@@ -68,8 +68,8 @@ export async function ensureD1Schema(env) {
       db.prepare('CREATE INDEX IF NOT EXISTS idx_subscription_history_sub_time ON subscription_history(subscription_id, changed_at DESC)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_subscription_history_action_time ON subscription_history(action, changed_at DESC)'),
       db.prepare(`CREATE TABLE IF NOT EXISTS accounts (
-        account_serial TEXT PRIMARY KEY,
-        account TEXT NOT NULL UNIQUE,
+        account TEXT PRIMARY KEY,
+        account_serial TEXT NOT NULL,
         password_encrypted TEXT NOT NULL DEFAULT '',
         source_subscription_id TEXT,
         created_at TEXT NOT NULL,
@@ -78,15 +78,17 @@ export async function ensureD1Schema(env) {
         account_type TEXT NOT NULL DEFAULT ''
       )`),
       db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_account ON accounts(account)'),
+      db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_serial_unique_except_voice_supplier ON accounts(account_serial) WHERE account_serial <> '配音供应商'"),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_account_serial ON accounts(account_serial)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_updated_at ON accounts(updated_at DESC)'),
       db.prepare(`CREATE TABLE IF NOT EXISTS account_credentials (
-        account_serial TEXT NOT NULL,
+        account TEXT NOT NULL,
         credential_type TEXT NOT NULL,
         password_encrypted TEXT NOT NULL DEFAULT '',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        PRIMARY KEY (account_serial, credential_type),
-        FOREIGN KEY (account_serial) REFERENCES accounts(account_serial) ON UPDATE CASCADE ON DELETE CASCADE
+        PRIMARY KEY (account, credential_type),
+        FOREIGN KEY (account) REFERENCES accounts(account) ON UPDATE CASCADE ON DELETE CASCADE
       )`),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_account_credentials_type ON account_credentials(credential_type)'),
       db.prepare(`CREATE TABLE IF NOT EXISTS account_history (
@@ -127,9 +129,57 @@ export async function ensureD1Schema(env) {
 
     await db.batch(statements);
 
-    // 兼容已存在的旧 accounts 表：运行时按需补列，避免漏跑 migration 时 Database 直接报错。
-    const tableInfo = await db.prepare('PRAGMA table_info(accounts)').all();
-    const columns = new Set((tableInfo.results || []).map((row) => String(row.name || '')));
+    // 兼容旧版：v3.2.6 以前 accounts 以 account_serial 为主键，无法支持“配音供应商”重复。
+    // 若检测到旧结构，运行时自动重建为 account 主键 + account_serial 条件唯一结构。
+    let tableInfo = await db.prepare('PRAGMA table_info(accounts)').all();
+    let columns = new Set((tableInfo.results || []).map((row) => String(row.name || '')));
+    const serialPk = (tableInfo.results || []).some((row) => String(row.name || '') === 'account_serial' && Number(row.pk || 0) > 0);
+    const credentialInfo = await db.prepare('PRAGMA table_info(account_credentials)').all();
+    const credentialColumns = new Set((credentialInfo.results || []).map((row) => String(row.name || '')));
+    if (serialPk || credentialColumns.has('account_serial')) {
+      await db.batch([
+        db.prepare(`CREATE TABLE IF NOT EXISTS accounts_v327 (
+          account TEXT PRIMARY KEY,
+          account_serial TEXT NOT NULL,
+          password_encrypted TEXT NOT NULL DEFAULT '',
+          source_subscription_id TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          real_name TEXT NOT NULL DEFAULT '',
+          account_type TEXT NOT NULL DEFAULT ''
+        )`),
+        db.prepare(`INSERT OR REPLACE INTO accounts_v327 (
+          account, account_serial, password_encrypted, source_subscription_id,
+          created_at, updated_at, real_name, account_type
+        )
+        SELECT account, account_serial, password_encrypted, source_subscription_id,
+               created_at, updated_at,
+               COALESCE(real_name,''), COALESCE(account_type,'')
+        FROM accounts`),
+        db.prepare(`CREATE TABLE IF NOT EXISTS account_credentials_v327 (
+          account TEXT NOT NULL,
+          credential_type TEXT NOT NULL,
+          password_encrypted TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          PRIMARY KEY (account, credential_type),
+          FOREIGN KEY (account) REFERENCES accounts_v327(account) ON UPDATE CASCADE ON DELETE CASCADE
+        )`),
+        db.prepare(`INSERT OR REPLACE INTO account_credentials_v327 (
+          account, credential_type, password_encrypted, created_at, updated_at
+        )
+        SELECT a.account, c.credential_type, c.password_encrypted, c.created_at, c.updated_at
+        FROM account_credentials c
+        JOIN accounts a ON a.account_serial = c.account_serial`),
+        db.prepare('DROP TABLE account_credentials'),
+        db.prepare('DROP TABLE accounts'),
+        db.prepare('ALTER TABLE accounts_v327 RENAME TO accounts'),
+        db.prepare('ALTER TABLE account_credentials_v327 RENAME TO account_credentials')
+      ]);
+      tableInfo = await db.prepare('PRAGMA table_info(accounts)').all();
+      columns = new Set((tableInfo.results || []).map((row) => String(row.name || '')));
+    }
+
     if (!columns.has('real_name')) {
       try { await db.prepare("ALTER TABLE accounts ADD COLUMN real_name TEXT NOT NULL DEFAULT ''").run(); }
       catch (error) { if (!String(error?.message || error).toLowerCase().includes('duplicate column')) throw error; }
@@ -139,11 +189,15 @@ export async function ensureD1Schema(env) {
       catch (error) { if (!String(error?.message || error).toLowerCase().includes('duplicate column')) throw error; }
     }
     await db.batch([
+      db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_account ON accounts(account)'),
+      db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_serial_unique_except_voice_supplier ON accounts(account_serial) WHERE account_serial <> '配音供应商'"),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_account_serial ON accounts(account_serial)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_real_name ON accounts(real_name)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_account_type ON accounts(account_type)'),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_account_credentials_type ON account_credentials(credential_type)'),
       db.prepare(`INSERT OR IGNORE INTO account_credentials (
-        account_serial, credential_type, password_encrypted, created_at, updated_at
-      ) SELECT account_serial, 'legacy', password_encrypted, created_at, updated_at
+        account, credential_type, password_encrypted, created_at, updated_at
+      ) SELECT account, 'legacy', password_encrypted, created_at, updated_at
         FROM accounts WHERE password_encrypted <> ''`)
     ]);
     return true;

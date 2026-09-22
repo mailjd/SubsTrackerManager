@@ -15,6 +15,7 @@ import {
   listOptions,
   getBySerial,
   getByAccount,
+  isDuplicateSerialAllowed,
   upsert,
   updateAndPropagate,
   deleteAccount
@@ -236,7 +237,7 @@ export async function handleAccounts(request, env, path) {
           errors.push({ row: sourceRow, success: false, accountSerial, account, message: '账号序号和账号不能为空' });
           continue;
         }
-        if (serials.has(accountSerial)) {
+        if (!isDuplicateSerialAllowed(accountSerial) && serials.has(accountSerial)) {
           errors.push({ row: sourceRow, success: false, accountSerial, account, message: `账号序号 ${accountSerial} 在导入表中重复（首次出现在第 ${serials.get(accountSerial)} 行）` });
           continue;
         }
@@ -244,7 +245,7 @@ export async function handleAccounts(request, env, path) {
           errors.push({ row: sourceRow, success: false, accountSerial, account, message: `账号 ${account} 在导入表中重复（首次出现在第 ${accounts.get(account)} 行）` });
           continue;
         }
-        serials.set(accountSerial, sourceRow);
+        if (!isDuplicateSerialAllowed(accountSerial)) serials.set(accountSerial, sourceRow);
         accounts.set(account, sourceRow);
 
         const plainPasswords = {
@@ -337,7 +338,7 @@ export async function handleAccounts(request, env, path) {
       }
 
       try {
-        const serialRow = await getBySerial(env, accountSerial);
+        const serialRow = isDuplicateSerialAllowed(accountSerial) ? null : await getBySerial(env, accountSerial);
         const accountRow = await getByAccount(env, account);
         if (serialRow && serialRow.account !== account) {
           failed += 1; results.push({ row: sourceRow, success: false, accountSerial, account, message: `账号序号 ${accountSerial} 已绑定账号 ${serialRow.account}` }); continue;
@@ -405,7 +406,7 @@ export async function handleAccounts(request, env, path) {
     const accountSerial = String(body?.accountSerial || '').trim();
     const account = String(body?.account || '').trim();
     if (!accountSerial || !account) return json({ success: false, message: '账号序号和账号不能为空' }, 400);
-    const existingSerial = await getBySerial(env, accountSerial);
+    const existingSerial = isDuplicateSerialAllowed(accountSerial) ? null : await getBySerial(env, accountSerial);
     const existingAccount = await getByAccount(env, account);
     if (existingSerial || existingAccount) {
       const existing = existingSerial || existingAccount;
@@ -423,9 +424,72 @@ export async function handleAccounts(request, env, path) {
     return json(result, result.success ? 201 : 400);
   }
 
+  if (path === '/accounts/item') {
+    const accountKey = String(url.searchParams.get('account') || '').trim();
+    if (!accountKey) return json({ success: false, message: '缺少账号参数' }, 400);
+
+    if (method === 'GET') {
+      const row = await getByAccount(env, accountKey);
+      if (!row) return json({ success: false, message: '账号记录不存在' }, 404);
+      const config = await getConfig(env);
+      const superAdminUnlocked = await isSuperAdminUnlocked(request, config);
+      let sensitive = null;
+      if (superAdminUnlocked) sensitive = await decryptPasswords(row, config);
+      return json({
+        success: true,
+        superAdminUnlocked,
+        account: {
+          accountSerial: row.accountSerial,
+          account: row.account,
+          realName: row.realName,
+          accountType: row.accountType,
+          credentialStatus: row.credentialStatus,
+          hasPassword: row.hasPassword,
+          hasLegacyPassword: row.hasLegacyPassword,
+          ...(superAdminUnlocked ? {
+            passwords: sensitive.passwords,
+            passwordDecryptFailed: sensitive.failed,
+            legacyPassword: sensitive.legacyPassword,
+            legacyPasswordDecryptFailed: sensitive.legacyFailed
+          } : {}),
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt
+        }
+      });
+    }
+
+    if (method === 'PUT') {
+      let body;
+      try { body = await request.json(); } catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
+      const current = await getByAccount(env, accountKey);
+      if (!current) return json({ success: false, message: '账号记录不存在' }, 404);
+      const config = await getConfig(env);
+      const credentialsEncrypted = await encryptPasswordUpdates(body?.passwords, config);
+      const result = await updateAndPropagate(env, accountKey, {
+        accountSerial: String(body?.accountSerial || current.accountSerial).trim(),
+        account: String(body?.account || current.account).trim(),
+        realName: String(body?.realName ?? current.realName ?? '').trim(),
+        accountType: String(body?.accountType ?? current.accountType ?? '').trim(),
+        credentialsEncrypted,
+        ...(body?.clearLegacyPassword ? { legacyPasswordEncrypted: '' } : {})
+      });
+      return json(result, result.success ? 200 : 400);
+    }
+
+    if (method === 'DELETE') {
+      const result = await deleteAccount(env, accountKey);
+      return json(result, result.success ? 200 : 400);
+    }
+
+    return json({ success: false, message: '不支持的请求方法' }, 405);
+  }
+
   const parts = path.split('/');
   const serial = decodePathPart(parts[2]);
   if (!serial) return null;
+  if (isDuplicateSerialAllowed(serial)) {
+    return json({ success: false, message: '账号序号“配音供应商”可对应多个账号，请使用账号作为唯一标识操作记录' }, 409);
+  }
 
   if (method === 'GET') {
     const row = await getBySerial(env, serial);

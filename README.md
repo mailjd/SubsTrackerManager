@@ -78,6 +78,7 @@ npm run deploy:safe
 - `migrations/0003_menu_options_database.sql`：订阅名称、类型、分类、会员级别、使用人等可配置菜单。
 - `migrations/0004_account_profiles_credentials.sql`：账号实名人 / 账号类型，以及 Tapnow、即梦、微信、QQ 分工具加密凭据。
 - `migrations/0005_account_database_backups.sql`：Database 全覆盖导入的自动快照备份，运行时只保留最近 2 版。
+- `migrations/0006_voice_supplier_duplicate_serial.sql`：账号序号默认保持唯一，但允许特殊序号 `配音供应商` 被多个不同账号重复使用；账号本身仍唯一。
 
 D1 现在分成三个业务区域：
 
@@ -230,7 +231,7 @@ Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV
 
 导航栏中的 **Database** 专门维护账号资料：
 
-- 账号序号：唯一，例如 `001`、`A-001`。
+- 账号序号：默认唯一，例如 `001`、`A-001`；特殊序号 `配音供应商` 允许多个不同账号重复使用。
 - 账号：唯一，例如邮箱、用户名或手机号。
 - 实名人：记录该账号实名认证人。
 - 账号类型：自由文本，例如手机号、邮箱、微信、QQ、平台账号。
@@ -346,6 +347,10 @@ Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV
 ### 订阅
 
 - 增删改查、启用/停用、克隆、筛选  
+- **v3.2.8 批量管理**：勾选多条记录、选择当前筛选、批量修改常用字段  
+- **Excel 批量导入**：支持 `.xlsx/.xls/.csv/.tsv` 文件直读和复制粘贴；固定为“只新增、不覆盖”，重复记录自动跳过  
+- **Excel 批量导出**：可导出选中记录、当前筛选结果或全部订阅  
+- **显示模式**：表格模式 / 卡片模式切换并记住偏好  
 - 多规则提醒、农历周期、自动/手动续订、支付历史  
 - 季/半年快捷、公历月末选项  
 

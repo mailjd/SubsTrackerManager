@@ -18,16 +18,18 @@ export async function createAccountDatabaseBackup(env, options = {}) {
   const [accountsResult, credentialsResult] = await Promise.all([
     db.prepare(`SELECT account_serial, account, password_encrypted, source_subscription_id,
       created_at, updated_at, real_name, account_type
-      FROM accounts ORDER BY account_serial COLLATE NOCASE ASC`).all(),
-    db.prepare(`SELECT account_serial, credential_type, password_encrypted, created_at, updated_at
-      FROM account_credentials ORDER BY account_serial COLLATE NOCASE ASC, credential_type ASC`).all()
+      FROM accounts ORDER BY account_serial COLLATE NOCASE ASC, account COLLATE NOCASE ASC`).all(),
+    db.prepare(`SELECT c.account, a.account_serial, c.credential_type, c.password_encrypted, c.created_at, c.updated_at
+      FROM account_credentials c
+      JOIN accounts a ON a.account = c.account
+      ORDER BY a.account_serial COLLATE NOCASE ASC, c.account COLLATE NOCASE ASC, c.credential_type ASC`).all()
   ]);
   const accounts = accountsResult.results || [];
   const credentials = credentialsResult.results || [];
   const createdAt = nowIso();
   const snapshot = {
     format: 'substracker-account-database-backup',
-    version: 1,
+    version: 2,
     createdAt,
     accounts,
     credentials
@@ -121,11 +123,11 @@ export async function restoreAccountDatabaseSnapshot(env, snapshot) {
     for (const row of accounts) {
       await db.prepare(`
         INSERT INTO accounts (
-          account_serial, account, password_encrypted, source_subscription_id,
+          account, account_serial, password_encrypted, source_subscription_id,
           created_at, updated_at, real_name, account_type
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
-        String(row.account_serial || ''), String(row.account || ''), String(row.password_encrypted || ''),
+        String(row.account || ''), String(row.account_serial || ''), String(row.password_encrypted || ''),
         row.source_subscription_id ? String(row.source_subscription_id) : null,
         String(row.created_at || nowIso()), String(row.updated_at || nowIso()),
         String(row.real_name || ''), String(row.account_type || '')
@@ -133,11 +135,18 @@ export async function restoreAccountDatabaseSnapshot(env, snapshot) {
     }
 
     for (const row of credentials) {
+      let account = String(row.account || '');
+      // 兼容 v1 备份：旧凭据只记录 account_serial，当时序号必然唯一。
+      if (!account && row.account_serial) {
+        const owner = accounts.find((item) => String(item.account_serial || '') === String(row.account_serial || ''));
+        account = owner ? String(owner.account || '') : '';
+      }
+      if (!account) continue;
       await db.prepare(`
-        INSERT INTO account_credentials (account_serial, credential_type, password_encrypted, created_at, updated_at)
+        INSERT INTO account_credentials (account, credential_type, password_encrypted, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?)
       `).bind(
-        String(row.account_serial || ''), String(row.credential_type || ''), String(row.password_encrypted || ''),
+        account, String(row.credential_type || ''), String(row.password_encrypted || ''),
         String(row.created_at || nowIso()), String(row.updated_at || nowIso())
       ).run();
     }

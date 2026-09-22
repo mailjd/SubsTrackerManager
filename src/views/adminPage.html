@@ -7,6 +7,7 @@
   <title>订阅管理系统</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   ${themeResources}  <style>
     .table-container { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
     .modal-container { backdrop-filter: blur(8px); }
@@ -368,6 +369,16 @@
     html.dark .toast.info { background-color: #2563eb; }
     html.dark .toast.warning { background-color: #d97706; }
 
+    /* 订阅批量管理 / 显示模式 */
+    .subscription-view-toggle button.active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+    .subscription-card-grid { display:grid; grid-template-columns:repeat(1,minmax(0,1fr)); gap:1rem; }
+    @media (min-width: 768px) { .subscription-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (min-width: 1280px) { .subscription-card-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+    .subscription-card { border:1px solid #e5e7eb; border-radius:.85rem; background:#fff; padding:1rem; box-shadow:0 2px 8px rgba(15,23,42,.05); }
+    .subscription-card.selected { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,.14); }
+    .bulk-action-bar { background:#f8fafc; border:1px solid #e2e8f0; border-radius:.75rem; }
+    html.dark .subscription-card, html.dark .bulk-action-bar { background:#1f2937; border-color:#374151; }
+
     /* 模态框动画 */
     #subscriptionModal { transition: opacity 0.2s ease; opacity: 0; }
     #subscriptionModal:not(.hidden) { opacity: 1; }
@@ -491,27 +502,53 @@
         </div>
       </div>
 
-      <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <label class="lunar-toggle inline-flex items-center">
-          <input type="checkbox" id="listShowLunar" class="form-checkbox h-4 w-4 text-indigo-600 shrink-0">
-          <span class="text-gray-700 ml-2 text-sm">显示农历</span>
-        </label>
-        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+      <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="lunar-toggle inline-flex items-center">
+            <input type="checkbox" id="listShowLunar" class="form-checkbox h-4 w-4 text-indigo-600 shrink-0">
+            <span class="text-gray-700 ml-2 text-sm">显示农历</span>
+          </label>
+          <div class="subscription-view-toggle inline-flex rounded-lg border border-gray-300 overflow-hidden" aria-label="订阅显示模式">
+            <button type="button" id="tableViewBtn" data-view-mode="table" class="active px-3 py-2 text-sm bg-white text-gray-700 border-r border-gray-300"><i class="fas fa-table mr-1"></i>表格模式</button>
+            <button type="button" id="cardViewBtn" data-view-mode="card" class="px-3 py-2 text-sm bg-white text-gray-700"><i class="fas fa-th-large mr-1"></i>卡片模式</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2 items-center">
           <button id="downloadImportTemplateBtn" class="bg-white hover:bg-gray-50 text-indigo-700 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
             <i class="fas fa-file-excel mr-2"></i>下载Excel模板
           </button>
           <button id="openBulkImportBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
-            <i class="fas fa-table mr-2"></i>批量录入
+            <i class="fas fa-file-import mr-2"></i>批量导入
+          </button>
+          <button id="openBulkExportBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
+            <i class="fas fa-file-export mr-2"></i>批量导出
           </button>
         </div>
       </div>
+
+      <div class="bulk-action-bar mt-3 px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3 text-sm">
+          <label class="inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="selectAllFiltered" class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300">
+            <span class="ml-2 text-gray-700">选择当前筛选</span>
+          </label>
+          <span id="selectedSubscriptionCount" class="text-gray-500">已选 0 条</span>
+          <button type="button" id="clearSubscriptionSelection" class="text-indigo-600 hover:text-indigo-800 text-sm">清除选择</button>
+        </div>
+        <button type="button" id="openBulkUpdateBtn" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
+          <i class="fas fa-edit mr-2"></i>批量修改
+        </button>
+      </div>
     </div>
     
-    <div class="table-container bg-white rounded-lg overflow-hidden">
+    <div id="subscriptionsTableView" class="table-container bg-white rounded-lg overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full divide-y divide-gray-200 responsive-table">
           <thead class="bg-gray-50">
             <tr>
+              <th scope="col" class="px-3 py-3 text-center text-sm font-medium text-gray-500" style="width: 42px;">
+                <span class="sr-only">选择</span>
+              </th>
               <th scope="col" class="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider" style="width: 23%;">
                 名称
               </th>
@@ -540,6 +577,7 @@
         </table>
       </div>
     </div>
+    <div id="subscriptionsCardView" class="subscription-card-grid hidden"></div>
   </div>
 
   <div id="subscriptionModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-600 bg-opacity-50">
@@ -894,6 +932,49 @@
     </div>
   </div>
 
+  <!-- 批量导出模态框 -->
+  <div id="bulkExportModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-600 bg-opacity-50">
+    <div class="relative w-auto max-w-lg mx-4 md:mx-auto my-16 bg-white rounded-xl shadow-xl">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div><h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-file-export text-blue-600 mr-2"></i>批量导出订阅</h3><p class="text-xs text-gray-500 mt-1">导出为 Excel .xlsx，账号序号按文本保存。</p></div>
+        <button type="button" id="closeBulkExportModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <div class="p-6 space-y-4">
+        <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer"><input type="radio" name="exportScope" value="selected" class="mt-1" checked><span><strong>导出选中记录</strong><small id="exportSelectedHint" class="block text-gray-500 mt-1">当前已选 0 条</small></span></label>
+        <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer"><input type="radio" name="exportScope" value="filtered" class="mt-1"><span><strong>导出当前筛选结果</strong><small id="exportFilteredHint" class="block text-gray-500 mt-1">当前筛选 0 条</small></span></label>
+        <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer"><input type="radio" name="exportScope" value="all" class="mt-1"><span><strong>导出全部订阅</strong><small id="exportAllHint" class="block text-gray-500 mt-1">全部 0 条</small></span></label>
+        <div class="flex justify-end gap-3 pt-3 border-t"><button type="button" id="cancelBulkExportBtn" class="px-4 py-2 border rounded-lg text-sm">取消</button><button type="button" id="executeBulkExportBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"><i class="fas fa-download mr-2"></i>导出 Excel</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批量修改模态框 -->
+  <div id="bulkUpdateModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-600 bg-opacity-50">
+    <div class="relative w-auto max-w-3xl mx-4 md:mx-auto my-10 bg-white rounded-xl shadow-xl">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div><h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-edit text-violet-600 mr-2"></i>批量修改订阅</h3><p id="bulkUpdateSelectionHint" class="text-xs text-gray-500 mt-1">已选择 0 条。只有勾选的字段才会修改。</p></div>
+        <button type="button" id="closeBulkUpdateModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="customType"><strong class="text-sm">订阅类型</strong></span><input id="bulkCustomType" type="text" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="留空可清除"></label>
+          <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="category"><strong class="text-sm">分类标签</strong></span><input id="bulkCategory" type="text" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="例如：已完成"></label>
+          <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="memberLevel"><strong class="text-sm">会员级别</strong></span><input id="bulkMemberLevel" type="text" class="w-full border rounded-md px-3 py-2 text-sm"></label>
+          <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="users"><strong class="text-sm">使用人</strong></span><input id="bulkUsers" type="text" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="多人用英文逗号分隔"></label>
+          <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="points"><strong class="text-sm">积分</strong></span><input id="bulkPoints" type="number" min="0" step="1" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="留空清除"></label>
+          <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="amount"><strong class="text-sm">费用</strong></span><input id="bulkAmount" type="number" min="0" step="0.01" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="留空清除"></label>
+          <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="currency"><strong class="text-sm">币种</strong></span><select id="bulkCurrency" class="w-full border rounded-md px-3 py-2 text-sm"><option>CNY</option><option>USD</option><option>HKD</option><option>TWD</option><option>JPY</option><option>EUR</option><option>GBP</option><option>KRW</option><option>TRY</option></select></label>
+          <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="subscriptionMode"><strong class="text-sm">订阅模式</strong></span><select id="bulkSubscriptionMode" class="w-full border rounded-md px-3 py-2 text-sm"><option value="cycle">循环订阅</option><option value="reset">到期重置</option></select></label>
+          <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="isActive"><strong class="text-sm">启用状态</strong></span><select id="bulkIsActive" class="w-full border rounded-md px-3 py-2 text-sm"><option value="true">启用</option><option value="false">停用</option></select></label>
+          <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="autoRenew"><strong class="text-sm">自动续订</strong></span><select id="bulkAutoRenew" class="w-full border rounded-md px-3 py-2 text-sm"><option value="true">开启</option><option value="false">关闭</option></select></label>
+        </div>
+        <label class="block border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="notes"><strong class="text-sm">备注</strong></span><textarea id="bulkNotes" rows="3" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="批量替换或追加备注"></textarea><span class="mt-2 inline-flex items-center text-xs text-gray-600"><input id="bulkAppendNotes" type="checkbox" class="mr-2">追加到原备注（不勾选则替换）</span></label>
+        <div id="bulkUpdateResult" class="hidden rounded-lg border p-3 text-sm"></div>
+        <div class="flex justify-end gap-3 pt-3 border-t"><button type="button" id="cancelBulkUpdateBtn" class="px-4 py-2 border rounded-lg text-sm">取消</button><button type="button" id="executeBulkUpdateBtn" class="px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium"><i class="fas fa-save mr-2"></i>确认批量修改</button></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Excel 批量录入模态框 -->
   <div id="bulkImportModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-600 bg-opacity-50">
     <div class="relative w-auto max-w-6xl mx-4 md:mx-auto my-8 bg-white rounded-lg shadow-xl">
@@ -921,9 +1002,18 @@
           </button>
         </div>
 
+        <div class="border border-emerald-200 bg-emerald-50 rounded-lg p-4">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div><label for="bulkImportFile" class="block text-sm font-semibold text-emerald-900">直接选择 Excel 表单</label><p class="text-xs text-emerald-700 mt-1">支持 .xlsx / .xls / .csv / .tsv；导入模式固定为“只新增、不覆盖原有订阅”。</p></div>
+            <input id="bulkImportFile" type="file" accept=".xlsx,.xls,.csv,.tsv" class="block text-sm text-gray-600 file:mr-3 file:px-3 file:py-2 file:rounded-md file:border-0 file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
+          </div>
+        </div>
+
+        <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><i class="fas fa-shield-alt mr-2"></i><strong>导入保护：</strong>Excel 导入只会创建新记录；检测到与现有订阅重复时自动跳过，绝不会覆盖原记录。</div>
+
         <div>
           <div class="flex items-center justify-between mb-2 gap-3">
-            <label for="bulkImportPaste" class="block text-sm font-semibold text-gray-700">粘贴 Excel 数据</label>
+            <label for="bulkImportPaste" class="block text-sm font-semibold text-gray-700">或粘贴 Excel 数据</label>
             <span id="bulkImportPasteHint" class="text-xs text-gray-500">支持带表头或按默认 21 列顺序直接粘贴</span>
           </div>
           <textarea id="bulkImportPaste" rows="12" spellcheck="false"
@@ -1551,6 +1641,9 @@ const lunarBiz = {
     let subscriptionsCache = [];
     let accountsCache = [];
     let searchDebounceTimer = null;
+    let lastFilteredSubscriptions = [];
+    const selectedSubscriptionIds = new Set();
+    let subscriptionViewMode = localStorage.getItem('subscriptionViewMode') === 'card' ? 'card' : 'table';
 
     function normalizeCategoryTokens(category = '') {
       return category
@@ -1758,6 +1851,85 @@ const lunarBiz = {
       return currencySymbols[currency] || '¥';
     }
 
+    function updateSelectionUI() {
+      const count = selectedSubscriptionIds.size;
+      const countEl = document.getElementById('selectedSubscriptionCount');
+      const bulkBtn = document.getElementById('openBulkUpdateBtn');
+      const selectAll = document.getElementById('selectAllFiltered');
+      if (countEl) countEl.textContent = `已选 ${count} 条`;
+      if (bulkBtn) bulkBtn.disabled = count === 0;
+      if (selectAll) {
+        const visibleIds = lastFilteredSubscriptions.map((item) => String(item.id));
+        const selectedVisible = visibleIds.filter((id) => selectedSubscriptionIds.has(id)).length;
+        selectAll.checked = visibleIds.length > 0 && selectedVisible === visibleIds.length;
+        selectAll.indeterminate = selectedVisible > 0 && selectedVisible < visibleIds.length;
+      }
+      document.querySelectorAll('.subscription-select').forEach((input) => {
+        const id = String(input.dataset.id || '');
+        input.checked = selectedSubscriptionIds.has(id);
+        const card = input.closest('.subscription-card');
+        if (card) card.classList.toggle('selected', input.checked);
+      });
+    }
+
+    function setSubscriptionViewMode(mode) {
+      subscriptionViewMode = mode === 'card' ? 'card' : 'table';
+      localStorage.setItem('subscriptionViewMode', subscriptionViewMode);
+      const table = document.getElementById('subscriptionsTableView');
+      const cards = document.getElementById('subscriptionsCardView');
+      const tableBtn = document.getElementById('tableViewBtn');
+      const cardBtn = document.getElementById('cardViewBtn');
+      if (table) table.classList.toggle('hidden', subscriptionViewMode !== 'table');
+      if (cards) cards.classList.toggle('hidden', subscriptionViewMode !== 'card');
+      if (tableBtn) tableBtn.classList.toggle('active', subscriptionViewMode === 'table');
+      if (cardBtn) cardBtn.classList.toggle('active', subscriptionViewMode === 'card');
+    }
+
+    function renderSubscriptionCards(items) {
+      const container = document.getElementById('subscriptionsCardView');
+      if (!container) return;
+      if (!Array.isArray(items) || items.length === 0) {
+        container.innerHTML = '<div class="md:col-span-2 xl:col-span-3 bg-white border rounded-xl p-8 text-center text-gray-500">没有符合条件的订阅</div>';
+        return;
+      }
+      container.innerHTML = items.map((subscription) => {
+        const id = String(subscription.id);
+        const users = String(subscription.users || '').split(',').map((v) => v.trim()).filter(Boolean);
+        const categories = normalizeCategoryTokens(subscription.category);
+        const expiry = formatDateInTimezone(subscription.expiryDate, globalTimezone);
+        const amount = subscription.amount !== null && subscription.amount !== undefined
+          ? `${getCurrencySymbol(subscription.currency || 'CNY')}${Number(subscription.amount).toFixed(2)}`
+          : '未设置';
+        const activeText = subscription.isActive === false ? '已停用' : '启用中';
+        return `<div class="subscription-card ${selectedSubscriptionIds.has(id) ? 'selected' : ''}">
+          <div class="flex items-start justify-between gap-3">
+            <label class="inline-flex items-center gap-2 min-w-0 cursor-pointer">
+              <input type="checkbox" class="subscription-select form-checkbox h-4 w-4 text-indigo-600" data-id="${escapeHtml(id)}" ${selectedSubscriptionIds.has(id) ? 'checked' : ''}>
+              <span class="font-semibold text-gray-900 truncate">${escapeHtml(subscription.name || '未命名订阅')}</span>
+            </label>
+            <span class="px-2 py-1 rounded-full text-xs ${subscription.isActive === false ? 'bg-gray-100 text-gray-600' : 'bg-green-50 text-green-700'}">${activeText}</span>
+          </div>
+          <div class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+            <div><span class="text-gray-400 text-xs block">账号</span><span class="text-gray-700 break-all">${escapeHtml(subscription.account || '—')}</span></div>
+            <div><span class="text-gray-400 text-xs block">账号序号</span><span class="text-gray-700">${escapeHtml(subscription.accountSerial || '—')}</span></div>
+            <div><span class="text-gray-400 text-xs block">订阅类型</span><span class="text-gray-700">${escapeHtml(subscription.customType || '—')}</span></div>
+            <div><span class="text-gray-400 text-xs block">会员级别</span><span class="text-gray-700">${escapeHtml(subscription.memberLevel || '—')}</span></div>
+            <div><span class="text-gray-400 text-xs block">费用</span><span class="text-gray-700">${escapeHtml(amount)}</span></div>
+            <div><span class="text-gray-400 text-xs block">到期日期</span><span class="text-gray-700">${escapeHtml(expiry || '—')}</span></div>
+          </div>
+          ${users.length ? `<div class="mt-3 flex flex-wrap gap-1">${users.map((u) => `<span class="px-2 py-0.5 text-xs rounded bg-sky-50 text-sky-700">${escapeHtml(u)}</span>`).join('')}</div>` : ''}
+          ${categories.length ? `<div class="mt-2 flex flex-wrap gap-1">${categories.map((c) => `<span class="px-2 py-0.5 text-xs rounded bg-indigo-50 text-indigo-700">${escapeHtml(c)}</span>`).join('')}</div>` : ''}
+          <div class="mt-4 flex flex-wrap gap-2 border-t pt-3">
+            <button class="edit btn-primary text-white px-2 py-1 rounded text-xs" data-id="${escapeHtml(id)}"><i class="fas fa-edit mr-1"></i>编辑</button>
+            <button class="clone btn-clone text-white px-2 py-1 rounded text-xs" data-id="${escapeHtml(id)}"><i class="fas fa-copy mr-1"></i>克隆</button>
+            <button class="view-history btn-history text-white px-2 py-1 rounded text-xs" data-id="${escapeHtml(id)}"><i class="fas fa-history mr-1"></i>历史</button>
+            ${subscription.periodUnit === 'single' ? '' : `<button class="renew-now btn-success text-white px-2 py-1 rounded text-xs" data-id="${escapeHtml(id)}"><i class="fas fa-sync-alt mr-1"></i>续订</button>`}
+            <button class="delete btn-danger text-white px-2 py-1 rounded text-xs" data-id="${escapeHtml(id)}"><i class="fas fa-trash-alt mr-1"></i>删除</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
     function renderSubscriptionTable() {
       const tbody = document.getElementById('subscriptionsBody');
       if (!tbody) {
@@ -1839,18 +2011,23 @@ const lunarBiz = {
       }
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500"><div>没有符合条件的订阅</div><button onclick="document.getElementById(\'searchKeyword\').value=\'\';document.getElementById(\'clearSearch\').style.display=\'none\';document.getElementById(\'categoryFilter\').value=\'\';document.getElementById(\'modeFilter\').value=\'\';document.getElementById(\'statusFilter\').value=\'\';renderSubscriptionTable();" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800"><i class="fas fa-undo mr-1"></i>清除筛选条件</button></td></tr>';
+        lastFilteredSubscriptions = [];
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500"><div>没有符合条件的订阅</div><button onclick="document.getElementById(\'searchKeyword\').value=\'\';document.getElementById(\'clearSearch\').style.display=\'none\';document.getElementById(\'categoryFilter\').value=\'\';document.getElementById(\'modeFilter\').value=\'\';document.getElementById(\'statusFilter\').value=\'\';renderSubscriptionTable();" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800"><i class="fas fa-undo mr-1"></i>清除筛选条件</button></td></tr>';
+        renderSubscriptionCards([]);
+        updateSelectionUI();
+        setSubscriptionViewMode(subscriptionViewMode);
         return;
       }
 
       filtered.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+      lastFilteredSubscriptions = filtered;
 
       // 使用 DocumentFragment 进行批量插入，减少页面重绘（移动端性能关键）
       const fragment = document.createDocumentFragment();
 
       filtered.forEach(subscription => {
         const row = document.createElement('tr');
-        row.className = subscription.isActive === false ? 'hover:bg-gray-50 bg-gray-100' : 'hover:bg-gray-50';
+        row.className = (subscription.isActive === false ? 'hover:bg-gray-50 bg-gray-100' : 'hover:bg-gray-50') + (selectedSubscriptionIds.has(String(subscription.id)) ? ' bg-indigo-50' : '');
 
         const calendarTypeHtml = subscription.useLunar
           ? '<div class="text-xs text-purple-600 mt-1">日历类型：农历</div>'
@@ -2028,6 +2205,7 @@ const lunarBiz = {
           : '<span class="text-xs text-gray-400">未设置</span>';
 
         row.innerHTML =
+          '<td data-label="选择" class="px-3 py-3 text-center"><input type="checkbox" class="subscription-select form-checkbox h-4 w-4 text-indigo-600" data-id="' + escapeHtml(String(subscription.id)) + '" ' + (selectedSubscriptionIds.has(String(subscription.id)) ? 'checked' : '') + '></td>' +
           '<td data-label="名称" class="px-4 py-3"><div class="td-content-wrapper">' +
             nameHtml +
             accountHtml +
@@ -2078,6 +2256,7 @@ const lunarBiz = {
       });
 
       tbody.appendChild(fragment);
+      renderSubscriptionCards(filtered);
       document.querySelectorAll('.edit').forEach(button => {
         button.addEventListener('click', editSubscription);
       });
@@ -2105,6 +2284,18 @@ const lunarBiz = {
       document.querySelectorAll('.view-history').forEach(button => {
         button.addEventListener('click', viewPaymentHistory);
       });
+
+      document.querySelectorAll('.subscription-select').forEach((input) => {
+        input.addEventListener('change', () => {
+          const id = String(input.dataset.id || '');
+          if (!id) return;
+          if (input.checked) selectedSubscriptionIds.add(id);
+          else selectedSubscriptionIds.delete(id);
+          updateSelectionUI();
+        });
+      });
+      updateSelectionUI();
+      setSubscriptionViewMode(subscriptionViewMode);
 
       if (window.matchMedia('(hover: hover)').matches) {
           attachHoverListeners();
@@ -2136,6 +2327,30 @@ const lunarBiz = {
       statusSelect.addEventListener('change', () => renderSubscriptionTable());
     }
 
+
+    const tableViewBtn = document.getElementById('tableViewBtn');
+    const cardViewBtn = document.getElementById('cardViewBtn');
+    if (tableViewBtn) tableViewBtn.addEventListener('click', () => setSubscriptionViewMode('table'));
+    if (cardViewBtn) cardViewBtn.addEventListener('click', () => setSubscriptionViewMode('card'));
+    const selectAllFiltered = document.getElementById('selectAllFiltered');
+    if (selectAllFiltered) {
+      selectAllFiltered.addEventListener('change', () => {
+        lastFilteredSubscriptions.forEach((item) => {
+          const id = String(item.id);
+          if (selectAllFiltered.checked) selectedSubscriptionIds.add(id);
+          else selectedSubscriptionIds.delete(id);
+        });
+        renderSubscriptionTable();
+      });
+    }
+    const clearSubscriptionSelection = document.getElementById('clearSubscriptionSelection');
+    if (clearSubscriptionSelection) {
+      clearSubscriptionSelection.addEventListener('click', () => {
+        selectedSubscriptionIds.clear();
+        renderSubscriptionTable();
+      });
+    }
+
     async function loadAccountOptions() {
       try {
         const response = await apiFetch('/api/accounts/options');
@@ -2162,13 +2377,15 @@ const lunarBiz = {
 
         const tbody = document.getElementById('subscriptionsBody');
         if (tbody && showLoading) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>加载中...</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>加载中...</td></tr>';
         }
 
         const response = await apiFetch('/api/subscriptions');
         const data = await response.json();
 
         subscriptionsCache = Array.isArray(data) ? data : [];
+        const validSubscriptionIds = new Set(subscriptionsCache.map((item) => String(item.id)));
+        Array.from(selectedSubscriptionIds).forEach((id) => { if (!validSubscriptionIds.has(id)) selectedSubscriptionIds.delete(id); });
         populateCategoryFilter(subscriptionsCache);
         await loadAccountOptions();
         refreshAccountSerialOptions();
@@ -2177,7 +2394,7 @@ const lunarBiz = {
         console.error('加载订阅失败:', error);
         const tbody = document.getElementById('subscriptionsBody');
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500"><i class="fas fa-exclamation-circle mr-2"></i>加载失败，请刷新页面重试</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500"><i class="fas fa-exclamation-circle mr-2"></i>加载失败，请刷新页面重试</td></tr>';
         }
         showToast('加载订阅记录失败', 'error');
       }
@@ -3810,17 +4027,23 @@ const lunarBiz = {
         });
 
       const accountToSerial = new Map();
-      const serialToAccount = new Map();
+      const serialToAccounts = new Map();
       rows.forEach(function (sub) {
         const account = String(sub.account || '').trim();
         const serial = String(sub.accountSerial || '').trim();
         if (!account || !serial) return;
-        if (accountToSerial.has(account) || serialToAccount.has(serial)) return;
-        accountToSerial.set(account, serial);
-        serialToAccount.set(serial, account);
+        if (!accountToSerial.has(account)) accountToSerial.set(account, serial);
+        if (!serialToAccounts.has(serial)) serialToAccounts.set(serial, []);
+        const list = serialToAccounts.get(serial);
+        if (!list.includes(account)) list.push(account);
       });
 
-      return { accountToSerial, serialToAccount };
+      const serialToAccount = new Map();
+      serialToAccounts.forEach(function (accounts, serial) {
+        if (accounts.length === 1) serialToAccount.set(serial, accounts[0]);
+      });
+
+      return { accountToSerial, serialToAccount, serialToAccounts };
     }
 
     function refreshAccountSerialOptions() {
@@ -3839,10 +4062,12 @@ const lunarBiz = {
         accountList.appendChild(option);
       });
 
-      pairs.serialToAccount.forEach(function (account, serial) {
+      pairs.serialToAccounts.forEach(function (accounts, serial) {
         const option = document.createElement('option');
         option.value = serial;
-        option.label = account ? ('账号: ' + account) : '';
+        option.label = accounts.length === 1
+          ? ('账号: ' + accounts[0])
+          : ('多个账号（' + accounts.length + '），请先选择账号');
         serialList.appendChild(option);
       });
     }
@@ -3877,9 +4102,16 @@ const lunarBiz = {
         accountInput.value = '';
         return;
       }
-      const linkedAccount = pairs.serialToAccount.get(serial);
-      if (linkedAccount !== undefined) {
-        accountInput.value = linkedAccount;
+      const linkedAccounts = pairs.serialToAccounts.get(serial) || [];
+      if (linkedAccounts.length === 1) {
+        accountInput.value = linkedAccounts[0];
+        return;
+      }
+      if (linkedAccounts.length > 1) {
+        // “配音供应商”等可重复序号无法唯一反查账号；保留已选账号，
+        // 若当前账号不属于该序号则清空，提示用户先选择具体账号。
+        const currentAccount = accountInput.value.trim();
+        if (!currentAccount || !linkedAccounts.includes(currentAccount)) accountInput.value = '';
         return;
       }
       if (isCommit) {
@@ -5195,8 +5427,10 @@ const lunarBiz = {
 
         let imported = 0;
         let failed = 0;
+        let skipped = 0;
         let completed = false;
         const failures = [];
+        const skippedRows = [];
         try {
           const chunkSize = 50;
           for (let i = 0; i < validRows.length; i += chunkSize) {
@@ -5209,8 +5443,10 @@ const lunarBiz = {
             const payload = await response.json();
             imported += Number(payload.imported || 0);
             failed += Number(payload.failed || 0);
+            skipped += Number(payload.skipped || 0);
             if (Array.isArray(payload.results)) {
-              payload.results.filter((item) => !item.success).forEach((item) => failures.push(item));
+              payload.results.filter((item) => !item.success && !item.skipped).forEach((item) => failures.push(item));
+              payload.results.filter((item) => item.skipped).forEach((item) => skippedRows.push(item));
             }
             if (!response.ok && !payload.results) {
               failed += chunk.length;
@@ -5222,8 +5458,14 @@ const lunarBiz = {
           const totalSkipped = localInvalid.length;
           const summaryParts = [
             `<div class="font-semibold mb-2">批量录入完成</div>`,
-            `<div>成功写入：<strong class="text-emerald-700">${imported}</strong> 条；服务器失败：<strong class="text-red-600">${failed}</strong> 条；本地校验跳过：<strong class="text-amber-600">${totalSkipped}</strong> 条。</div>`
+            `<div>成功新增：<strong class="text-emerald-700">${imported}</strong> 条；原有记录跳过：<strong class="text-blue-700">${skipped}</strong> 条；服务器失败：<strong class="text-red-600">${failed}</strong> 条；本地校验跳过：<strong class="text-amber-600">${totalSkipped}</strong> 条。</div>`
           ];
+          if (skippedRows.length > 0) {
+            summaryParts.push('<div class="mt-3 font-medium text-blue-800">未覆盖的原有记录：</div>');
+            summaryParts.push('<ul class="mt-1 list-disc pl-5 max-h-32 overflow-y-auto text-blue-800">' + skippedRows.slice(0, 100).map((item) =>
+              `<li>第 ${escapeHtml(String(item.row))} 行：${escapeHtml(item.message || '检测到原有记录，已跳过')}</li>`
+            ).join('') + '</ul>');
+          }
           const allFailures = [
             ...localInvalid.map((item) => ({ row: item.sourceRow, message: item.errors.join('；') })),
             ...failures
@@ -5291,6 +5533,232 @@ const lunarBiz = {
             if (event.target === modal) closeImportModal();
           });
         }
+      });
+    })();
+  </script>
+  <script>
+    // 订阅记录批量导出 / 批量修改 / Excel 文件直读
+    (function () {
+      const EXPORT_HEADERS = [
+        '订阅名称','账号','账号序号','会员级别','积分','使用人','订阅类型','分类标签','费用','币种',
+        '订阅模式','开始日期','周期数值','周期单位','到期日期','农历周期','每月最后一天','提醒规则','启用订阅','自动续订','备注'
+      ];
+
+      function modalOpen(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      }
+      function modalClose(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      }
+      function boolText(value) { return value === false ? '否' : '是'; }
+      function periodUnitText(value) {
+        return ({ single:'单次', day:'天', month:'月', year:'年' })[value] || value || '';
+      }
+      function subscriptionModeText(value) { return value === 'reset' ? '到期重置' : '循环订阅'; }
+      function dateText(value) {
+        if (!value) return '';
+        try { return formatDateInputInTimezone(value, globalTimezone) || String(value).slice(0,10); }
+        catch { return String(value).slice(0,10); }
+      }
+
+      function toExportRow(sub) {
+        return {
+          '订阅名称': sub.name || '',
+          '账号': sub.account || '',
+          '账号序号': sub.accountSerial || '',
+          '会员级别': sub.memberLevel || '',
+          '积分': sub.points == null ? '' : sub.points,
+          '使用人': sub.users || '',
+          '订阅类型': sub.customType || '',
+          '分类标签': sub.category || '',
+          '费用': sub.amount == null ? '' : sub.amount,
+          '币种': sub.currency || 'CNY',
+          '订阅模式': subscriptionModeText(sub.subscriptionMode),
+          '开始日期': dateText(sub.startDate),
+          '周期数值': sub.periodValue == null ? '' : sub.periodValue,
+          '周期单位': periodUnitText(sub.periodUnit),
+          '到期日期': dateText(sub.expiryDate),
+          '农历周期': boolText(!!sub.useLunar),
+          '每月最后一天': boolText(!!sub.endOfMonth),
+          '提醒规则': sub.reminderRulesText || '',
+          '启用订阅': boolText(sub.isActive !== false),
+          '自动续订': boolText(sub.autoRenew !== false),
+          '备注': sub.notes || ''
+        };
+      }
+
+      function openExportModal() {
+        const selected = selectedSubscriptionIds.size;
+        const filtered = lastFilteredSubscriptions.length;
+        const all = subscriptionsCache.length;
+        const selectedHint = document.getElementById('exportSelectedHint');
+        const filteredHint = document.getElementById('exportFilteredHint');
+        const allHint = document.getElementById('exportAllHint');
+        if (selectedHint) selectedHint.textContent = `当前已选 ${selected} 条`;
+        if (filteredHint) filteredHint.textContent = `当前筛选 ${filtered} 条`;
+        if (allHint) allHint.textContent = `全部 ${all} 条`;
+        const preferred = document.querySelector(`input[name="exportScope"][value="${selected ? 'selected' : 'filtered'}"]`);
+        if (preferred) preferred.checked = true;
+        modalOpen('bulkExportModal');
+      }
+
+      async function executeExport() {
+        if (typeof XLSX === 'undefined') {
+          showToast('Excel 导出组件未加载，请检查网络后重试', 'error');
+          return;
+        }
+        const scopeEl = document.querySelector('input[name="exportScope"]:checked');
+        const scope = scopeEl ? scopeEl.value : 'selected';
+        let ids = [];
+        let label = '选中';
+        if (scope === 'selected') {
+          ids = Array.from(selectedSubscriptionIds);
+          if (!ids.length) { showToast('请先选择要导出的订阅', 'warning'); return; }
+        } else if (scope === 'filtered') {
+          ids = lastFilteredSubscriptions.map((item) => String(item.id));
+          label = '筛选';
+          if (!ids.length) { showToast('当前筛选没有可导出的订阅', 'warning'); return; }
+        } else {
+          ids = subscriptionsCache.map((item) => String(item.id));
+          label = '全部';
+          if (!ids.length) { showToast('没有可导出的订阅', 'warning'); return; }
+        }
+
+        const btn = document.getElementById('executeBulkExportBtn');
+        const old = btn ? btn.innerHTML : '';
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>导出中...'; }
+        try {
+          const response = await apiFetch('/api/subscriptions/export-data', {
+            method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ ids })
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.success || !Array.isArray(payload.items)) throw new Error(payload.message || '读取导出数据失败');
+          const rows = payload.items.map(toExportRow);
+          const ws = XLSX.utils.json_to_sheet(rows, { header: EXPORT_HEADERS });
+          ws['!cols'] = [18,26,16,20,10,28,18,22,12,10,14,14,12,12,14,12,14,24,12,12,36].map((wch) => ({ wch }));
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, '订阅记录');
+          const now = new Date();
+          const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+          XLSX.writeFile(wb, `SubsTracker_订阅记录_${label}_${stamp}.xlsx`, { compression: true });
+          showToast(`已导出 ${rows.length} 条订阅记录`, 'success');
+          modalClose('bulkExportModal');
+        } catch (error) {
+          console.error('[批量导出] 失败:', error);
+          showToast('批量导出失败：' + (error.message || '未知错误'), 'error');
+        } finally {
+          if (btn) { btn.disabled = false; btn.innerHTML = old; }
+        }
+      }
+
+      function openBulkUpdateModal() {
+        if (!selectedSubscriptionIds.size) { showToast('请先选择要批量修改的订阅', 'warning'); return; }
+        document.querySelectorAll('.bulk-field-enable').forEach((box) => { box.checked = false; });
+        const hint = document.getElementById('bulkUpdateSelectionHint');
+        if (hint) hint.textContent = `已选择 ${selectedSubscriptionIds.size} 条。只有勾选的字段才会修改，未勾选字段保持原值。`;
+        const result = document.getElementById('bulkUpdateResult');
+        if (result) { result.classList.add('hidden'); result.innerHTML = ''; }
+        modalOpen('bulkUpdateModal');
+      }
+
+      function getBulkFieldValue(field) {
+        const ids = {
+          customType:'bulkCustomType', category:'bulkCategory', memberLevel:'bulkMemberLevel', users:'bulkUsers',
+          points:'bulkPoints', amount:'bulkAmount', currency:'bulkCurrency', subscriptionMode:'bulkSubscriptionMode',
+          isActive:'bulkIsActive', autoRenew:'bulkAutoRenew', notes:'bulkNotes'
+        };
+        const el = document.getElementById(ids[field]);
+        if (!el) return '';
+        if (field === 'points' || field === 'amount') return el.value === '' ? null : Number(el.value);
+        if (field === 'isActive' || field === 'autoRenew') return el.value === 'true';
+        return el.value;
+      }
+
+      async function executeBulkUpdate() {
+        const changes = {};
+        document.querySelectorAll('.bulk-field-enable:checked').forEach((box) => {
+          changes[box.dataset.field] = getBulkFieldValue(box.dataset.field);
+        });
+        const fields = Object.keys(changes);
+        if (!fields.length) { showToast('请至少勾选一个要修改的字段', 'warning'); return; }
+        const ids = Array.from(selectedSubscriptionIds);
+        if (!confirm(`即将批量修改 ${ids.length} 条订阅，共修改 ${fields.length} 个字段。\n\n未勾选的字段不会改变。是否继续？`)) return;
+        const btn = document.getElementById('executeBulkUpdateBtn');
+        const resultBox = document.getElementById('bulkUpdateResult');
+        const old = btn ? btn.innerHTML : '';
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>修改中...'; }
+        try {
+          const response = await apiFetch('/api/subscriptions/bulk-update', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ ids, changes, appendNotes: !!document.getElementById('bulkAppendNotes')?.checked })
+          });
+          const payload = await response.json();
+          if (resultBox) {
+            resultBox.className = 'rounded-lg border p-3 text-sm ' + (payload.failed ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900');
+            resultBox.innerHTML = `批量修改完成：成功 <strong>${Number(payload.updated || 0)}</strong> 条，失败 <strong>${Number(payload.failed || 0)}</strong> 条。`;
+            if (Array.isArray(payload.results) && payload.results.some((r) => !r.success)) {
+              resultBox.innerHTML += '<ul class="list-disc pl-5 mt-2 max-h-32 overflow-y-auto">' + payload.results.filter((r) => !r.success).map((r) => `<li>${escapeHtml(r.id)}：${escapeHtml(r.message || '修改失败')}</li>`).join('') + '</ul>';
+            }
+            resultBox.classList.remove('hidden');
+          }
+          if (Number(payload.updated || 0) > 0) {
+            showToast(`成功批量修改 ${payload.updated} 条订阅`, 'success');
+            selectedSubscriptionIds.clear();
+            await loadSubscriptions(false);
+          } else if (!response.ok) {
+            throw new Error(payload.message || '没有记录修改成功');
+          }
+        } catch (error) {
+          console.error('[批量修改] 失败:', error);
+          showToast('批量修改失败：' + (error.message || '未知错误'), 'error');
+        } finally {
+          if (btn) { btn.disabled = false; btn.innerHTML = old; }
+        }
+      }
+
+      async function loadSubscriptionExcelFile(file) {
+        if (!file) return;
+        if (typeof XLSX === 'undefined') { showToast('Excel 解析组件未加载，请检查网络后重试', 'error'); return; }
+        try {
+          let workbook;
+          const lower = file.name.toLowerCase();
+          if (lower.endsWith('.csv') || lower.endsWith('.tsv')) workbook = XLSX.read(await file.text(), { type:'string', cellDates:false });
+          else workbook = XLSX.read(await file.arrayBuffer(), { type:'array', cellDates:false });
+          if (!workbook.SheetNames || !workbook.SheetNames.length) throw new Error('Excel 文件没有可读取的工作表');
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const tsv = XLSX.utils.sheet_to_csv(sheet, { FS:'\t', RS:'\n', blankrows:false });
+          const textarea = document.getElementById('bulkImportPaste');
+          if (textarea) textarea.value = tsv;
+          document.getElementById('parseBulkImportBtn')?.click();
+          showToast(`已读取 ${file.name}，请确认预览后导入`, 'success');
+        } catch (error) {
+          console.error('[订阅Excel导入] 文件读取失败:', error);
+          showToast('Excel 文件读取失败：' + (error.message || '未知错误'), 'error');
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('openBulkExportBtn')?.addEventListener('click', openExportModal);
+        document.getElementById('closeBulkExportModal')?.addEventListener('click', () => modalClose('bulkExportModal'));
+        document.getElementById('cancelBulkExportBtn')?.addEventListener('click', () => modalClose('bulkExportModal'));
+        document.getElementById('executeBulkExportBtn')?.addEventListener('click', executeExport);
+        document.getElementById('openBulkUpdateBtn')?.addEventListener('click', openBulkUpdateModal);
+        document.getElementById('closeBulkUpdateModal')?.addEventListener('click', () => modalClose('bulkUpdateModal'));
+        document.getElementById('cancelBulkUpdateBtn')?.addEventListener('click', () => modalClose('bulkUpdateModal'));
+        document.getElementById('executeBulkUpdateBtn')?.addEventListener('click', executeBulkUpdate);
+        document.getElementById('bulkImportFile')?.addEventListener('change', (event) => loadSubscriptionExcelFile(event.target.files && event.target.files[0]));
+        document.getElementById('clearBulkImportBtn')?.addEventListener('click', () => { const file = document.getElementById('bulkImportFile'); if (file) file.value=''; });
+        ['bulkExportModal','bulkUpdateModal'].forEach((id) => {
+          document.getElementById(id)?.addEventListener('click', (event) => { if (event.target && event.target.id === id) modalClose(id); });
+        });
+        setSubscriptionViewMode(subscriptionViewMode);
+        updateSelectionUI();
       });
     })();
   </script>

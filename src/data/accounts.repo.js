@@ -4,11 +4,11 @@
  *
  * 数据模型：
  * - accounts：账号序号、账号、实名人、账号类型等账号资料。
- * - account_credentials：按工具独立保存 AES-GCM 密文。
+ * - account_credentials：按工具独立保存 AES-GCM 密文，并以唯一账号(account)关联。
  *   当前工具：Tapnow / 即梦 / 微信 / QQ；另保留 legacy 槽位兼容旧版单一密码。
  *
- * 订阅记录仍保留 account/accountSerial 快照以兼容旧版本和 KV 主数据，
- * 但账号映射与凭据以本 Database 为统一来源；修改账号库时会同步关联订阅。
+ * 账号默认仍是一对一映射；仅“配音供应商”允许多个不同账号共用同一个账号序号。
+ * 账号(account)始终保持唯一，避免重复建立同一登录账号。
  */
 
 import * as subRepo from './subscriptions.repo.js';
@@ -17,6 +17,7 @@ import { ensureD1Schema } from './d1-schema.js';
 
 export const ACCOUNT_CREDENTIAL_TYPES = ['tapnow', 'jimeng', 'wechat', 'qq'];
 const ALL_CREDENTIAL_TYPES = [...ACCOUNT_CREDENTIAL_TYPES, 'legacy'];
+export const DUPLICATE_SERIAL_EXCEPTIONS = ['配音供应商'];
 
 let accountsSeedReady = false;
 
@@ -28,6 +29,10 @@ export function hasAccountsDb(env) {
 function normalizeSerial(value) { return String(value || '').trim(); }
 function normalizeAccount(value) { return String(value || '').trim(); }
 function normalizeText(value) { return String(value || '').trim(); }
+
+export function isDuplicateSerialAllowed(serial) {
+  return DUPLICATE_SERIAL_EXCEPTIONS.includes(normalizeSerial(serial));
+}
 
 function emptyCredentialMap() {
   return { tapnow: '', jimeng: '', wechat: '', qq: '', legacy: '' };
@@ -61,16 +66,16 @@ function mapBaseRow(row) {
   };
 }
 
-/** @param {any} env @param {string} serial */
-async function loadCredentialMap(env, serial) {
+/** @param {any} env @param {string} account */
+async function loadCredentialMap(env, account) {
   const map = emptyCredentialMap();
-  const value = normalizeSerial(serial);
+  const value = normalizeAccount(account);
   if (!value) return map;
   try {
     const result = await env.SUBSCRIPTIONS_DB.prepare(`
       SELECT credential_type, password_encrypted
       FROM account_credentials
-      WHERE account_serial = ?
+      WHERE account = ?
     `).bind(value).all();
     for (const row of result.results || []) {
       const type = String(row.credential_type || '');
@@ -86,8 +91,7 @@ async function loadCredentialMap(env, serial) {
 async function hydrateRow(env, base) {
   const mapped = mapBaseRow(base);
   if (!mapped) return null;
-  const credentialsEncrypted = await loadCredentialMap(env, mapped.accountSerial);
-  // 若漏跑 0004 migration，仍从旧字段兜底保留 legacy 密文。
+  const credentialsEncrypted = await loadCredentialMap(env, mapped.account);
   if (!credentialsEncrypted.legacy && mapped.legacyPasswordEncrypted) {
     credentialsEncrypted.legacy = mapped.legacyPasswordEncrypted;
   }
@@ -98,7 +102,6 @@ async function hydrateRow(env, base) {
     credentialStatus,
     hasPassword: anyCredential(credentialStatus),
     hasLegacyPassword: credentialStatus.legacy,
-    // 仅兼容旧调用；新代码应使用 legacyPasswordEncrypted / credentialsEncrypted。
     passwordEncrypted: credentialsEncrypted.legacy || mapped.legacyPasswordEncrypted || ''
   };
 }
@@ -153,7 +156,10 @@ export async function getBySerial(env, serial) {
     const row = await env.SUBSCRIPTIONS_DB.prepare(`
       SELECT account_serial, account, real_name, account_type, password_encrypted,
              source_subscription_id, created_at, updated_at
-      FROM accounts WHERE account_serial = ?
+      FROM accounts
+      WHERE account_serial = ?
+      ORDER BY updated_at DESC, account COLLATE NOCASE ASC
+      LIMIT 1
     `).bind(value).first();
     return await hydrateRow(env, row);
   } catch (error) {
@@ -169,8 +175,12 @@ export async function getByAccount(env, account) {
   const value = normalizeAccount(account);
   if (!value) return null;
   try {
-    const row = await env.SUBSCRIPTIONS_DB.prepare(`SELECT account_serial FROM accounts WHERE account = ?`).bind(value).first();
-    return row ? await getBySerial(env, String(row.account_serial || '')) : null;
+    const row = await env.SUBSCRIPTIONS_DB.prepare(`
+      SELECT account_serial, account, real_name, account_type, password_encrypted,
+             source_subscription_id, created_at, updated_at
+      FROM accounts WHERE account = ?
+    `).bind(value).first();
+    return await hydrateRow(env, row);
   } catch (error) {
     console.error('[accounts] 按账号查询失败:', error);
     return null;
@@ -184,13 +194,13 @@ export async function listOptions(env) {
     await ensureD1Schema(env);
     const result = await env.SUBSCRIPTIONS_DB.prepare(`
       SELECT a.account_serial, a.account, a.real_name, a.account_type, a.updated_at,
-        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account_serial=a.account_serial AND c.credential_type='tapnow' AND c.password_encrypted<>'') AS has_tapnow,
-        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account_serial=a.account_serial AND c.credential_type='jimeng' AND c.password_encrypted<>'') AS has_jimeng,
-        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account_serial=a.account_serial AND c.credential_type='wechat' AND c.password_encrypted<>'') AS has_wechat,
-        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account_serial=a.account_serial AND c.credential_type='qq' AND c.password_encrypted<>'') AS has_qq,
-        (a.password_encrypted<>'' OR EXISTS(SELECT 1 FROM account_credentials c WHERE c.account_serial=a.account_serial AND c.credential_type='legacy' AND c.password_encrypted<>'')) AS has_legacy
+        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='tapnow' AND c.password_encrypted<>'') AS has_tapnow,
+        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='jimeng' AND c.password_encrypted<>'') AS has_jimeng,
+        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='wechat' AND c.password_encrypted<>'') AS has_wechat,
+        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='qq' AND c.password_encrypted<>'') AS has_qq,
+        (a.password_encrypted<>'' OR EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='legacy' AND c.password_encrypted<>'')) AS has_legacy
       FROM accounts a
-      ORDER BY a.account_serial COLLATE NOCASE ASC
+      ORDER BY a.account_serial COLLATE NOCASE ASC, a.account COLLATE NOCASE ASC
       LIMIT 5000
     `).all();
     return (result.results || []).map((row) => {
@@ -235,14 +245,14 @@ export async function listPaged(env, options = {}) {
   const sql = `
     SELECT a.account_serial, a.account, a.real_name, a.account_type, a.source_subscription_id,
            a.created_at, a.updated_at,
-      EXISTS(SELECT 1 FROM account_credentials c WHERE c.account_serial=a.account_serial AND c.credential_type='tapnow' AND c.password_encrypted<>'') AS has_tapnow,
-      EXISTS(SELECT 1 FROM account_credentials c WHERE c.account_serial=a.account_serial AND c.credential_type='jimeng' AND c.password_encrypted<>'') AS has_jimeng,
-      EXISTS(SELECT 1 FROM account_credentials c WHERE c.account_serial=a.account_serial AND c.credential_type='wechat' AND c.password_encrypted<>'') AS has_wechat,
-      EXISTS(SELECT 1 FROM account_credentials c WHERE c.account_serial=a.account_serial AND c.credential_type='qq' AND c.password_encrypted<>'') AS has_qq,
-      (a.password_encrypted<>'' OR EXISTS(SELECT 1 FROM account_credentials c WHERE c.account_serial=a.account_serial AND c.credential_type='legacy' AND c.password_encrypted<>'')) AS has_legacy
+      EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='tapnow' AND c.password_encrypted<>'') AS has_tapnow,
+      EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='jimeng' AND c.password_encrypted<>'') AS has_jimeng,
+      EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='wechat' AND c.password_encrypted<>'') AS has_wechat,
+      EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='qq' AND c.password_encrypted<>'') AS has_qq,
+      (a.password_encrypted<>'' OR EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='legacy' AND c.password_encrypted<>'')) AS has_legacy
     FROM accounts a
     ${where}
-    ORDER BY a.updated_at DESC, a.account_serial COLLATE NOCASE ASC
+    ORDER BY a.updated_at DESC, a.account_serial COLLATE NOCASE ASC, a.account COLLATE NOCASE ASC
     LIMIT ? OFFSET ?
   `;
   const stmt = env.SUBSCRIPTIONS_DB.prepare(sql);
@@ -276,20 +286,23 @@ export async function listPaged(env, options = {}) {
   };
 }
 
-/** 检查一对一映射冲突。 */
-export async function validatePair(env, serial, account, excludeSerial = '') {
+/** 检查账号映射冲突：账号始终唯一；“配音供应商”允许账号序号重复。 */
+export async function validatePair(env, serial, account, excludeAccount = '') {
   if (!hasAccountsDb(env)) return { ok: true, reason: 'd1_not_bound' };
   const normalizedSerial = normalizeSerial(serial);
   const normalizedAccount = normalizeAccount(account);
+  const excluded = normalizeAccount(excludeAccount);
   if (!normalizedSerial && !normalizedAccount) return { ok: true, reason: 'empty' };
   if (!normalizedSerial || !normalizedAccount) return { ok: false, message: '账号序号和账号必须同时填写' };
   try {
-    const serialRow = await getBySerial(env, normalizedSerial);
-    if (serialRow && serialRow.account !== normalizedAccount && normalizedSerial !== excludeSerial) {
-      return { ok: false, message: `账号序号 ${normalizedSerial} 已绑定账号 ${serialRow.account}` };
+    if (!isDuplicateSerialAllowed(normalizedSerial)) {
+      const serialRow = await getBySerial(env, normalizedSerial);
+      if (serialRow && serialRow.account !== normalizedAccount && serialRow.account !== excluded) {
+        return { ok: false, message: `账号序号 ${normalizedSerial} 已绑定账号 ${serialRow.account}` };
+      }
     }
     const accountRow = await getByAccount(env, normalizedAccount);
-    if (accountRow && accountRow.accountSerial !== normalizedSerial && accountRow.accountSerial !== excludeSerial) {
+    if (accountRow && accountRow.account !== excluded && accountRow.accountSerial !== normalizedSerial) {
       return { ok: false, message: `账号 ${normalizedAccount} 已绑定账号序号 ${accountRow.accountSerial}` };
     }
     return { ok: true };
@@ -309,26 +322,26 @@ function mergeCredentials(existingMap, updates) {
   return next;
 }
 
-function credentialStatements(db, accountSerial, credentialsEncrypted, createdAt, updatedAt) {
+function credentialStatements(db, account, credentialsEncrypted, createdAt, updatedAt) {
   const statements = [];
   for (const type of ALL_CREDENTIAL_TYPES) {
     const encrypted = String(credentialsEncrypted?.[type] || '');
     if (encrypted) {
       statements.push(db.prepare(`
-        INSERT INTO account_credentials (account_serial, credential_type, password_encrypted, created_at, updated_at)
+        INSERT INTO account_credentials (account, credential_type, password_encrypted, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(account_serial, credential_type) DO UPDATE SET
+        ON CONFLICT(account, credential_type) DO UPDATE SET
           password_encrypted=excluded.password_encrypted,
           updated_at=excluded.updated_at
-      `).bind(accountSerial, type, encrypted, createdAt, updatedAt));
+      `).bind(account, type, encrypted, createdAt, updatedAt));
     } else {
-      statements.push(db.prepare('DELETE FROM account_credentials WHERE account_serial=? AND credential_type=?').bind(accountSerial, type));
+      statements.push(db.prepare('DELETE FROM account_credentials WHERE account=? AND credential_type=?').bind(account, type));
     }
   }
   return statements;
 }
 
-/** 新增/同步账号。 */
+/** 新增/同步账号。账号(account)是唯一实体标识。 */
 export async function upsert(env, data, options = {}) {
   if (!hasAccountsDb(env)) return { success: true, skipped: true, reason: 'd1_not_bound' };
   await ensureD1Schema(env);
@@ -336,10 +349,16 @@ export async function upsert(env, data, options = {}) {
   const account = normalizeAccount(data.account);
   if (!accountSerial && !account) return { success: true, skipped: true, reason: 'empty' };
   if (!accountSerial || !account) return { success: false, message: '账号序号和账号必须同时填写' };
-  const check = await validatePair(env, accountSerial, account);
+  const check = await validatePair(env, accountSerial, account, account);
   if (!check.ok) return { success: false, message: check.message };
 
-  const existing = await getBySerial(env, accountSerial);
+  const existingByAccount = await getByAccount(env, account);
+  const existingBySerial = isDuplicateSerialAllowed(accountSerial) ? null : await getBySerial(env, accountSerial);
+  const existing = existingByAccount || existingBySerial;
+  if (existingBySerial && existingBySerial.account !== account) {
+    return { success: false, message: `账号序号 ${accountSerial} 已绑定账号 ${existingBySerial.account}` };
+  }
+
   const now = new Date().toISOString();
   const createdAt = existing?.createdAt || now;
   const realName = data.realName !== undefined ? normalizeText(data.realName) : (existing?.realName || '');
@@ -353,23 +372,26 @@ export async function upsert(env, data, options = {}) {
   const db = env.SUBSCRIPTIONS_DB;
 
   try {
-    const statements = [db.prepare(`
+    await db.prepare(`
       INSERT INTO accounts (
-        account_serial, account, password_encrypted, source_subscription_id, created_at, updated_at, real_name, account_type
+        account, account_serial, password_encrypted, source_subscription_id, created_at, updated_at, real_name, account_type
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(account_serial) DO UPDATE SET
-        account=excluded.account,
+      ON CONFLICT(account) DO UPDATE SET
+        account_serial=excluded.account_serial,
         password_encrypted=excluded.password_encrypted,
         source_subscription_id=excluded.source_subscription_id,
         updated_at=excluded.updated_at,
         real_name=excluded.real_name,
         account_type=excluded.account_type
-    `).bind(accountSerial, account, credentialsEncrypted.legacy || '', sourceSubscriptionId || null, createdAt, now, realName, accountType)];
-    statements.push(...credentialStatements(db, accountSerial, credentialsEncrypted, createdAt, now));
-    statements.push(buildHistoryStatement(db, options.action || (existing ? 'sync' : 'create'), {
-      accountSerial, account, realName, accountType, credentialsEncrypted, credentialStatus: status
-    }, options.metadata || {}));
-    await db.batch(statements);
+    `).bind(account, accountSerial, credentialsEncrypted.legacy || '', sourceSubscriptionId || null, createdAt, now, realName, accountType).run();
+
+    await db.batch([
+      ...credentialStatements(db, account, credentialsEncrypted, createdAt, now),
+      buildHistoryStatement(db, options.action || (existing ? 'sync' : 'create'), {
+        accountSerial, account, realName, accountType, credentialsEncrypted, credentialStatus: status
+      }, options.metadata || {})
+    ]);
+
     return {
       success: true,
       account: { accountSerial, account, realName, accountType, credentialStatus: status, hasPassword: anyCredential(status), createdAt, updatedAt: now }
@@ -397,19 +419,33 @@ export async function syncFromSubscription(env, subscription, options = {}) {
   });
 }
 
-/** 修改账号资料，并把账号/序号同步到关联订阅。 */
-export async function updateAndPropagate(env, originalSerial, data) {
+/** 修改账号资料，并把账号/序号同步到该账号关联订阅。 */
+export async function updateAndPropagate(env, originalAccount, data) {
   if (!hasAccountsDb(env)) return { success: false, message: 'D1 数据库未绑定' };
   await ensureD1Schema(env);
-  const oldSerial = normalizeSerial(originalSerial);
-  const current = await getBySerial(env, oldSerial);
+  const originalKey = normalizeAccount(originalAccount);
+  let current = await getByAccount(env, originalKey);
+  if (!current) current = await getBySerial(env, originalKey); // 兼容旧调用
   if (!current) return { success: false, message: '账号记录不存在' };
+
+  const oldSerial = current.accountSerial;
+  const oldAccount = current.account;
   const newSerial = normalizeSerial(data.accountSerial);
   const newAccount = normalizeAccount(data.account);
   if (!newSerial || !newAccount) return { success: false, message: '账号序号和账号不能为空' };
-  const check = await validatePair(env, newSerial, newAccount, oldSerial);
+  const check = await validatePair(env, newSerial, newAccount, oldAccount);
   if (!check.ok) return { success: false, message: check.message };
-  if (newSerial !== oldSerial && await getBySerial(env, newSerial)) return { success: false, message: `账号序号 ${newSerial} 已存在` };
+
+  const otherAccountRow = await getByAccount(env, newAccount);
+  if (otherAccountRow && otherAccountRow.account !== oldAccount) {
+    return { success: false, message: `账号 ${newAccount} 已存在` };
+  }
+  if (!isDuplicateSerialAllowed(newSerial)) {
+    const serialRow = await getBySerial(env, newSerial);
+    if (serialRow && serialRow.account !== oldAccount) {
+      return { success: false, message: `账号序号 ${newSerial} 已存在` };
+    }
+  }
 
   const realName = data.realName !== undefined ? normalizeText(data.realName) : current.realName;
   const accountType = data.accountType !== undefined ? normalizeText(data.accountType) : current.accountType;
@@ -422,27 +458,38 @@ export async function updateAndPropagate(env, originalSerial, data) {
   const db = env.SUBSCRIPTIONS_DB;
 
   try {
-    const statements = [
-      db.prepare(`UPDATE accounts
-        SET account_serial=?, account=?, password_encrypted=?, real_name=?, account_type=?, updated_at=?
-        WHERE account_serial=?`)
-        .bind(newSerial, newAccount, credentialsEncrypted.legacy || '', realName, accountType, now, oldSerial)
-    ];
-    if (newSerial !== oldSerial) {
-      statements.push(db.prepare('UPDATE account_credentials SET account_serial=? WHERE account_serial=?').bind(newSerial, oldSerial));
+    await db.prepare(`UPDATE accounts
+      SET account_serial=?, account=?, password_encrypted=?, real_name=?, account_type=?, updated_at=?
+      WHERE account=?`)
+      .bind(newSerial, newAccount, credentialsEncrypted.legacy || '', realName, accountType, now, oldAccount).run();
+
+    // 新结构使用 account 作为账号记录/凭据的唯一标识。D1 外键开启时会 ON UPDATE CASCADE；
+    // 这里再做一次兼容性更新，覆盖旧环境或外键未开启的情况。
+    if (newAccount !== oldAccount) {
+      try {
+        await db.prepare('UPDATE account_credentials SET account=? WHERE account=?')
+          .bind(newAccount, oldAccount).run();
+      } catch (credentialKeyError) {
+        console.warn('[accounts] 凭据账号键兼容更新跳过:', credentialKeyError?.message || credentialKeyError);
+      }
     }
-    statements.push(...credentialStatements(db, newSerial, credentialsEncrypted, current.createdAt || now, now));
-    statements.push(buildHistoryStatement(db, 'update', {
-      accountSerial: newSerial, account: newAccount, realName, accountType, credentialsEncrypted, credentialStatus: status
-    }, { previousSerial: oldSerial, previousAccount: current.account }));
-    await db.batch(statements);
+
+    await db.batch([
+      ...credentialStatements(db, newAccount, credentialsEncrypted, current.createdAt || now, now),
+      buildHistoryStatement(db, 'update', {
+        accountSerial: newSerial, account: newAccount, realName, accountType, credentialsEncrypted, credentialStatus: status
+      }, { previousSerial: oldSerial, previousAccount: oldAccount })
+    ]);
 
     const subscriptions = await subRepo.listAll(env);
     const affected = subscriptions.filter((sub) => {
       const serial = normalizeSerial(sub.accountSerial);
       const account = normalizeAccount(sub.account);
-      return serial === oldSerial || (serial === '' && account === current.account);
+      if (account === oldAccount) return true;
+      if (!isDuplicateSerialAllowed(oldSerial) && serial === oldSerial) return true;
+      return serial === '' && account === oldAccount;
     });
+
     let syncedSubscriptions = 0;
     let syncFailures = 0;
     for (const sub of affected) {
@@ -451,7 +498,7 @@ export async function updateAndPropagate(env, originalSerial, data) {
       try {
         await subRepo.save(env, updated);
         await recordSubscriptionChange(env, 'account_database_sync', updated, {
-          source: 'accounts_database', previousSerial: oldSerial, accountSerial: newSerial
+          source: 'accounts_database', previousSerial: oldSerial, accountSerial: newSerial, previousAccount: oldAccount, account: newAccount
         });
         syncedSubscriptions += 1;
       } catch (syncError) {
@@ -472,33 +519,41 @@ export async function updateAndPropagate(env, originalSerial, data) {
   }
 }
 
-export async function countLinkedSubscriptions(env, serial) {
-  const value = normalizeSerial(serial);
-  if (!value) return 0;
+export async function countLinkedSubscriptions(env, accountOrSerial) {
+  const key = normalizeText(accountOrSerial);
+  if (!key) return 0;
+  const existing = await getByAccount(env, key) || await getBySerial(env, key);
+  if (!existing) return 0;
+
   let d1Count = 0;
   if (hasAccountsDb(env)) {
     try {
-      const row = await env.SUBSCRIPTIONS_DB.prepare('SELECT COUNT(*) AS count FROM subscriptions_current WHERE account_serial=?').bind(value).first();
+      const row = await env.SUBSCRIPTIONS_DB.prepare(
+        'SELECT COUNT(*) AS count FROM subscriptions_current WHERE account=? AND account_serial=?'
+      ).bind(existing.account, existing.accountSerial).first();
       d1Count = Number(row?.count || 0);
     } catch { d1Count = 0; }
   }
   const subs = await subRepo.listAll(env);
-  const kvCount = subs.filter((sub) => normalizeSerial(sub.accountSerial) === value).length;
+  const kvCount = subs.filter((sub) =>
+    normalizeAccount(sub.account) === existing.account &&
+    normalizeSerial(sub.accountSerial) === existing.accountSerial
+  ).length;
   return Math.max(d1Count, kvCount);
 }
 
-export async function deleteAccount(env, serial) {
+export async function deleteAccount(env, accountOrSerial) {
   if (!hasAccountsDb(env)) return { success: false, message: 'D1 数据库未绑定' };
-  const value = normalizeSerial(serial);
-  const existing = await getBySerial(env, value);
+  const key = normalizeText(accountOrSerial);
+  const existing = await getByAccount(env, key) || await getBySerial(env, key);
   if (!existing) return { success: false, message: '账号记录不存在' };
-  const linked = await countLinkedSubscriptions(env, value);
+  const linked = await countLinkedSubscriptions(env, existing.account);
   if (linked > 0) return { success: false, message: `该账号仍被 ${linked} 条订阅引用，请先调整关联订阅`, linkedSubscriptions: linked };
   try {
     const db = env.SUBSCRIPTIONS_DB;
     await db.batch([
-      db.prepare('DELETE FROM account_credentials WHERE account_serial=?').bind(value),
-      db.prepare('DELETE FROM accounts WHERE account_serial=?').bind(value),
+      db.prepare('DELETE FROM account_credentials WHERE account=?').bind(existing.account),
+      db.prepare('DELETE FROM accounts WHERE account=?').bind(existing.account),
       buildHistoryStatement(db, 'delete', existing)
     ]);
     return { success: true };
@@ -508,7 +563,7 @@ export async function deleteAccount(env, serial) {
   }
 }
 
-/** 首次部署从旧订阅抽取账号；旧单一密码保存在 legacy 槽位。 */
+/** 首次部署从旧订阅抽取账号；“配音供应商”可重复序号，账号仍唯一。 */
 export async function ensureAccountsSeed(env, knownSubscriptions) {
   if (!hasAccountsDb(env)) return { seeded: false, reason: 'd1_not_bound' };
   try { await ensureD1Schema(env); } catch { return { seeded: false, reason: 'schema_init_failed' }; }
@@ -527,9 +582,13 @@ export async function ensureAccountsSeed(env, knownSubscriptions) {
     const seenSerials = new Set(); const seenAccounts = new Set();
     for (const sub of rows) {
       const serial = normalizeSerial(sub.accountSerial); const account = normalizeAccount(sub.account);
-      if (seenSerials.has(serial) || seenAccounts.has(account)) { skipped += 1; continue; }
+      if ((!isDuplicateSerialAllowed(serial) && seenSerials.has(serial)) || seenAccounts.has(account)) { skipped += 1; continue; }
       const result = await syncFromSubscription(env, sub, { action: 'initial_import', metadata: { seed: 'accounts_seed_v1' }, syncPassword: true });
-      if (result.success && !result.skipped) { imported += 1; seenSerials.add(serial); seenAccounts.add(account); } else skipped += 1;
+      if (result.success && !result.skipped) {
+        imported += 1;
+        if (!isDuplicateSerialAllowed(serial)) seenSerials.add(serial);
+        seenAccounts.add(account);
+      } else skipped += 1;
     }
     await db.prepare(`INSERT INTO schema_meta (key,value,updated_at) VALUES ('accounts_seed_v1',?,?)
       ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at`)
@@ -550,22 +609,22 @@ export async function listAllRaw(env) {
     const accountsResult = await env.SUBSCRIPTIONS_DB.prepare(`
       SELECT account_serial, account, real_name, account_type, password_encrypted,
              source_subscription_id, created_at, updated_at
-      FROM accounts ORDER BY account_serial COLLATE NOCASE ASC
+      FROM accounts ORDER BY account_serial COLLATE NOCASE ASC, account COLLATE NOCASE ASC
     `).all();
     const credsResult = await env.SUBSCRIPTIONS_DB.prepare(`
-      SELECT account_serial, credential_type, password_encrypted FROM account_credentials
+      SELECT account, credential_type, password_encrypted FROM account_credentials
     `).all();
     const credMap = new Map();
     for (const row of credsResult.results || []) {
-      const serial = String(row.account_serial || '');
-      if (!credMap.has(serial)) credMap.set(serial, emptyCredentialMap());
+      const account = String(row.account || '');
+      if (!credMap.has(account)) credMap.set(account, emptyCredentialMap());
       const type = String(row.credential_type || '');
-      if (ALL_CREDENTIAL_TYPES.includes(type)) credMap.get(serial)[type] = String(row.password_encrypted || '');
+      if (ALL_CREDENTIAL_TYPES.includes(type)) credMap.get(account)[type] = String(row.password_encrypted || '');
     }
     return (accountsResult.results || []).map((row) => {
       const base = mapBaseRow(row);
       if (!base) return null;
-      const credentialsEncrypted = { ...emptyCredentialMap(), ...(credMap.get(base.accountSerial) || {}) };
+      const credentialsEncrypted = { ...emptyCredentialMap(), ...(credMap.get(base.account) || {}) };
       if (!credentialsEncrypted.legacy && base.legacyPasswordEncrypted) credentialsEncrypted.legacy = base.legacyPasswordEncrypted;
       const credentialStatus = credentialStatusFromMap(credentialsEncrypted);
       return { ...base, credentialsEncrypted, credentialStatus, hasPassword: anyCredential(credentialStatus), hasLegacyPassword: credentialStatus.legacy };

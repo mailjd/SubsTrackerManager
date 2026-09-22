@@ -777,6 +777,67 @@ async function updatePaymentRecord(subscriptionId, paymentId, paymentData, env) 
 }
 
 /**
+ * 仅修改指定业务字段，不触发周期/到期日期自动推算。
+ * 用于订阅记录批量修改，保证未勾选字段保持原值。
+ *
+ * @param {string} id
+ * @param {Record<string, any>} changes
+ * @param {any} env
+ */
+async function patchSubscriptionFields(id, changes, env) {
+  try {
+    const existing = await subRepo.getById(env, id);
+    if (!existing) return { success: false, message: '订阅不存在' };
+
+    const allowed = new Set([
+      'customType', 'category', 'memberLevel', 'users', 'points', 'amount', 'currency',
+      'subscriptionMode', 'isActive', 'autoRenew', 'notes'
+    ]);
+    const patch = {};
+    Object.entries(changes || {}).forEach(([key, value]) => {
+      if (!allowed.has(key)) return;
+      if (['customType', 'category', 'memberLevel'].includes(key)) patch[key] = String(value == null ? '' : value).trim();
+      else if (key === 'users') patch[key] = normalizeSubscriptionUsers(value);
+      else if (key === 'points') patch[key] = value === '' || value == null || !Number.isFinite(Number(value)) ? null : Math.max(0, Number(value));
+      else if (key === 'amount') patch[key] = value === '' || value == null || !Number.isFinite(Number(value)) ? null : Math.max(0, Number(value));
+      else if (key === 'currency') patch[key] = String(value || existing.currency || 'CNY').trim().toUpperCase();
+      else if (key === 'subscriptionMode') patch[key] = value === 'reset' ? 'reset' : 'cycle';
+      else if (key === 'isActive') patch[key] = !!value;
+      else if (key === 'autoRenew') patch[key] = existing.periodUnit === 'single' ? false : !!value;
+      else if (key === 'notes') patch[key] = String(value == null ? '' : value);
+    });
+
+    if (Object.keys(patch).length === 0) return { success: false, message: '没有可修改字段' };
+
+    const updated = {
+      ...existing,
+      ...patch,
+      updatedAt: new Date().toISOString()
+    };
+
+    // 金额或币种批量调整时同步初始支付记录，但不改动续订历史。
+    if (Object.prototype.hasOwnProperty.call(patch, 'amount') || Object.prototype.hasOwnProperty.call(patch, 'currency')) {
+      const history = Array.isArray(existing.paymentHistory) ? existing.paymentHistory.map((item) => ({ ...item })) : [];
+      const initialIndex = history.findIndex((item) => item.type === 'initial');
+      if (initialIndex >= 0) {
+        history[initialIndex].amount = updated.amount;
+        history[initialIndex].currency = updated.currency || 'CNY';
+        updated.paymentHistory = history;
+      }
+    }
+
+    await subRepo.save(env, updated);
+    await recordSubscriptionChange(env, 'bulk_update', updated, { fields: Object.keys(patch) });
+    if (Object.prototype.hasOwnProperty.call(patch, 'category') && updated.category) await addCategory(env, updated.category);
+    await syncSubscriptionMenuOptions(env, updated);
+    return { success: true, subscription: updated };
+  } catch (error) {
+    console.error('[subscriptions] 批量字段修改失败:', error);
+    return { success: false, message: error && error.message ? error.message : '批量修改失败' };
+  }
+}
+
+/**
  * 启用/停用订阅。
  *
  * @param {string} id
@@ -813,5 +874,6 @@ export {
   deletePaymentRecord,
   updatePaymentRecord,
   toggleSubscriptionStatus,
+  patchSubscriptionFields,
   syncLegacyReminderFields
 };

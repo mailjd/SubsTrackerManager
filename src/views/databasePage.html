@@ -115,7 +115,7 @@
       </div>
       <div class="bg-white rounded-lg border border-gray-200 px-5 py-4 md:col-span-2">
         <div class="text-sm text-gray-500">数据规则</div>
-        <div class="text-sm text-gray-700 mt-1">账号序号与账号均为一对一唯一映射；实名人、账号类型作为账号资料保存。Tapnow / 即梦 / 微信 / QQ 密码分别使用 AES-GCM 加密保存，Admin 只能看到设置状态，SuperAdmin 解锁后才显示明文。</div>
+        <div class="text-sm text-gray-700 mt-1">账号默认保持一对一唯一映射；仅账号序号“配音供应商”允许多个不同账号重复使用，账号本身仍保持唯一。实名人、账号类型作为账号资料保存。Tapnow / 即梦 / 微信 / QQ 密码分别使用 AES-GCM 加密保存，Admin 只能看到设置状态，SuperAdmin 解锁后才显示明文。</div>
       </div>
     </div>
 
@@ -170,7 +170,7 @@
       </div>
       <div class="p-6 space-y-5">
         <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 db-help">
-          <div><strong>导入规则：</strong>账号序号和账号均必须唯一；相同“账号序号 + 账号”视为同一账号。实名人/账号类型填写非空值时可更新；四组工具密码分别更新，某个密码留空则保留该工具原密码。</div>
+          <div><strong>导入规则：</strong>账号默认必须唯一；账号序号默认也必须唯一，仅“配音供应商”允许多个不同账号共用该序号。相同账号视为同一记录。实名人/账号类型填写非空值时可更新；四组工具密码分别更新，某个密码留空则保留该工具原密码。</div>
           <div class="mt-1"><i class="fas fa-shield-alt mr-1"></i>Excel 中的密码是明文，导入 D1 后才会使用 AES-GCM 加密保存。</div>
           <div class="mt-1 text-amber-800">兼容旧版 3 列“账号序号 / 账号 / 密码”模板；旧单一密码会进入 legacy 兼容槽，不会自动归类到四个工具。</div>
         </div>
@@ -266,12 +266,12 @@
         <button id="closeModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
       </div>
       <form id="accountForm" class="p-6 space-y-6">
-        <input type="hidden" id="originalSerial">
+        <input type="hidden" id="originalAccount">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label for="accountSerial" class="block text-sm font-medium text-gray-700 mb-1">账号序号 *</label>
             <input id="accountSerial" type="text" required placeholder="例如：001 / A-001" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
-            <p class="text-xs text-gray-500 mt-1">按文本保存，001 不会变成 1。</p>
+            <p class="text-xs text-gray-500 mt-1">按文本保存，001 不会变成 1；账号序号为“配音供应商”时允许多个不同账号重复使用。</p>
           </div>
           <div>
             <label for="account" class="block text-sm font-medium text-gray-700 mb-1">账号 *</label>
@@ -512,9 +512,9 @@
       const status = item && item.credentialStatus ? !!item.credentialStatus[type] : false;
       if (!status) return '<span class="text-gray-400">未设置</span>';
       if (!superAdminState.unlocked) return '<span class="text-gray-500"><i class="fas fa-lock mr-1 text-gray-400"></i>已设置</span>';
-      const encoded = encodeURIComponent(item.accountSerial);
+      const encoded = encodeURIComponent(item.account);
       return '<span class="password-value font-mono text-gray-500" data-credential-value="' + type + ':' + encoded + '"><i class="fas fa-spinner fa-spin mr-1"></i>读取中</span> ' +
-        '<button type="button" class="view-password ml-2 text-amber-700 hover:text-amber-900 text-xs hidden" data-serial="' + encoded + '" data-type="' + type + '" data-visible="0"><i class="fas fa-eye-slash mr-1"></i>隐藏</button>';
+        '<button type="button" class="view-password ml-2 text-amber-700 hover:text-amber-900 text-xs hidden" data-account="' + encoded + '" data-type="' + type + '" data-visible="0"><i class="fas fa-eye-slash mr-1"></i>隐藏</button>';
     }
 
     function renderRows(items) {
@@ -529,7 +529,7 @@
       document.getElementById('accountTypeOptions').innerHTML = accountTypes.map((value) => '<option value="' + escapeHtml(value) + '"></option>').join('');
       bodyEl.innerHTML = items.map((item) => {
         const serial = escapeHtml(item.accountSerial);
-        const encoded = encodeURIComponent(item.accountSerial);
+        const encoded = encodeURIComponent(item.account);
         const legacyBadge = item.hasLegacyPassword
           ? '<div class="mt-1"><span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs"><i class="fas fa-exclamation-triangle mr-1"></i>旧版密码待归类</span></div>'
           : '';
@@ -544,8 +544,8 @@
           '<td data-label="QQ 密码" class="px-4 py-4 text-sm min-w-36" data-password-cell="qq:' + encoded + '">' + passwordStatusCell(item, 'qq', 'QQ') + '</td>' +
           '<td data-label="更新时间" class="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">' + escapeHtml(formatTime(item.updatedAt)) + '</td>' +
           '<td data-label="操作" class="px-4 py-4 text-sm text-right whitespace-nowrap">' +
-            '<button class="edit-account text-indigo-600 hover:text-indigo-800 mr-4" data-serial="' + encoded + '"><i class="fas fa-edit mr-1"></i>编辑</button>' +
-            '<button class="delete-account text-red-600 hover:text-red-800" data-serial="' + encoded + '"><i class="fas fa-trash mr-1"></i>删除</button>' +
+            '<button class="edit-account text-indigo-600 hover:text-indigo-800 mr-4" data-account="' + encoded + '"><i class="fas fa-edit mr-1"></i>编辑</button>' +
+            '<button class="delete-account text-red-600 hover:text-red-800" data-account="' + encoded + '"><i class="fas fa-trash mr-1"></i>删除</button>' +
           '</td></tr>';
       }).join('');
     }
@@ -571,9 +571,9 @@
       if (!superAdminState.unlocked || protectedItems.length === 0) return;
       let sessionExpired = false;
       await Promise.all(protectedItems.map(async (item) => {
-        const encoded = encodeURIComponent(item.accountSerial);
+        const encoded = encodeURIComponent(item.account);
         try {
-          const data = await api('/api/accounts/' + encoded);
+          const data = await api('/api/accounts/item?account=' + encoded);
           if (!data.superAdminUnlocked) { sessionExpired = true; return; }
           const passwords = data.account && data.account.passwords ? data.account.passwords : {};
           const failed = data.account && data.account.passwordDecryptFailed ? data.account.passwordDecryptFailed : {};
@@ -622,7 +622,7 @@
 
     function openCreateModal() {
       document.getElementById('modalTitle').textContent = '新增账号';
-      document.getElementById('originalSerial').value = '';
+      document.getElementById('originalAccount').value = '';
       document.getElementById('accountSerial').value = '';
       document.getElementById('account').value = '';
       document.getElementById('realName').value = '';
@@ -634,12 +634,12 @@
       document.getElementById('accountSerial').focus();
     }
 
-    async function openEditModal(serial) {
+    async function openEditModal(accountKey) {
       try {
-        const data = await api('/api/accounts/' + encodeURIComponent(serial));
+        const data = await api('/api/accounts/item?account=' + encodeURIComponent(accountKey));
         const item = data.account;
         document.getElementById('modalTitle').textContent = '编辑账号';
-        document.getElementById('originalSerial').value = item.accountSerial;
+        document.getElementById('originalAccount').value = item.account;
         document.getElementById('accountSerial').value = item.accountSerial;
         document.getElementById('account').value = item.account;
         document.getElementById('realName').value = item.realName || '';
@@ -676,7 +676,7 @@
 
     async function saveAccount(event) {
       event.preventDefault();
-      const originalSerial = document.getElementById('originalSerial').value.trim();
+      const originalAccount = document.getElementById('originalAccount').value.trim();
       const payload = {
         accountSerial: document.getElementById('accountSerial').value.trim(),
         account: document.getElementById('account').value.trim(),
@@ -690,15 +690,15 @@
         if (value.length > 0 || clear) passwords[def.type] = clear ? '' : value;
       });
       if (Object.keys(passwords).length > 0) payload.passwords = passwords;
-      if (originalSerial && document.getElementById('clearLegacyPassword').checked) payload.clearLegacyPassword = true;
+      if (originalAccount && document.getElementById('clearLegacyPassword').checked) payload.clearLegacyPassword = true;
 
       const errorEl = document.getElementById('modalError');
       const saveBtn = document.getElementById('saveAccountBtn');
       errorEl.classList.add('hidden');
       saveBtn.disabled = true;
       try {
-        const isEdit = !!originalSerial;
-        const data = await api(isEdit ? '/api/accounts/' + encodeURIComponent(originalSerial) : '/api/accounts', {
+        const isEdit = !!originalAccount;
+        const data = await api(isEdit ? '/api/accounts/item?account=' + encodeURIComponent(originalAccount) : '/api/accounts', {
           method: isEdit ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -718,7 +718,7 @@
 
     async function toggleRowPassword(button) {
       if (!superAdminState.unlocked) { showToast('请先进入 SuperAdmin mode', 'error'); return; }
-      const encoded = button.dataset.serial || '';
+      const encoded = button.dataset.account || '';
       const type = button.dataset.type || '';
       const cell = document.querySelector('[data-password-cell="' + CSS.escape(type + ':' + encoded) + '"]');
       if (!cell) return;
@@ -731,7 +731,7 @@
       }
       try {
         button.disabled = true;
-        const data = await api('/api/accounts/' + encoded);
+        const data = await api('/api/accounts/item?account=' + encoded);
         if (!data.superAdminUnlocked) {
           superAdminState.unlocked = false; updateSuperAdminUi(); await loadAccounts();
           throw new Error('SuperAdmin 会话已过期，请重新输入二级密码');
@@ -745,10 +745,10 @@
       finally { button.disabled = false; }
     }
 
-    async function removeAccount(serial) {
-      if (!confirm('确定删除账号序号 “' + serial + '” 吗？\n仍被订阅引用的账号不能删除。')) return;
+    async function removeAccount(accountKey) {
+      if (!confirm('确定删除账号 “' + accountKey + '” 吗？\n仍被订阅引用的账号不能删除。')) return;
       try {
-        await api('/api/accounts/' + encodeURIComponent(serial), { method: 'DELETE' });
+        await api('/api/accounts/item?account=' + encodeURIComponent(accountKey), { method: 'DELETE' });
         showToast('账号已删除', 'success');
         await loadAccounts();
       } catch (error) { showToast(error.message, 'error'); }
@@ -996,7 +996,7 @@
       const accountSeen = new Map();
       for (const item of accountImportRows) {
         const { accountSerial, account } = item.data;
-        if (accountSerial) {
+        if (accountSerial && accountSerial !== '配音供应商') {
           if (serialSeen.has(accountSerial)) item.errors.push(`账号序号与第 ${serialSeen.get(accountSerial)} 行重复`);
           else serialSeen.set(accountSerial, item.sourceRow);
         }
@@ -1179,9 +1179,9 @@
       const view = e.target.closest('.view-password');
       if (view) return toggleRowPassword(view);
       const edit = e.target.closest('.edit-account');
-      if (edit) return openEditModal(decodeURIComponent(edit.dataset.serial || ''));
+      if (edit) return openEditModal(decodeURIComponent(edit.dataset.account || ''));
       const del = e.target.closest('.delete-account');
-      if (del) return removeAccount(decodeURIComponent(del.dataset.serial || ''));
+      if (del) return removeAccount(decodeURIComponent(del.dataset.account || ''));
     });
     document.getElementById('mobile-menu-btn').addEventListener('click', () => {
       const menu = document.getElementById('mobile-menu');

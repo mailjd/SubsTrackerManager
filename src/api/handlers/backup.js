@@ -316,7 +316,7 @@ export async function handleImportBackup(request, env) {
     const existingAccountMap = new Map();
     if (!includeSecrets && mode === 'merge' && Array.isArray(backup.accounts)) {
       const existingAccounts = await listAllAccountsRaw(env);
-      for (const item of existingAccounts) existingAccountMap.set(item.accountSerial, item);
+      for (const item of existingAccounts) existingAccountMap.set(item.account, item);
     }
     if (Array.isArray(backup.accounts)) {
       for (const rawAccount of backup.accounts) {
@@ -339,7 +339,7 @@ export async function handleImportBackup(request, env) {
             : (typeof rawAccount.password === 'string' ? rawAccount.password : '');
           if (legacyPlain) legacyPasswordEncrypted = await encryptCredential(legacyPlain, currentConfig.CREDENTIALS_ENCRYPTION_KEY);
         } else if (mode === 'merge') {
-          const existing = existingAccountMap.get(accountSerial);
+          const existing = existingAccountMap.get(account);
           if (existing?.credentialsEncrypted) Object.assign(credentialsEncrypted, existing.credentialsEncrypted);
           legacyPasswordEncrypted = existing?.legacyPasswordEncrypted || existing?.passwordEncrypted || '';
         }

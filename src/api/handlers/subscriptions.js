@@ -7,7 +7,8 @@ import {
   manualRenewSubscription,
   deletePaymentRecord,
   updatePaymentRecord,
-  toggleSubscriptionStatus
+  toggleSubscriptionStatus,
+  patchSubscriptionFields
 } from '../../data/subscriptions.js';
 import { getConfig } from '../../data/config.js';
 import { sendNotificationToAllChannels } from '../../services/notify/index.js';
@@ -52,6 +53,48 @@ function sanitizeSubscription(subscription) {
   if (!subscription || typeof subscription !== 'object') return subscription;
   const { passwordEncrypted: _passwordEncrypted, password: _password, ...safe } = subscription;
   return safe;
+}
+
+function normalizeImportText(value) {
+  return String(value == null ? '' : value).trim().toLowerCase();
+}
+
+function makeSubscriptionImportFingerprint(subscription) {
+  const name = normalizeImportText(subscription && subscription.name);
+  const account = normalizeImportText(subscription && subscription.account);
+  const serial = normalizeImportText(subscription && subscription.accountSerial);
+  const customType = normalizeImportText(subscription && subscription.customType);
+  const expiry = normalizeImportText(subscription && subscription.expiryDate).slice(0, 10);
+  const amount = subscription && subscription.amount !== undefined && subscription.amount !== null
+    ? String(Number(subscription.amount))
+    : '';
+  const currency = normalizeImportText(subscription && subscription.currency || 'CNY');
+
+  if (name && account) return `account|${name}|${account}`;
+  if (name && serial && serial !== '配音供应商') return `serial|${name}|${serial}`;
+  return `fallback|${name}|${customType}|${expiry}|${amount}|${currency}`;
+}
+
+function changesObject(value) {
+  return value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function formatReminderRulesForExport(rules = []) {
+  if (!Array.isArray(rules) || rules.length === 0) return '';
+  return rules
+    .filter((rule) => rule && rule.isEnabled !== false)
+    .map((rule) => {
+      if (rule.type === 'on_expiry') return '当天';
+      if (rule.type === 'after_expiry') {
+        const interval = Number(rule.repeatInterval || rule.value || 24) || 24;
+        return `到期后每${interval}小时`;
+      }
+      const value = Number(rule.value || 0);
+      const unit = rule.unit === 'hours' || rule.unit === 'hour' ? '小时' : '天';
+      return `${value}${unit}`;
+    })
+    .filter(Boolean)
+    .join(',');
 }
 
 async function buildEditableSubscription(subscription) {
@@ -171,6 +214,9 @@ async function handleSubscriptions(request, env, path) {
     const results = [];
     let imported = 0;
     let failed = 0;
+    let skipped = 0;
+    const existingSubscriptions = await getAllSubscriptions(env);
+    const existingFingerprints = new Set(existingSubscriptions.map(makeSubscriptionImportFingerprint));
 
     for (let index = 0; index < rows.length; index++) {
       const raw = rows[index];
@@ -182,6 +228,19 @@ async function handleSubscriptions(request, env, path) {
       }
 
       const { __sourceRow: _sourceRow, ...subscription } = raw;
+      const fingerprint = makeSubscriptionImportFingerprint(subscription);
+      if (existingFingerprints.has(fingerprint)) {
+        skipped += 1;
+        results.push({
+          row: sourceRow,
+          success: false,
+          skipped: true,
+          name: subscription.name || '',
+          message: '检测到原有订阅记录，按“只新增、不覆盖”规则跳过'
+        });
+        continue;
+      }
+
       const result = await createSubscription(subscription, env, {
         historyAction: 'import',
         historyMetadata: { source: 'excel_paste', sourceRow }
@@ -190,6 +249,7 @@ async function handleSubscriptions(request, env, path) {
       if (result.success && result.subscription) {
         await persistCreatedReminderRules(env, result.subscription.id, subscription.reminderRules);
         imported += 1;
+        existingFingerprints.add(fingerprint);
         results.push({
           row: sourceRow,
           success: true,
@@ -209,13 +269,126 @@ async function handleSubscriptions(request, env, path) {
 
     return new Response(JSON.stringify({
       success: failed === 0,
-      partial: imported > 0 && failed > 0,
+      partial: imported > 0 && (failed > 0 || skipped > 0),
       imported,
       failed,
+      skipped,
       total: rows.length,
       results
     }), {
-      status: imported > 0 ? 200 : 400,
+      status: imported > 0 || (failed === 0 && skipped > 0) ? 200 : 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  if (path === '/subscriptions/export-data' && method === 'POST') {
+    let payload = {};
+    try {
+      payload = await request.json();
+    } catch {
+      payload = {};
+    }
+    const requestedIds = Array.isArray(payload.ids) ? payload.ids.map(String) : [];
+    const all = await getAllSubscriptions(env);
+    const selected = requestedIds.length > 0
+      ? all.filter((item) => requestedIds.includes(String(item.id)))
+      : all;
+    const remindersRepo = await import('../../data/reminders.repo.js');
+    const items = [];
+    for (const subscription of selected) {
+      let rules = [];
+      try {
+        rules = await remindersRepo.listForSubscription(env, subscription.id);
+      } catch {
+        rules = [];
+      }
+      items.push({
+        ...sanitizeSubscription(subscription),
+        reminderRulesText: formatReminderRulesForExport(rules)
+      });
+    }
+    return new Response(JSON.stringify({ success: true, items }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  if (path === '/subscriptions/bulk-update' && method === 'POST') {
+    let payload;
+    try {
+      payload = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ success: false, message: '请求体不是合法 JSON' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const ids = Array.isArray(payload && payload.ids) ? [...new Set(payload.ids.map(String).filter(Boolean))] : [];
+    const changes = payload && changesObject(payload.changes) ? payload.changes : null;
+    if (ids.length === 0 || !changes) {
+      return new Response(JSON.stringify({ success: false, message: '请选择要修改的订阅，并至少勾选一个修改字段' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    if (ids.length > 200) {
+      return new Response(JSON.stringify({ success: false, message: '单次最多批量修改 200 条订阅' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const allowedFields = new Set([
+      'customType', 'category', 'memberLevel', 'users', 'points', 'amount', 'currency',
+      'subscriptionMode', 'isActive', 'autoRenew', 'notes'
+    ]);
+    const patch = {};
+    for (const [key, value] of Object.entries(changes)) {
+      if (allowedFields.has(key)) patch[key] = value;
+    }
+    if (Object.keys(patch).length === 0) {
+      return new Response(JSON.stringify({ success: false, message: '没有允许批量修改的字段' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const appendNotes = payload.appendNotes === true;
+    const results = [];
+    let updated = 0;
+    let failed = 0;
+    for (const id of ids) {
+      const existing = await getSubscription(id, env);
+      if (!existing) {
+        failed += 1;
+        results.push({ id, success: false, message: '订阅不存在' });
+        continue;
+      }
+      const mergedPatch = { ...patch };
+      if (Object.prototype.hasOwnProperty.call(mergedPatch, 'notes') && appendNotes) {
+        const oldNotes = String(existing.notes || '').trim();
+        const newNotes = String(mergedPatch.notes || '').trim();
+        mergedPatch.notes = [oldNotes, newNotes].filter(Boolean).join('\n');
+      }
+      const result = await patchSubscriptionFields(id, mergedPatch, env);
+      if (result.success) {
+        updated += 1;
+        results.push({ id, success: true });
+      } else {
+        failed += 1;
+        results.push({ id, success: false, message: result.message || '修改失败' });
+      }
+    }
+
+    return new Response(JSON.stringify({
+      success: failed === 0,
+      partial: updated > 0 && failed > 0,
+      updated,
+      failed,
+      total: ids.length,
+      results
+    }), {
+      status: updated > 0 ? 200 : 400,
       headers: { 'Content-Type': 'application/json' }
     });
   }

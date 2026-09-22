@@ -1115,7 +1115,7 @@
           </div>
         </div>
 
-        <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><i class="fas fa-shield-alt mr-2"></i><strong>导入保护：</strong>Excel 导入只会创建新记录；检测到与现有订阅重复时自动跳过，绝不会覆盖原记录。</div>
+        <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><i class="fas fa-shield-alt mr-2"></i><strong>导入保护：</strong>Excel 导入只会创建新记录；检测到“同账号 + 同订阅”重复时自动跳过；同一账号可以绑定不同订阅，绝不会覆盖原记录。</div>
         <div class="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900"><i class="fas fa-cloud mr-2"></i><strong>Cloudflare 稳定模式：</strong>大量数据会自动拆分为每批 4 条独立 Worker 请求；若极端情况下仍触发单次 API/Subrequest 上限，受影响行会自动改为单条请求重试。</div>
 
         <div>

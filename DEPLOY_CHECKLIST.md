@@ -35,7 +35,7 @@ API Token 需要允许自动创建/复用并访问本项目使用的 Worker、KV
 - Worker：`subscription-manager`
 - KV：`SUBSCRIPTIONS_KV` / `SUBSCRIPTIONS_KV_PREVIEW`
 - D1：`subscription-manager-db`，Worker binding 为 `SUBSCRIPTIONS_DB`
-- D1 migrations：`migrations/0001_subscription_history.sql`、`migrations/0002_accounts_database.sql`、`migrations/0003_menu_options_database.sql`
+- D1 migrations：`migrations/0001_subscription_history.sql`、`migrations/0002_accounts_database.sql`、`migrations/0003_menu_options_database.sql`、`migrations/0004_account_profiles_credentials.sql`
 - Cron：每小时一次
 
 ## 不应提交

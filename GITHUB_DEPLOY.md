@@ -59,6 +59,7 @@ API Token、管理员密码和 SuperAdmin 二级密码不要写进 `wrangler.tom
 - `0001_subscription_history.sql`：订阅当前镜像 + 历史记录
 - `0002_accounts_database.sql`：独立 Database 账号库（账号序号 / 账号 / AES-GCM 加密密码）
 - `0003_menu_options_database.sql`：五组订阅菜单（名称 / 类型 / 分类 / 会员级别 / 使用人）
+- `0004_account_profiles_credentials.sql`：账号实名人 / 账号类型 + Tapnow / 即梦 / 微信 / QQ 分工具凭据
 
 后续新增 migration，只需继续放进 `migrations/`，部署时会按 Wrangler migration 记录只执行未应用的版本。
 

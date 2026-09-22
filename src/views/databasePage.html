@@ -75,7 +75,7 @@
               <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Database · 账号数据库</h1>
               <span class="inline-flex items-center rounded-full bg-indigo-50 text-indigo-700 px-2.5 py-1 text-xs font-semibold">D1 Accounts</span>
             </div>
-            <p class="db-help text-sm text-gray-500 mt-2 max-w-3xl">独立管理账号序号、账号和加密密码。普通 Admin 不下发或显示已保存密码；输入 SuperAdmin 二级密码解锁后，当前页会显示明文密码。</p>
+            <p class="db-help text-sm text-gray-500 mt-2 max-w-3xl">独立管理账号序号、账号、实名人、账号类型，以及 Tapnow / 即梦 / 微信 / QQ 四组独立加密密码。普通 Admin 只显示密码状态；进入 SuperAdmin mode 后才显示明文。</p>
           </div>
         </div>
         <div class="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center lg:items-stretch xl:items-center gap-2 lg:flex-shrink-0">
@@ -90,7 +90,7 @@
     <section class="db-card db-toolbar bg-white border border-gray-200 shadow-sm p-5 mb-5">
       <div class="flex flex-col xl:flex-row xl:items-center gap-4">
         <div class="relative flex-1 min-w-0">
-          <input id="searchInput" type="text" placeholder="搜索账号序号或账号..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
+          <input id="searchInput" type="text" placeholder="搜索账号序号、账号、实名人或账号类型..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
           <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-search"></i></span>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 xl:flex-shrink-0">
@@ -114,7 +114,7 @@
       </div>
       <div class="bg-white rounded-lg border border-gray-200 px-5 py-4 md:col-span-2">
         <div class="text-sm text-gray-500">数据规则</div>
-        <div class="text-sm text-gray-700 mt-1">账号序号与账号均为一对一唯一映射；密码仅保存在 D1 的 AES-GCM 密文中。Admin 只能看到“已设置/未设置”，SuperAdmin 解锁后当前页会自动显示明文密码。</div>
+        <div class="text-sm text-gray-700 mt-1">账号序号与账号均为一对一唯一映射；实名人、账号类型作为账号资料保存。Tapnow / 即梦 / 微信 / QQ 密码分别使用 AES-GCM 加密保存，Admin 只能看到设置状态，SuperAdmin 解锁后才显示明文。</div>
       </div>
     </div>
 
@@ -123,11 +123,16 @@
         <table class="w-full divide-y divide-gray-200 responsive-table">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">账号序号</th>
-              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">账号</th>
-              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">密码</th>
-              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">更新时间</th>
-              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">操作</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">账号序号</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">账号</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">实名人</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">账号类型</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tapnow 密码</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">即梦密码</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">微信密码</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">QQ 密码</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">更新时间</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">操作</th>
             </tr>
           </thead>
           <tbody id="accountsBody" class="divide-y divide-gray-200"></tbody>
@@ -158,23 +163,24 @@
       <div class="px-6 py-5 border-b border-gray-200 flex items-start justify-between gap-4">
         <div>
           <h2 class="text-xl font-semibold text-gray-900"><i class="fas fa-file-import text-emerald-600 mr-2"></i>账号数据库批量导入</h2>
-          <p class="text-sm text-gray-500 mt-1">支持直接从 Excel 复制并粘贴。默认列顺序：账号序号、账号、密码。</p>
+          <p class="text-sm text-gray-500 mt-1">支持直接从 Excel 复制并粘贴。默认列顺序：账号序号、账号、实名人、账号类型、Tapnow密码、即梦密码、微信密码、QQ密码。</p>
         </div>
         <button id="closeAccountImportModal" type="button" class="text-gray-400 hover:text-gray-600 p-1" aria-label="关闭批量导入"><i class="fas fa-times text-xl"></i></button>
       </div>
       <div class="p-6 space-y-5">
         <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 db-help">
-          <div><strong>导入规则：</strong>账号序号和账号均必须唯一；相同“账号序号 + 账号”视为同一账号。已有账号遇到非空密码时会更新密码，密码留空则保留原密码。</div>
+          <div><strong>导入规则：</strong>账号序号和账号均必须唯一；相同“账号序号 + 账号”视为同一账号。实名人/账号类型填写非空值时可更新；四组工具密码分别更新，某个密码留空则保留该工具原密码。</div>
           <div class="mt-1"><i class="fas fa-shield-alt mr-1"></i>Excel 中的密码是明文，导入 D1 后才会使用 AES-GCM 加密保存。</div>
+          <div class="mt-1 text-amber-800">兼容旧版 3 列“账号序号 / 账号 / 密码”模板；旧单一密码会进入 legacy 兼容槽，不会自动归类到四个工具。</div>
         </div>
 
         <div>
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
             <label for="accountImportPaste" class="text-sm font-semibold text-gray-700">粘贴 Excel 数据</label>
-            <span class="text-xs text-gray-500">支持带表头；也支持按 3 列默认顺序直接粘贴</span>
+            <span class="text-xs text-gray-500">支持带表头；也支持按 8 列默认顺序直接粘贴</span>
           </div>
-          <textarea id="accountImportPaste" rows="8" class="w-full px-3 py-3 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 bg-white" placeholder="账号序号	账号	密码
-001	user@example.com	password"></textarea>
+          <textarea id="accountImportPaste" rows="8" class="w-full px-3 py-3 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 bg-white" placeholder="账号序号	账号	实名人	账号类型	Tapnow密码	即梦密码	微信密码	QQ密码
+001	user@example.com	张三	邮箱	pass1	pass2	pass3	pass4"></textarea>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -193,7 +199,12 @@
                   <th class="px-3 py-2 text-left font-semibold text-gray-600">状态</th>
                   <th class="px-3 py-2 text-left font-semibold text-gray-600">账号序号</th>
                   <th class="px-3 py-2 text-left font-semibold text-gray-600">账号</th>
-                  <th class="px-3 py-2 text-left font-semibold text-gray-600">密码</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">实名人</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">账号类型</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">Tapnow</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">即梦</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">微信</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">QQ</th>
                   <th class="px-3 py-2 text-left font-semibold text-gray-600">提示</th>
                 </tr>
               </thead>
@@ -212,37 +223,77 @@
   </div>
 
   <div id="accountModal" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-50 overflow-y-auto">
-    <div class="relative max-w-lg mx-4 md:mx-auto my-16 bg-white rounded-lg shadow-xl">
+    <div class="relative max-w-4xl mx-4 md:mx-auto my-10 bg-white rounded-xl shadow-xl overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-        <h2 id="modalTitle" class="text-lg font-semibold text-gray-900">新增账号</h2>
+        <div>
+          <h2 id="modalTitle" class="text-lg font-semibold text-gray-900">新增账号</h2>
+          <p class="text-xs text-gray-500 mt-1">账号资料与四组工具密码独立维护；密码写入 D1 前使用 AES-GCM 加密。</p>
+        </div>
         <button id="closeModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
       </div>
-      <form id="accountForm" class="p-6 space-y-5">
+      <form id="accountForm" class="p-6 space-y-6">
         <input type="hidden" id="originalSerial">
-        <div>
-          <label for="accountSerial" class="block text-sm font-medium text-gray-700 mb-1">账号序号 *</label>
-          <input id="accountSerial" type="text" required placeholder="例如：001 / A-001" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white">
-          <p class="text-xs text-gray-500 mt-1">按文本保存，001 不会变成 1。</p>
-        </div>
-        <div>
-          <label for="account" class="block text-sm font-medium text-gray-700 mb-1">账号 *</label>
-          <input id="account" type="text" required autocomplete="username" placeholder="邮箱 / 用户名 / 手机号" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white">
-        </div>
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
-          <div class="relative">
-            <input id="password" type="password" autocomplete="current-password" class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white">
-            <button id="togglePassword" type="button" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600" aria-label="显示或隐藏密码"><i class="fas fa-eye"></i></button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label for="accountSerial" class="block text-sm font-medium text-gray-700 mb-1">账号序号 *</label>
+            <input id="accountSerial" type="text" required placeholder="例如：001 / A-001" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
+            <p class="text-xs text-gray-500 mt-1">按文本保存，001 不会变成 1。</p>
           </div>
-          <p class="text-xs text-gray-500 mt-1">保存到 D1 前会使用 AES-GCM 加密。编辑时留空默认保留原密码。</p>
-          <label id="clearPasswordWrap" class="hidden mt-2 inline-flex items-center text-xs text-red-600 cursor-pointer select-none">
-            <input id="clearPassword" type="checkbox" class="form-checkbox h-4 w-4 text-red-600 rounded border-gray-300 mr-2">清除已保存密码
-          </label>
+          <div>
+            <label for="account" class="block text-sm font-medium text-gray-700 mb-1">账号 *</label>
+            <input id="account" type="text" required autocomplete="username" placeholder="邮箱 / 用户名 / 手机号" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
+          </div>
+          <div>
+            <label for="realName" class="block text-sm font-medium text-gray-700 mb-1">实名人</label>
+            <input id="realName" type="text" placeholder="账号实名认证人" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
+          </div>
+          <div>
+            <label for="accountType" class="block text-sm font-medium text-gray-700 mb-1">账号类型</label>
+            <input id="accountType" type="text" list="accountTypeOptions" placeholder="例如：手机号 / 邮箱 / 微信 / QQ" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
+            <datalist id="accountTypeOptions"></datalist>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-gray-800">工具密码</h3>
+              <p class="text-xs text-gray-500 mt-1">编辑时留空默认保留原密码；需要清除时勾选对应“清除”。</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-gray-200 p-4 bg-gray-50">
+              <label for="passwordTapnow" class="block text-sm font-medium text-gray-700 mb-1">Tapnow 密码</label>
+              <div class="relative"><input id="passwordTapnow" type="password" class="credential-input w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-white" data-type="tapnow"><button type="button" class="toggle-credential absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600" data-target="passwordTapnow"><i class="fas fa-eye"></i></button></div>
+              <label id="clearTapnowWrap" class="hidden mt-2 inline-flex items-center text-xs text-red-600"><input id="clearTapnow" type="checkbox" class="mr-2">清除 Tapnow 密码</label>
+            </div>
+            <div class="rounded-lg border border-gray-200 p-4 bg-gray-50">
+              <label for="passwordJimeng" class="block text-sm font-medium text-gray-700 mb-1">即梦密码</label>
+              <div class="relative"><input id="passwordJimeng" type="password" class="credential-input w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-white" data-type="jimeng"><button type="button" class="toggle-credential absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600" data-target="passwordJimeng"><i class="fas fa-eye"></i></button></div>
+              <label id="clearJimengWrap" class="hidden mt-2 inline-flex items-center text-xs text-red-600"><input id="clearJimeng" type="checkbox" class="mr-2">清除即梦密码</label>
+            </div>
+            <div class="rounded-lg border border-gray-200 p-4 bg-gray-50">
+              <label for="passwordWechat" class="block text-sm font-medium text-gray-700 mb-1">微信密码</label>
+              <div class="relative"><input id="passwordWechat" type="password" class="credential-input w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-white" data-type="wechat"><button type="button" class="toggle-credential absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600" data-target="passwordWechat"><i class="fas fa-eye"></i></button></div>
+              <label id="clearWechatWrap" class="hidden mt-2 inline-flex items-center text-xs text-red-600"><input id="clearWechat" type="checkbox" class="mr-2">清除微信密码</label>
+            </div>
+            <div class="rounded-lg border border-gray-200 p-4 bg-gray-50">
+              <label for="passwordQq" class="block text-sm font-medium text-gray-700 mb-1">QQ 密码</label>
+              <div class="relative"><input id="passwordQq" type="password" class="credential-input w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-white" data-type="qq"><button type="button" class="toggle-credential absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600" data-target="passwordQq"><i class="fas fa-eye"></i></button></div>
+              <label id="clearQqWrap" class="hidden mt-2 inline-flex items-center text-xs text-red-600"><input id="clearQq" type="checkbox" class="mr-2">清除 QQ 密码</label>
+            </div>
+          </div>
+          <div id="legacyPasswordNotice" class="hidden mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <div class="font-semibold"><i class="fas fa-exclamation-triangle mr-1"></i>检测到旧版单一密码</div>
+            <div class="mt-1">旧密码无法自动判断属于哪个工具，因此继续保留但不再作为新字段使用。SuperAdmin 编辑时会显示旧密码，建议手工复制到正确工具后再保留或清理旧数据。</div>
+            <div id="legacyPasswordValue" class="mt-2 font-mono break-all"></div>
+            <label id="clearLegacyPasswordWrap" class="hidden mt-3 inline-flex items-center text-xs text-red-700 cursor-pointer"><input id="clearLegacyPassword" type="checkbox" class="mr-2">确认已归类，清除旧版单一密码</label>
+          </div>
         </div>
         <div id="modalError" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2"></div>
         <div class="pt-2 flex justify-end gap-3">
-          <button id="cancelModal" type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">取消</button>
-          <button id="saveAccountBtn" type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md"><i class="fas fa-save mr-2"></i>保存</button>
+          <button id="cancelModal" type="button" class="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">取消</button>
+          <button id="saveAccountBtn" type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg"><i class="fas fa-save mr-2"></i>保存</button>
         </div>
       </form>
     </div>
@@ -276,6 +327,12 @@
     let superAdminState = { configured: false, unlocked: false };
     const bodyEl = document.getElementById('accountsBody');
     const emptyEl = document.getElementById('emptyState');
+    const credentialDefs = [
+      { type: 'tapnow', label: 'Tapnow', inputId: 'passwordTapnow', clearId: 'clearTapnow', wrapId: 'clearTapnowWrap' },
+      { type: 'jimeng', label: '即梦', inputId: 'passwordJimeng', clearId: 'clearJimeng', wrapId: 'clearJimengWrap' },
+      { type: 'wechat', label: '微信', inputId: 'passwordWechat', clearId: 'clearWechat', wrapId: 'clearWechatWrap' },
+      { type: 'qq', label: 'QQ', inputId: 'passwordQq', clearId: 'clearQq', wrapId: 'clearQqWrap' }
+    ];
 
     function escapeHtml(value) {
       return String(value == null ? '' : value)
@@ -398,7 +455,7 @@
     }
 
     async function loadAccounts() {
-      bodyEl.innerHTML = '<tr><td colspan="5" class="px-5 py-10 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在加载...</td></tr>';
+      bodyEl.innerHTML = '<tr><td colspan="10" class="px-5 py-10 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在加载...</td></tr>';
       emptyEl.classList.add('hidden');
       try {
         const params = new URLSearchParams({ page: String(state.page), pageSize: String(state.pageSize) });
@@ -413,73 +470,90 @@
         renderPagination();
         if (superAdminState.unlocked) await revealVisiblePasswords(items);
       } catch (error) {
-        bodyEl.innerHTML = '<tr><td colspan="5" class="px-5 py-10 text-center text-red-600">' + escapeHtml(error.message) + '</td></tr>';
+        bodyEl.innerHTML = '<tr><td colspan="10" class="px-5 py-10 text-center text-red-600">' + escapeHtml(error.message) + '</td></tr>';
       }
+    }
+
+    function passwordStatusCell(item, type, label) {
+      const status = item && item.credentialStatus ? !!item.credentialStatus[type] : false;
+      if (!status) return '<span class="text-gray-400">未设置</span>';
+      if (!superAdminState.unlocked) return '<span class="text-gray-500"><i class="fas fa-lock mr-1 text-gray-400"></i>已设置</span>';
+      const encoded = encodeURIComponent(item.accountSerial);
+      return '<span class="password-value font-mono text-gray-500" data-credential-value="' + type + ':' + encoded + '"><i class="fas fa-spinner fa-spin mr-1"></i>读取中</span> ' +
+        '<button type="button" class="view-password ml-2 text-amber-700 hover:text-amber-900 text-xs hidden" data-serial="' + encoded + '" data-type="' + type + '" data-visible="0"><i class="fas fa-eye-slash mr-1"></i>隐藏</button>';
     }
 
     function renderRows(items) {
       if (!items.length) {
         bodyEl.innerHTML = '';
         emptyEl.classList.remove('hidden');
+        document.getElementById('accountTypeOptions').innerHTML = '';
         return;
       }
       emptyEl.classList.add('hidden');
+      const accountTypes = [...new Set(items.map((item) => String(item.accountType || '').trim()).filter(Boolean))].sort();
+      document.getElementById('accountTypeOptions').innerHTML = accountTypes.map((value) => '<option value="' + escapeHtml(value) + '"></option>').join('');
       bodyEl.innerHTML = items.map((item) => {
         const serial = escapeHtml(item.accountSerial);
         const encoded = encodeURIComponent(item.accountSerial);
-        const passwordCell = item.hasPassword
-          ? (superAdminState.unlocked
-              ? '<span class="password-value font-mono text-gray-500"><i class="fas fa-spinner fa-spin mr-1"></i>读取中</span> <button type="button" class="view-password ml-2 text-amber-700 hover:text-amber-900 text-xs hidden" data-serial="' + encoded + '" data-visible="0"><i class="fas fa-eye-slash mr-1"></i>隐藏</button>'
-              : '<span class="text-gray-500"><i class="fas fa-lock mr-1 text-gray-400"></i>已设置</span>')
-          : '<span class="text-gray-400">未设置</span>';
+        const legacyBadge = item.hasLegacyPassword
+          ? '<div class="mt-1"><span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs"><i class="fas fa-exclamation-triangle mr-1"></i>旧版密码待归类</span></div>'
+          : '';
         return '<tr class="hover:bg-gray-50">' +
-          '<td data-label="账号序号" class="px-5 py-4 text-sm font-semibold text-gray-900 font-mono">' + serial + '</td>' +
-          '<td data-label="账号" class="px-5 py-4 text-sm text-gray-700 break-all">' + escapeHtml(item.account) + '</td>' +
-          '<td data-label="密码" class="px-5 py-4 text-sm" data-password-cell="' + encoded + '">' + passwordCell + '</td>' +
-          '<td data-label="更新时间" class="px-5 py-4 text-sm text-gray-500">' + escapeHtml(formatTime(item.updatedAt)) + '</td>' +
-          '<td data-label="操作" class="px-5 py-4 text-sm text-right whitespace-nowrap">' +
+          '<td data-label="账号序号" class="px-4 py-4 text-sm font-semibold text-gray-900 font-mono whitespace-nowrap">' + serial + '</td>' +
+          '<td data-label="账号" class="px-4 py-4 text-sm text-gray-700 break-all min-w-48">' + escapeHtml(item.account) + legacyBadge + '</td>' +
+          '<td data-label="实名人" class="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">' + (escapeHtml(item.realName) || '<span class="text-gray-400">—</span>') + '</td>' +
+          '<td data-label="账号类型" class="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">' + (escapeHtml(item.accountType) || '<span class="text-gray-400">—</span>') + '</td>' +
+          '<td data-label="Tapnow 密码" class="px-4 py-4 text-sm min-w-36" data-password-cell="tapnow:' + encoded + '">' + passwordStatusCell(item, 'tapnow', 'Tapnow') + '</td>' +
+          '<td data-label="即梦密码" class="px-4 py-4 text-sm min-w-36" data-password-cell="jimeng:' + encoded + '">' + passwordStatusCell(item, 'jimeng', '即梦') + '</td>' +
+          '<td data-label="微信密码" class="px-4 py-4 text-sm min-w-36" data-password-cell="wechat:' + encoded + '">' + passwordStatusCell(item, 'wechat', '微信') + '</td>' +
+          '<td data-label="QQ 密码" class="px-4 py-4 text-sm min-w-36" data-password-cell="qq:' + encoded + '">' + passwordStatusCell(item, 'qq', 'QQ') + '</td>' +
+          '<td data-label="更新时间" class="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">' + escapeHtml(formatTime(item.updatedAt)) + '</td>' +
+          '<td data-label="操作" class="px-4 py-4 text-sm text-right whitespace-nowrap">' +
             '<button class="edit-account text-indigo-600 hover:text-indigo-800 mr-4" data-serial="' + encoded + '"><i class="fas fa-edit mr-1"></i>编辑</button>' +
             '<button class="delete-account text-red-600 hover:text-red-800" data-serial="' + encoded + '"><i class="fas fa-trash mr-1"></i>删除</button>' +
           '</td></tr>';
       }).join('');
     }
 
+    function setCredentialCell(encoded, type, value, failed) {
+      const cell = document.querySelector('[data-password-cell="' + CSS.escape(type + ':' + encoded) + '"]');
+      if (!cell) return;
+      const valueEl = cell.querySelector('.password-value');
+      const button = cell.querySelector('.view-password');
+      if (valueEl) {
+        valueEl.textContent = failed ? '解密失败' : (value || '(空密码)');
+        valueEl.className = failed ? 'password-value text-red-600' : 'password-value font-mono text-gray-800 break-all';
+      }
+      if (button && !failed) {
+        button.dataset.visible = '1';
+        button.classList.remove('hidden');
+        button.innerHTML = '<i class="fas fa-eye-slash mr-1"></i>隐藏';
+      }
+    }
+
     async function revealVisiblePasswords(items) {
       const protectedItems = (Array.isArray(items) ? items : []).filter((item) => item && item.hasPassword);
       if (!superAdminState.unlocked || protectedItems.length === 0) return;
-
       let sessionExpired = false;
       await Promise.all(protectedItems.map(async (item) => {
         const encoded = encodeURIComponent(item.accountSerial);
-        const cell = document.querySelector('[data-password-cell="' + CSS.escape(encoded) + '"]');
-        if (!cell) return;
-        const valueEl = cell.querySelector('.password-value');
-        const button = cell.querySelector('.view-password');
         try {
           const data = await api('/api/accounts/' + encoded);
-          if (!data.superAdminUnlocked) {
-            sessionExpired = true;
-            return;
-          }
-          if (valueEl) {
-            valueEl.textContent = data.account && data.account.passwordDecryptFailed
-              ? '解密失败'
-              : ((data.account && data.account.password) || '(空密码)');
-            valueEl.className = 'password-value font-mono text-gray-800 break-all';
-          }
-          if (button) {
-            button.dataset.visible = '1';
-            button.classList.remove('hidden');
-            button.innerHTML = '<i class="fas fa-eye-slash mr-1"></i>隐藏';
-          }
+          if (!data.superAdminUnlocked) { sessionExpired = true; return; }
+          const passwords = data.account && data.account.passwords ? data.account.passwords : {};
+          const failed = data.account && data.account.passwordDecryptFailed ? data.account.passwordDecryptFailed : {};
+          credentialDefs.forEach((def) => {
+            if (item.credentialStatus && item.credentialStatus[def.type]) {
+              setCredentialCell(encoded, def.type, passwords[def.type] || '', !!failed[def.type]);
+            }
+          });
         } catch (error) {
-          if (valueEl) {
-            valueEl.textContent = '读取失败';
-            valueEl.className = 'password-value text-red-600';
-          }
+          credentialDefs.forEach((def) => {
+            if (item.credentialStatus && item.credentialStatus[def.type]) setCredentialCell(encoded, def.type, '', true);
+          });
         }
       }));
-
       if (sessionExpired) {
         superAdminState.unlocked = false;
         updateSuperAdminUi();
@@ -497,17 +571,32 @@
       document.getElementById('nextPage').disabled = totalPages === 0 || state.page >= totalPages;
     }
 
+    function resetCredentialInputs() {
+      credentialDefs.forEach((def) => {
+        const input = document.getElementById(def.inputId);
+        input.value = '';
+        input.type = 'password';
+        input.placeholder = '可设置新密码';
+        document.getElementById(def.clearId).checked = false;
+        document.getElementById(def.wrapId).classList.add('hidden');
+      });
+      document.getElementById('legacyPasswordNotice').classList.add('hidden');
+      document.getElementById('legacyPasswordValue').textContent = '';
+      document.getElementById('clearLegacyPassword').checked = false;
+      document.getElementById('clearLegacyPasswordWrap').classList.add('hidden');
+    }
+
     function openCreateModal() {
       document.getElementById('modalTitle').textContent = '新增账号';
       document.getElementById('originalSerial').value = '';
       document.getElementById('accountSerial').value = '';
       document.getElementById('account').value = '';
-      document.getElementById('password').value = '';
-      document.getElementById('password').type = 'password';
-      document.getElementById('clearPassword').checked = false;
-      document.getElementById('clearPasswordWrap').classList.add('hidden');
+      document.getElementById('realName').value = '';
+      document.getElementById('accountType').value = '';
+      resetCredentialInputs();
       document.getElementById('modalError').classList.add('hidden');
       document.getElementById('accountModal').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
       document.getElementById('accountSerial').focus();
     }
 
@@ -519,30 +608,56 @@
         document.getElementById('originalSerial').value = item.accountSerial;
         document.getElementById('accountSerial').value = item.accountSerial;
         document.getElementById('account').value = item.account;
-        document.getElementById('password').value = data.superAdminUnlocked ? (item.password || '') : '';
-        document.getElementById('password').placeholder = item.hasPassword ? (data.superAdminUnlocked ? '当前密码已载入，可修改' : 'Admin mode：留空保留原密码') : '可设置新密码';
-        document.getElementById('password').type = 'password';
-        document.getElementById('clearPassword').checked = false;
-        document.getElementById('clearPasswordWrap').classList.toggle('hidden', !item.hasPassword);
+        document.getElementById('realName').value = item.realName || '';
+        document.getElementById('accountType').value = item.accountType || '';
+        credentialDefs.forEach((def) => {
+          const input = document.getElementById(def.inputId);
+          const has = !!(item.credentialStatus && item.credentialStatus[def.type]);
+          input.value = data.superAdminUnlocked && item.passwords ? (item.passwords[def.type] || '') : '';
+          input.type = 'password';
+          input.placeholder = has ? (data.superAdminUnlocked ? '当前密码已载入，可修改' : 'Admin mode：留空保留原密码') : '可设置新密码';
+          document.getElementById(def.clearId).checked = false;
+          document.getElementById(def.wrapId).classList.toggle('hidden', !has);
+        });
+        const legacyNotice = document.getElementById('legacyPasswordNotice');
+        const legacyValue = document.getElementById('legacyPasswordValue');
+        legacyNotice.classList.toggle('hidden', !item.hasLegacyPassword);
+        document.getElementById('clearLegacyPassword').checked = false;
+        document.getElementById('clearLegacyPasswordWrap').classList.toggle('hidden', !item.hasLegacyPassword);
+        if (item.hasLegacyPassword) {
+          legacyValue.textContent = data.superAdminUnlocked
+            ? (item.legacyPasswordDecryptFailed ? '旧版密码解密失败' : ('旧版密码：' + (item.legacyPassword || '(空密码)')))
+            : '旧版密码已安全保留；进入 SuperAdmin mode 后可查看。';
+        }
         document.getElementById('modalError').classList.add('hidden');
         document.getElementById('accountModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
       } catch (error) { showToast(error.message, 'error'); }
     }
 
-    function closeModal() { document.getElementById('accountModal').classList.add('hidden'); }
+    function closeModal() {
+      document.getElementById('accountModal').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
 
     async function saveAccount(event) {
       event.preventDefault();
       const originalSerial = document.getElementById('originalSerial').value.trim();
-      const passwordValue = document.getElementById('password').value;
-      const clearPassword = !!document.getElementById('clearPassword').checked;
       const payload = {
         accountSerial: document.getElementById('accountSerial').value.trim(),
-        account: document.getElementById('account').value.trim()
+        account: document.getElementById('account').value.trim(),
+        realName: document.getElementById('realName').value.trim(),
+        accountType: document.getElementById('accountType').value.trim()
       };
-      if (!originalSerial || passwordValue.length > 0 || clearPassword) {
-        payload.password = clearPassword ? '' : passwordValue;
-      }
+      const passwords = {};
+      credentialDefs.forEach((def) => {
+        const value = document.getElementById(def.inputId).value;
+        const clear = !!document.getElementById(def.clearId).checked;
+        if (value.length > 0 || clear) passwords[def.type] = clear ? '' : value;
+      });
+      if (Object.keys(passwords).length > 0) payload.passwords = passwords;
+      if (originalSerial && document.getElementById('clearLegacyPassword').checked) payload.clearLegacyPassword = true;
+
       const errorEl = document.getElementById('modalError');
       const saveBtn = document.getElementById('saveAccountBtn');
       errorEl.classList.add('hidden');
@@ -568,13 +683,10 @@
     }
 
     async function toggleRowPassword(button) {
-      if (!superAdminState.unlocked) {
-        showToast('请先进入 SuperAdmin mode', 'error');
-        return;
-      }
+      if (!superAdminState.unlocked) { showToast('请先进入 SuperAdmin mode', 'error'); return; }
       const encoded = button.dataset.serial || '';
-      const serial = decodeURIComponent(encoded);
-      const cell = document.querySelector('[data-password-cell="' + CSS.escape(encoded) + '"]');
+      const type = button.dataset.type || '';
+      const cell = document.querySelector('[data-password-cell="' + CSS.escape(type + ':' + encoded) + '"]');
       if (!cell) return;
       const valueEl = cell.querySelector('.password-value');
       if (button.dataset.visible === '1') {
@@ -585,14 +697,14 @@
       }
       try {
         button.disabled = true;
-        const data = await api('/api/accounts/' + encodeURIComponent(serial));
+        const data = await api('/api/accounts/' + encoded);
         if (!data.superAdminUnlocked) {
-          superAdminState.unlocked = false;
-          updateSuperAdminUi();
-          await loadAccounts();
+          superAdminState.unlocked = false; updateSuperAdminUi(); await loadAccounts();
           throw new Error('SuperAdmin 会话已过期，请重新输入二级密码');
         }
-        if (valueEl) valueEl.textContent = data.account.password || '(空密码)';
+        const passwords = data.account && data.account.passwords ? data.account.passwords : {};
+        const failed = data.account && data.account.passwordDecryptFailed ? data.account.passwordDecryptFailed : {};
+        if (valueEl) valueEl.textContent = failed[type] ? '解密失败' : (passwords[type] || '(空密码)');
         button.dataset.visible = '1';
         button.innerHTML = '<i class="fas fa-eye-slash mr-1"></i>隐藏';
       } catch (error) { showToast(error.message, 'error'); }
@@ -676,7 +788,13 @@
       const aliases = {
         accountSerial: ['账号序号', '序号', 'accountserial'],
         account: ['账号', '账户', '用户名', 'account'],
-        password: ['密码', 'password']
+        realName: ['实名人', '实名认证人', 'realname'],
+        accountType: ['账号类型', '账户类型', 'accounttype'],
+        tapnowPassword: ['Tapnow密码', 'tapnow密码', 'tapnowpassword'],
+        jimengPassword: ['即梦密码', 'jimeng密码', 'jimengpassword'],
+        wechatPassword: ['微信密码', 'wechat密码', 'wechatpassword'],
+        qqPassword: ['QQ密码', 'qq密码', 'qqpassword'],
+        legacyPassword: ['密码', '旧版密码', 'password']
       };
       const mapping = {};
       let recognized = 0;
@@ -686,9 +804,20 @@
       });
       const hasHeader = recognized >= 2;
       if (!hasHeader) {
+        const maxCols = Math.max(...table.map((row) => row.length));
         mapping.accountSerial = 0;
         mapping.account = 1;
-        mapping.password = 2;
+        if (maxCols <= 3) {
+          // 兼容旧版 3 列模板：账号序号 / 账号 / 单一密码。
+          mapping.legacyPassword = 2;
+        } else {
+          mapping.realName = 2;
+          mapping.accountType = 3;
+          mapping.tapnowPassword = 4;
+          mapping.jimengPassword = 5;
+          mapping.wechatPassword = 6;
+          mapping.qqPassword = 7;
+        }
       }
 
       const dataRows = hasHeader ? table.slice(1) : table;
@@ -699,13 +828,19 @@
         .map((item) => {
           const serial = String(item.cells[mapping.accountSerial] == null ? '' : item.cells[mapping.accountSerial]).trim();
           const account = String(item.cells[mapping.account] == null ? '' : item.cells[mapping.account]).trim();
-          const password = String(item.cells[mapping.password] == null ? '' : item.cells[mapping.password]);
+          const realName = String(item.cells[mapping.realName] == null ? '' : item.cells[mapping.realName]).trim();
+          const accountType = String(item.cells[mapping.accountType] == null ? '' : item.cells[mapping.accountType]).trim();
+          const tapnowPassword = String(item.cells[mapping.tapnowPassword] == null ? '' : item.cells[mapping.tapnowPassword]);
+          const jimengPassword = String(item.cells[mapping.jimengPassword] == null ? '' : item.cells[mapping.jimengPassword]);
+          const wechatPassword = String(item.cells[mapping.wechatPassword] == null ? '' : item.cells[mapping.wechatPassword]);
+          const qqPassword = String(item.cells[mapping.qqPassword] == null ? '' : item.cells[mapping.qqPassword]);
+          const legacyPassword = String(item.cells[mapping.legacyPassword] == null ? '' : item.cells[mapping.legacyPassword]);
           const errors = [];
           if (!serial) errors.push('账号序号不能为空');
           if (!account) errors.push('账号不能为空');
           return {
             sourceRow: item.sourceRow,
-            data: { __sourceRow: item.sourceRow, accountSerial: serial, account, password },
+            data: { __sourceRow: item.sourceRow, accountSerial: serial, account, realName, accountType, tapnowPassword, jimengPassword, wechatPassword, qqPassword, legacyPassword },
             errors
           };
         });
@@ -723,8 +858,13 @@
           `<td class="px-3 py-2 whitespace-nowrap">${ok ? '<span class="text-emerald-700 font-medium">可导入</span>' : '<span class="text-red-600 font-medium">错误</span>'}</td>` +
           `<td class="px-3 py-2 whitespace-nowrap font-mono">${escapeHtml(item.data.accountSerial)}</td>` +
           `<td class="px-3 py-2 break-all">${escapeHtml(item.data.account)}</td>` +
-          `<td class="px-3 py-2 whitespace-nowrap">${item.data.password ? '<span class="text-gray-700">已填写</span>' : '<span class="text-gray-400">空 / 保留原密码</span>'}</td>` +
-          `<td class="px-3 py-2 ${ok ? 'text-gray-400' : 'text-red-600'}">${ok ? '—' : escapeHtml(item.errors.join('；'))}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${escapeHtml(item.data.realName || '') || '—'}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${escapeHtml(item.data.accountType || '') || '—'}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${item.data.tapnowPassword ? '已填写' : '<span class="text-gray-400">保留</span>'}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${item.data.jimengPassword ? '已填写' : '<span class="text-gray-400">保留</span>'}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${item.data.wechatPassword ? '已填写' : '<span class="text-gray-400">保留</span>'}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${item.data.qqPassword ? '已填写' : '<span class="text-gray-400">保留</span>'}</td>` +
+          `<td class="px-3 py-2 ${ok ? (item.data.legacyPassword ? 'text-amber-700' : 'text-gray-400') : 'text-red-600'}">${ok ? (item.data.legacyPassword ? '旧版单一密码将保存在兼容槽' : '—') : escapeHtml(item.errors.join('；'))}</td>` +
         `</tr>`;
       }).join('');
       preview.classList.toggle('hidden', accountImportRows.length === 0);
@@ -787,7 +927,7 @@
         ];
         const parts = [
           '<div class="font-semibold mb-2">账号批量导入完成</div>',
-          `<div>新增：<strong class="text-emerald-700">${created}</strong> 条；更新密码：<strong class="text-blue-700">${updated}</strong> 条；已有且无需更新：<strong>${unchanged}</strong> 条；失败：<strong class="text-red-600">${failed + localInvalid.length}</strong> 条。</div>`
+          `<div>新增：<strong class="text-emerald-700">${created}</strong> 条；更新资料/密码：<strong class="text-blue-700">${updated}</strong> 条；已有且无需更新：<strong>${unchanged}</strong> 条；失败：<strong class="text-red-600">${failed + localInvalid.length}</strong> 条。</div>`
         ];
         if (allFailures.length) {
           parts.push('<div class="mt-3 font-medium">未导入行：</div>');
@@ -833,11 +973,14 @@
     document.getElementById('closeModal').addEventListener('click', closeModal);
     document.getElementById('cancelModal').addEventListener('click', closeModal);
     document.getElementById('accountForm').addEventListener('submit', saveAccount);
-    document.getElementById('togglePassword').addEventListener('click', () => {
-      const input = document.getElementById('password');
-      const icon = document.querySelector('#togglePassword i');
-      input.type = input.type === 'password' ? 'text' : 'password';
-      icon.className = input.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+    document.querySelectorAll('.toggle-credential').forEach((button) => {
+      button.addEventListener('click', () => {
+        const input = document.getElementById(button.dataset.target || '');
+        const icon = button.querySelector('i');
+        if (!input || !icon) return;
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.className = input.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+      });
     });
     document.getElementById('prevPage').addEventListener('click', () => { if (state.page > 1) { state.page--; loadAccounts(); } });
     document.getElementById('nextPage').addEventListener('click', () => { if (state.page < state.totalPages) { state.page++; loadAccounts(); } });

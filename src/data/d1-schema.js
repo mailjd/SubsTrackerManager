@@ -73,10 +73,22 @@ export async function ensureD1Schema(env) {
         password_encrypted TEXT NOT NULL DEFAULT '',
         source_subscription_id TEXT,
         created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
+        updated_at TEXT NOT NULL,
+        real_name TEXT NOT NULL DEFAULT '',
+        account_type TEXT NOT NULL DEFAULT ''
       )`),
       db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_account ON accounts(account)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_updated_at ON accounts(updated_at DESC)'),
+      db.prepare(`CREATE TABLE IF NOT EXISTS account_credentials (
+        account_serial TEXT NOT NULL,
+        credential_type TEXT NOT NULL,
+        password_encrypted TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (account_serial, credential_type),
+        FOREIGN KEY (account_serial) REFERENCES accounts(account_serial) ON UPDATE CASCADE ON DELETE CASCADE
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_account_credentials_type ON account_credentials(credential_type)'),
       db.prepare(`CREATE TABLE IF NOT EXISTS account_history (
         history_id INTEGER PRIMARY KEY AUTOINCREMENT,
         account_serial TEXT NOT NULL,
@@ -105,6 +117,26 @@ export async function ensureD1Schema(env) {
     ];
 
     await db.batch(statements);
+
+    // 兼容已存在的旧 accounts 表：运行时按需补列，避免漏跑 migration 时 Database 直接报错。
+    const tableInfo = await db.prepare('PRAGMA table_info(accounts)').all();
+    const columns = new Set((tableInfo.results || []).map((row) => String(row.name || '')));
+    if (!columns.has('real_name')) {
+      try { await db.prepare("ALTER TABLE accounts ADD COLUMN real_name TEXT NOT NULL DEFAULT ''").run(); }
+      catch (error) { if (!String(error?.message || error).toLowerCase().includes('duplicate column')) throw error; }
+    }
+    if (!columns.has('account_type')) {
+      try { await db.prepare("ALTER TABLE accounts ADD COLUMN account_type TEXT NOT NULL DEFAULT ''").run(); }
+      catch (error) { if (!String(error?.message || error).toLowerCase().includes('duplicate column')) throw error; }
+    }
+    await db.batch([
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_real_name ON accounts(real_name)'),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_account_type ON accounts(account_type)'),
+      db.prepare(`INSERT OR IGNORE INTO account_credentials (
+        account_serial, credential_type, password_encrypted, created_at, updated_at
+      ) SELECT account_serial, 'legacy', password_encrypted, created_at, updated_at
+        FROM accounts WHERE password_encrypted <> ''`)
+    ]);
     return true;
   })().catch((error) => {
     schemaReadyPromise = null;

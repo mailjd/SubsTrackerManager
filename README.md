@@ -76,18 +76,19 @@ npm run deploy:safe
 - `migrations/0001_subscription_history.sql`：订阅当前镜像与历史。
 - `migrations/0002_accounts_database.sql`：独立账号 Database。
 - `migrations/0003_menu_options_database.sql`：订阅名称、类型、分类、会员级别、使用人等可配置菜单。
+- `migrations/0004_account_profiles_credentials.sql`：账号实名人 / 账号类型，以及 Tapnow、即梦、微信、QQ 分工具加密凭据。
 
 D1 现在分成三个业务区域：
 
 - **订阅记录**：`subscriptions_current` 保存当前订阅结构化镜像，`subscription_history` 保存创建、编辑、续订、支付、启停、删除、备份恢复等不可变历史。
-- **Database / 账号数据库**：`accounts` 独立保存 `账号序号 / 账号 / 密码密文`，`account_history` 保存账号变更审计（只记录是否有密码，不保存密码内容）。
+- **Database / 账号数据库**：`accounts` 独立保存 `账号序号 / 账号 / 实名人 / 账号类型`；`account_credentials` 按工具独立保存 Tapnow / 即梦 / 微信 / QQ 的 AES-GCM 密文；`account_history` 只记录是否设置凭据及资料变化，不保存密码内容。
 - **订阅菜单数据库**：`menu_option_groups / menu_options` 保存订阅名称、订阅类型、分类标签、会员级别、使用人五组菜单；D1 是主存储，旧 KV 菜单只在升级时迁移或在没有 D1 时兼容回退。
 
 `accounts.account_serial` 与 `accounts.account` 都具有唯一约束，一个账号可被多条订阅引用。Database 页面位于 `/admin/database`，可分页搜索、新增、编辑、批量导入和删除账号；普通 Admin 只能看到密码“已设置/未设置”，不会收到或显示已保存密码。输入独立的 SuperAdmin 二级密码解锁后，当前分页会自动显示账号明文密码，并可单独隐藏/再次查看；30 分钟后自动锁定。仍被订阅引用的账号禁止删除。
 
-正常部署仍会执行 D1 migrations；同时 Worker 运行时增加了幂等的 `CREATE TABLE IF NOT EXISTS` 兜底初始化。如果使用 Cloudflare Git 直连部署、手动 `wrangler deploy` 或曾遗漏 migration，首次访问也会自动补齐 `subscriptions_current / subscription_history / accounts / account_history / menu_option_groups / menu_options` 等基础表，避免出现 `no such table: accounts`。
+正常部署仍会执行 D1 migrations；同时 Worker 运行时增加了幂等的 `CREATE TABLE IF NOT EXISTS` 兜底初始化。如果使用 Cloudflare Git 直连部署、手动 `wrangler deploy` 或曾遗漏 migration，首次访问也会自动补齐 `subscriptions_current / subscription_history / accounts / account_credentials / account_history / menu_option_groups / menu_options` 等基础表，避免出现 `no such table: accounts`。
 
-账号密码使用部署环境的 `CREDENTIALS_ENCRYPTION_KEY` 通过 AES-GCM 加密后保存到 D1。普通 Admin 不下发明文密码；只有 SuperAdmin 二级认证通过后，单条查看接口才会解密返回。已有部署升级后，首次访问会自动从现有 KV 订阅抽取账号序号、账号与已有密码密文到 `accounts`，最新有效映射优先。
+四组工具密码使用部署环境的 `CREDENTIALS_ENCRYPTION_KEY` 通过 AES-GCM 分别加密后保存到 D1 `account_credentials`。普通 Admin 不下发明文密码；只有 SuperAdmin 二级认证通过后才会解密返回。旧版单一密码无法自动判断所属工具，会迁移到 `legacy` 兼容槽保留，避免升级丢失。
 
 单条订阅历史可通过 `GET /api/subscriptions/{id}/history?limit=100` 查询。账号 API 为 `/api/accounts`，订阅编辑页的账号/序号联动优先使用该账号库。
 
@@ -230,13 +231,15 @@ Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV
 
 - 账号序号：唯一，例如 `001`、`A-001`。
 - 账号：唯一，例如邮箱、用户名或手机号。
-- 密码：AES-GCM 加密保存。Admin mode 不显示已保存密码；进入 SuperAdmin mode 并输入二级密码后，当前分页会自动显示明文密码，30 分钟后自动锁定。
-- 修改账号序号或账号后，会同步所有引用该账号的订阅记录；账号密码只保存在 Database，不再复制到订阅记录。
+- 实名人：记录该账号实名认证人。
+- 账号类型：自由文本，例如手机号、邮箱、微信、QQ、平台账号。
+- 工具密码：Tapnow / 即梦 / 微信 / QQ 四组独立 AES-GCM 密文。Admin mode 只显示“已设置/未设置”；SuperAdmin mode 才显示明文，30 分钟后自动锁定。
+- 修改账号序号或账号后，会同步所有引用该账号的订阅记录；实名人、账号类型和四组工具密码只保存在 Database，不复制到订阅记录。
 - 如果账号仍被订阅引用，系统会阻止删除。
 - 订阅编辑页选择已有账号或账号序号时会自动双向切换；订阅新增/编辑表单不再挂载密码字段。
 - 页面提供独立的 **下载模板 / 批量导入 / 新增账号** 工具栏，支持直接从 Excel 复制粘贴。
 
-账号 Database 批量导入默认 3 列：`账号序号、账号、密码`。可带表头，也可按默认顺序直接粘贴。相同“账号序号 + 账号”会视为同一账号：密码非空时更新密码，密码留空时保留原密码；账号序号或账号与现有一对一关系冲突时，该行会拒绝导入并显示 Excel 行号。单次 API 最多 200 条，前端按每批 100 条提交。
+账号 Database 批量导入默认 8 列：`账号序号、账号、实名人、账号类型、Tapnow密码、即梦密码、微信密码、QQ密码`。可带表头，也可按默认顺序直接粘贴。已有账号的实名人/账号类型填非空值时更新；每个工具密码独立更新，留空则保留该工具原密码。账号序号或账号与现有一对一关系冲突时，该行会拒绝导入并显示 Excel 行号。单次 API 最多 200 条，前端按每批 100 条提交。
 
 仓库内附带账号模板：`templates/SubsTracker_账号数据库批量导入模板.xlsx`。
 
@@ -267,7 +270,7 @@ Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV
 - 单次导入最多 100 条；前端会自动按每批 50 条提交。
 - 导入记录会正常写入 KV、D1 当前镜像，并在 D1 历史中标记为 `import`。
 
-**密码归属：**订阅模板不再包含密码列。账号密码请使用 Database 页单独新增或使用 `templates/SubsTracker_账号数据库批量导入模板.xlsx` 批量维护，写入 D1 前会使用 AES-GCM 加密。
+**密码归属：**订阅模板不包含密码列。Tapnow / 即梦 / 微信 / QQ 密码请在 Database 页或账号批量导入模板中分别维护，写入 D1 前会使用 AES-GCM 独立加密。
 
 仓库内也附带一份模板：`templates/SubsTracker_订阅批量导入模板.xlsx`。
 

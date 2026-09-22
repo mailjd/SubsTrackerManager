@@ -9,6 +9,7 @@ import {
   ACCOUNT_IMPORT_TEMPLATE_MIME
 } from '../../data/account-import-template.js';
 import {
+  ACCOUNT_CREDENTIAL_TYPES,
   hasAccountsDb,
   listPaged,
   listOptions,
@@ -26,7 +27,6 @@ function json(data, status = 200) {
   });
 }
 
-
 function base64ToBytes(base64) {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -37,7 +37,6 @@ function base64ToBytes(base64) {
 function decodePathPart(value) {
   try { return decodeURIComponent(value || ''); } catch { return value || ''; }
 }
-
 
 const SUPERADMIN_COOKIE = 'superadmin_token';
 const SUPERADMIN_TTL_SECONDS = 30 * 60;
@@ -71,43 +70,63 @@ async function clearSuperAdminFailures(env, ip) {
   await env.SUBSCRIPTIONS_KV.delete(`superadmin_attempts:${ip}`);
 }
 
-/**
- * /api/accounts*
- * @param {Request} request
- * @param {any} env
- * @param {string} path 去掉 /api 后的路径
- */
+async function encryptPasswordUpdates(passwords, config) {
+  const encrypted = {};
+  if (!passwords || typeof passwords !== 'object') return encrypted;
+  for (const type of ACCOUNT_CREDENTIAL_TYPES) {
+    if (!Object.prototype.hasOwnProperty.call(passwords, type)) continue;
+    const value = typeof passwords[type] === 'string' ? passwords[type] : '';
+    encrypted[type] = value.length > 0 ? await encryptCredential(value, config.CREDENTIALS_ENCRYPTION_KEY) : '';
+  }
+  return encrypted;
+}
+
+async function decryptPasswords(row, config) {
+  const passwords = {};
+  const failed = {};
+  for (const type of ACCOUNT_CREDENTIAL_TYPES) {
+    const encrypted = row?.credentialsEncrypted?.[type] || '';
+    if (!encrypted) { passwords[type] = ''; failed[type] = false; continue; }
+    try {
+      passwords[type] = await decryptCredential(encrypted, config.CREDENTIALS_ENCRYPTION_KEY);
+      failed[type] = false;
+    } catch (error) {
+      console.error(`[accounts] 解密 ${type} 密码失败:`, error);
+      passwords[type] = '';
+      failed[type] = true;
+    }
+  }
+  let legacyPassword = '';
+  let legacyFailed = false;
+  const legacyEncrypted = row?.credentialsEncrypted?.legacy || row?.legacyPasswordEncrypted || '';
+  if (legacyEncrypted) {
+    try { legacyPassword = await decryptCredential(legacyEncrypted, config.CREDENTIALS_ENCRYPTION_KEY); }
+    catch (error) { console.error('[accounts] 解密旧版密码失败:', error); legacyFailed = true; }
+  }
+  return { passwords, failed, legacyPassword, legacyFailed };
+}
+
+/** /api/accounts* */
 export async function handleAccounts(request, env, path) {
   if (!path.startsWith('/accounts')) return null;
-  if (!hasAccountsDb(env)) {
-    return json({ success: false, message: 'D1 数据库未绑定，请先运行 npm run setup' }, 503);
-  }
+  if (!hasAccountsDb(env)) return json({ success: false, message: 'D1 数据库未绑定，请先运行 npm run setup' }, 503);
 
   const method = request.method;
   const url = new URL(request.url);
 
   if (path === '/accounts/superadmin/status' && method === 'GET') {
     const config = await getConfig(env);
-    return json({
-      success: true,
-      configured: hasSuperAdminPassword(env),
-      unlocked: await isSuperAdminUnlocked(request, config),
-      expiresInSeconds: SUPERADMIN_TTL_SECONDS
-    });
+    return json({ success: true, configured: hasSuperAdminPassword(env), unlocked: await isSuperAdminUnlocked(request, config), expiresInSeconds: SUPERADMIN_TTL_SECONDS });
   }
 
   if (path === '/accounts/superadmin/unlock' && method === 'POST') {
     const ip = getClientIp(request);
     const attempts = await getSuperAdminAttempts(env, ip);
-    if (attempts >= SUPERADMIN_MAX_ATTEMPTS) {
-      return json({ success: false, message: 'SuperAdmin 二级密码尝试过多，请 5 分钟后再试' }, 429);
-    }
+    if (attempts >= SUPERADMIN_MAX_ATTEMPTS) return json({ success: false, message: 'SuperAdmin 二级密码尝试过多，请 5 分钟后再试' }, 429);
     let body;
     try { body = await request.json(); } catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
     const config = await getConfig(env);
-    if (!hasSuperAdminPassword(env)) {
-      return json({ success: false, message: '尚未配置 SuperAdmin 二级密码，请在 Cloudflare Worker 的 Variables and Secrets 中设置 SUBSTRACKER_SUPERADMIN_PASSWORD' }, 503);
-    }
+    if (!hasSuperAdminPassword(env)) return json({ success: false, message: '尚未配置 SuperAdmin 二级密码，请在 Cloudflare Worker 的 Variables and Secrets 中设置 SUBSTRACKER_SUPERADMIN_PASSWORD' }, 503);
     const password = typeof body?.password === 'string' ? body.password : '';
     if (!password || !(await verifySuperAdminPassword(password, env))) {
       const failedAttempts = await recordSuperAdminFailure(env, ip);
@@ -115,14 +134,10 @@ export async function handleAccounts(request, env, path) {
       return json({ success: false, message: remaining > 0 ? `二级密码错误（还可尝试 ${remaining} 次）` : '尝试过多，请 5 分钟后再试' }, remaining > 0 ? 403 : 429);
     }
     await clearSuperAdminFailures(env, ip);
-    const token = await generateJWT(config.ADMIN_USERNAME || 'admin', `${config.JWT_SECRET}:superadmin`, {
-      ttlSeconds: SUPERADMIN_TTL_SECONDS,
-      extra: { role: 'superadmin' }
-    });
+    const token = await generateJWT(config.ADMIN_USERNAME || 'admin', `${config.JWT_SECRET}:superadmin`, { ttlSeconds: SUPERADMIN_TTL_SECONDS, extra: { role: 'superadmin' } });
     return new Response(JSON.stringify({ success: true, unlocked: true, expiresInSeconds: SUPERADMIN_TTL_SECONDS }), {
       headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'no-store',
+        'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store',
         'Set-Cookie': `${SUPERADMIN_COOKIE}=${token}; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=${SUPERADMIN_TTL_SECONDS}`
       }
     });
@@ -130,11 +145,7 @@ export async function handleAccounts(request, env, path) {
 
   if (path === '/accounts/superadmin/lock' && method === 'POST') {
     return new Response(JSON.stringify({ success: true, unlocked: false }), {
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'no-store',
-        'Set-Cookie': `${SUPERADMIN_COOKIE}=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0`
-      }
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Set-Cookie': `${SUPERADMIN_COOKIE}=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0` }
     });
   }
 
@@ -159,98 +170,83 @@ export async function handleAccounts(request, env, path) {
 
     const config = await getConfig(env);
     const results = [];
-    let created = 0;
-    let updated = 0;
-    let unchanged = 0;
-    let failed = 0;
+    let created = 0; let updated = 0; let unchanged = 0; let failed = 0;
 
     for (let index = 0; index < rows.length; index++) {
       const raw = rows[index];
       const sourceRow = raw && Number(raw.__sourceRow) > 0 ? Number(raw.__sourceRow) : index + 2;
       if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-        failed += 1;
-        results.push({ row: sourceRow, success: false, message: '该行数据格式无效' });
-        continue;
+        failed += 1; results.push({ row: sourceRow, success: false, message: '该行数据格式无效' }); continue;
       }
-
       const accountSerial = String(raw.accountSerial || '').trim();
       const account = String(raw.account || '').trim();
-      const password = typeof raw.password === 'string' ? raw.password : '';
+      const realName = String(raw.realName || '').trim();
+      const accountType = String(raw.accountType || '').trim();
       if (!accountSerial || !account) {
-        failed += 1;
-        results.push({ row: sourceRow, success: false, accountSerial, account, message: '账号序号和账号不能为空' });
-        continue;
+        failed += 1; results.push({ row: sourceRow, success: false, accountSerial, account, message: '账号序号和账号不能为空' }); continue;
       }
 
       try {
         const serialRow = await getBySerial(env, accountSerial);
         const accountRow = await getByAccount(env, account);
         if (serialRow && serialRow.account !== account) {
-          failed += 1;
-          results.push({ row: sourceRow, success: false, accountSerial, account, message: `账号序号 ${accountSerial} 已绑定账号 ${serialRow.account}` });
-          continue;
+          failed += 1; results.push({ row: sourceRow, success: false, accountSerial, account, message: `账号序号 ${accountSerial} 已绑定账号 ${serialRow.account}` }); continue;
         }
         if (accountRow && accountRow.accountSerial !== accountSerial) {
-          failed += 1;
-          results.push({ row: sourceRow, success: false, accountSerial, account, message: `账号 ${account} 已绑定账号序号 ${accountRow.accountSerial}` });
-          continue;
+          failed += 1; results.push({ row: sourceRow, success: false, accountSerial, account, message: `账号 ${account} 已绑定账号序号 ${accountRow.accountSerial}` }); continue;
         }
 
         const existing = serialRow || accountRow;
-        if (existing && password.length === 0) {
-          unchanged += 1;
-          results.push({ row: sourceRow, success: true, status: 'unchanged', accountSerial, account });
-          continue;
+        const plainPasswords = {
+          tapnow: typeof raw.tapnowPassword === 'string' ? raw.tapnowPassword : '',
+          jimeng: typeof raw.jimengPassword === 'string' ? raw.jimengPassword : '',
+          wechat: typeof raw.wechatPassword === 'string' ? raw.wechatPassword : '',
+          qq: typeof raw.qqPassword === 'string' ? raw.qqPassword : ''
+        };
+        const legacyPlainPassword = typeof raw.legacyPassword === 'string' ? raw.legacyPassword : '';
+        const passwordUpdates = {};
+        for (const type of ACCOUNT_CREDENTIAL_TYPES) {
+          if (plainPasswords[type].length > 0) passwordUpdates[type] = plainPasswords[type];
+        }
+        const credentialsEncrypted = await encryptPasswordUpdates(passwordUpdates, config);
+        const metadataChanged = !existing || (realName && realName !== existing.realName) || (accountType && accountType !== existing.accountType);
+        const legacyPasswordEncrypted = legacyPlainPassword.length > 0
+          ? await encryptCredential(legacyPlainPassword, config.CREDENTIALS_ENCRYPTION_KEY)
+          : undefined;
+        const credentialsChanged = Object.keys(credentialsEncrypted).length > 0 || legacyPasswordEncrypted !== undefined;
+        if (existing && !metadataChanged && !credentialsChanged) {
+          unchanged += 1; results.push({ row: sourceRow, success: true, status: 'unchanged', accountSerial, account }); continue;
         }
 
-        const passwordEncrypted = password.length > 0
-          ? await encryptCredential(password, config.CREDENTIALS_ENCRYPTION_KEY)
-          : '';
         const result = await upsert(env, {
           accountSerial,
           account,
-          passwordEncrypted
-        }, {
-          action: existing ? 'bulk_import_update' : 'bulk_import_create',
-          metadata: { source: 'excel_paste', sourceRow }
-        });
+          ...(existing ? (realName ? { realName } : {}) : { realName }),
+          ...(existing ? (accountType ? { accountType } : {}) : { accountType }),
+          credentialsEncrypted,
+          ...(legacyPasswordEncrypted !== undefined ? { legacyPasswordEncrypted } : {})
+        }, { action: existing ? 'bulk_import_update' : 'bulk_import_create', metadata: { source: 'excel_paste', sourceRow } });
         if (!result.success) {
-          failed += 1;
-          results.push({ row: sourceRow, success: false, accountSerial, account, message: result.message || '导入失败' });
-          continue;
+          failed += 1; results.push({ row: sourceRow, success: false, accountSerial, account, message: result.message || '导入失败' }); continue;
         }
         if (existing) updated += 1; else created += 1;
         results.push({ row: sourceRow, success: true, status: existing ? 'updated' : 'created', accountSerial, account });
       } catch (error) {
-        failed += 1;
-        results.push({ row: sourceRow, success: false, accountSerial, account, message: error?.message || String(error) });
+        failed += 1; results.push({ row: sourceRow, success: false, accountSerial, account, message: error?.message || String(error) });
       }
     }
 
     const processed = created + updated + unchanged;
-    return json({
-      success: failed === 0,
-      partial: processed > 0 && failed > 0,
-      created,
-      updated,
-      unchanged,
-      failed,
-      total: rows.length,
-      results
-    }, processed > 0 ? 200 : 400);
+    return json({ success: failed === 0, partial: processed > 0 && failed > 0, created, updated, unchanged, failed, total: rows.length, results }, processed > 0 ? 200 : 400);
   }
 
-  if (path === '/accounts/options' && method === 'GET') {
-    const items = await listOptions(env);
-    return json({ success: true, items });
-  }
+  if (path === '/accounts/options' && method === 'GET') return json({ success: true, items: await listOptions(env) });
 
   if (path === '/accounts' && method === 'GET') {
     const page = Number(url.searchParams.get('page')) || 1;
     const pageSize = Number(url.searchParams.get('pageSize')) || 20;
     const q = url.searchParams.get('q') || '';
-    const result = await listPaged(env, { page, pageSize, q });
-    return json({ success: true, ...result });
+    return json({ success: true, ...(await listPaged(env, { page, pageSize, q })) });
   }
 
   if (path === '/accounts' && method === 'POST') {
@@ -259,19 +255,21 @@ export async function handleAccounts(request, env, path) {
     const accountSerial = String(body?.accountSerial || '').trim();
     const account = String(body?.account || '').trim();
     if (!accountSerial || !account) return json({ success: false, message: '账号序号和账号不能为空' }, 400);
-
     const existingSerial = await getBySerial(env, accountSerial);
     const existingAccount = await getByAccount(env, account);
     if (existingSerial || existingAccount) {
       const existing = existingSerial || existingAccount;
       return json({ success: false, message: `账号记录已存在：${existing.accountSerial} / ${existing.account}` }, 409);
     }
-
     const config = await getConfig(env);
-    const passwordEncrypted = typeof body.password === 'string' && body.password.length > 0
-      ? await encryptCredential(body.password, config.CREDENTIALS_ENCRYPTION_KEY)
-      : '';
-    const result = await upsert(env, { accountSerial, account, passwordEncrypted }, { action: 'manual_create' });
+    const credentialsEncrypted = await encryptPasswordUpdates(body?.passwords, config);
+    const result = await upsert(env, {
+      accountSerial,
+      account,
+      realName: String(body?.realName || '').trim(),
+      accountType: String(body?.accountType || '').trim(),
+      credentialsEncrypted
+    }, { action: 'manual_create' });
     return json(result, result.success ? 201 : 400);
   }
 
@@ -284,25 +282,25 @@ export async function handleAccounts(request, env, path) {
     if (!row) return json({ success: false, message: '账号记录不存在' }, 404);
     const config = await getConfig(env);
     const superAdminUnlocked = await isSuperAdminUnlocked(request, config);
-    let password = '';
-    let passwordDecryptFailed = false;
-    if (superAdminUnlocked && row.passwordEncrypted) {
-      try {
-        password = await decryptCredential(row.passwordEncrypted, config.CREDENTIALS_ENCRYPTION_KEY);
-      } catch (error) {
-        console.error('[accounts] 解密账号密码失败:', error);
-        passwordDecryptFailed = true;
-      }
-    }
+    let sensitive = null;
+    if (superAdminUnlocked) sensitive = await decryptPasswords(row, config);
     return json({
       success: true,
       superAdminUnlocked,
       account: {
         accountSerial: row.accountSerial,
         account: row.account,
-        ...(superAdminUnlocked ? { password } : {}),
-        hasPassword: !!row.passwordEncrypted,
-        passwordDecryptFailed: superAdminUnlocked ? passwordDecryptFailed : false,
+        realName: row.realName,
+        accountType: row.accountType,
+        credentialStatus: row.credentialStatus,
+        hasPassword: row.hasPassword,
+        hasLegacyPassword: row.hasLegacyPassword,
+        ...(superAdminUnlocked ? {
+          passwords: sensitive.passwords,
+          passwordDecryptFailed: sensitive.failed,
+          legacyPassword: sensitive.legacyPassword,
+          legacyPasswordDecryptFailed: sensitive.legacyFailed
+        } : {}),
         createdAt: row.createdAt,
         updatedAt: row.updatedAt
       }
@@ -314,19 +312,15 @@ export async function handleAccounts(request, env, path) {
     try { body = await request.json(); } catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
     const current = await getBySerial(env, serial);
     if (!current) return json({ success: false, message: '账号记录不存在' }, 404);
-
     const config = await getConfig(env);
-    let passwordEncrypted = current.passwordEncrypted;
-    if (Object.prototype.hasOwnProperty.call(body || {}, 'password')) {
-      passwordEncrypted = typeof body.password === 'string' && body.password.length > 0
-        ? await encryptCredential(body.password, config.CREDENTIALS_ENCRYPTION_KEY)
-        : '';
-    }
-
+    const credentialsEncrypted = await encryptPasswordUpdates(body?.passwords, config);
     const result = await updateAndPropagate(env, serial, {
       accountSerial: String(body?.accountSerial || serial).trim(),
       account: String(body?.account || '').trim(),
-      passwordEncrypted
+      realName: String(body?.realName ?? current.realName ?? '').trim(),
+      accountType: String(body?.accountType ?? current.accountType ?? '').trim(),
+      credentialsEncrypted,
+      ...(body?.clearLegacyPassword ? { legacyPasswordEncrypted: '' } : {})
     });
     return json(result, result.success ? 200 : 400);
   }

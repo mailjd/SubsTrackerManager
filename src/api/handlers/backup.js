@@ -23,7 +23,7 @@ import { syncCurrentSubscriptions } from '../../data/subscription-history.repo.j
 import { listAllRaw as listAllAccountsRaw, restoreAccounts, syncFromSubscription } from '../../data/accounts.repo.js';
 
 const BACKUP_FORMAT = 'substracker-backup';
-const BACKUP_VERSION = 4;
+const BACKUP_VERSION = 5;
 
 /** 永不导出/覆盖的字段 */
 const NEVER_EXPORT_FIELDS = ['JWT_SECRET', 'ADMIN_PASSWORD', 'CREDENTIALS_ENCRYPTION_KEY', 'SUPERADMIN_PASSWORD_HASH'];
@@ -115,12 +115,19 @@ export async function handleExportBackup(request, env) {
 
     const rawAccounts = await listAllAccountsRaw(env);
     const cleanAccounts = await Promise.all(rawAccounts.map(async (item) => {
-      const { passwordEncrypted, ...rest } = item || {};
-      if (includeSecrets && passwordEncrypted) {
-        rest.password = await decryptCredential(
-          passwordEncrypted,
-          config.CREDENTIALS_ENCRYPTION_KEY
-        );
+      const { credentialsEncrypted, legacyPasswordEncrypted, passwordEncrypted: _legacyAlias, ...rest } = item || {};
+      if (includeSecrets && credentialsEncrypted && typeof credentialsEncrypted === 'object') {
+        rest.passwords = {};
+        for (const type of ['tapnow', 'jimeng', 'wechat', 'qq']) {
+          const encrypted = credentialsEncrypted[type] || '';
+          if (encrypted) {
+            rest.passwords[type] = await decryptCredential(encrypted, config.CREDENTIALS_ENCRYPTION_KEY);
+          }
+        }
+        const legacyEncrypted = credentialsEncrypted.legacy || legacyPasswordEncrypted || '';
+        if (legacyEncrypted) {
+          rest.legacyPassword = await decryptCredential(legacyEncrypted, config.CREDENTIALS_ENCRYPTION_KEY);
+        }
       }
       return rest;
     }));
@@ -317,16 +324,33 @@ export async function handleImportBackup(request, env) {
         const accountSerial = String(rawAccount.accountSerial || '').trim();
         const account = String(rawAccount.account || '').trim();
         if (!accountSerial || !account) continue;
-        let passwordEncrypted = '';
-        if (includeSecrets && typeof rawAccount.password === 'string' && rawAccount.password.length > 0) {
-          passwordEncrypted = await encryptCredential(rawAccount.password, currentConfig.CREDENTIALS_ENCRYPTION_KEY);
-        } else if (!includeSecrets && mode === 'merge') {
-          passwordEncrypted = existingAccountMap.get(accountSerial)?.passwordEncrypted || '';
+
+        const credentialsEncrypted = {};
+        let legacyPasswordEncrypted = '';
+        if (includeSecrets) {
+          const plainPasswords = rawAccount.passwords && typeof rawAccount.passwords === 'object' ? rawAccount.passwords : {};
+          for (const type of ['tapnow', 'jimeng', 'wechat', 'qq']) {
+            if (typeof plainPasswords[type] === 'string' && plainPasswords[type].length > 0) {
+              credentialsEncrypted[type] = await encryptCredential(plainPasswords[type], currentConfig.CREDENTIALS_ENCRYPTION_KEY);
+            }
+          }
+          const legacyPlain = typeof rawAccount.legacyPassword === 'string' && rawAccount.legacyPassword.length > 0
+            ? rawAccount.legacyPassword
+            : (typeof rawAccount.password === 'string' ? rawAccount.password : '');
+          if (legacyPlain) legacyPasswordEncrypted = await encryptCredential(legacyPlain, currentConfig.CREDENTIALS_ENCRYPTION_KEY);
+        } else if (mode === 'merge') {
+          const existing = existingAccountMap.get(accountSerial);
+          if (existing?.credentialsEncrypted) Object.assign(credentialsEncrypted, existing.credentialsEncrypted);
+          legacyPasswordEncrypted = existing?.legacyPasswordEncrypted || existing?.passwordEncrypted || '';
         }
+
         incomingAccounts.push({
           accountSerial,
           account,
-          passwordEncrypted,
+          realName: String(rawAccount.realName || ''),
+          accountType: String(rawAccount.accountType || ''),
+          credentialsEncrypted,
+          legacyPasswordEncrypted,
           sourceSubscriptionId: String(rawAccount.sourceSubscriptionId || '')
         });
       }

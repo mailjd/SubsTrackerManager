@@ -185,6 +185,9 @@
     .custom-dropdown-list.show {
       display: block;
     }
+    #usersDropdown {
+      max-height: 320px;
+    }
     .dropdown-item {
       padding: 10px 12px;
       font-size: 14px;
@@ -3499,6 +3502,22 @@ const lunarBiz = {
       }
     }
 
+    function getUserMenuState(input) {
+      const raw = String(input.value || '');
+      const tokens = raw
+        .split(/[,，]/)
+        .map(item => item.trim())
+        .filter(Boolean);
+      const currentToken = tokens.length ? tokens[tokens.length - 1] : '';
+      const menu = Array.isArray(menuOptionsCache.users) ? menuOptionsCache.users : [];
+      const currentIsCommitted = currentToken && menu.includes(currentToken);
+      const selected = currentIsCommitted ? tokens : tokens.slice(0, -1);
+      return {
+        selected,
+        filter: currentIsCommitted ? '' : currentToken
+      };
+    }
+
     function getMenuFilterText(input, group) {
       const raw = String(input.value || '');
       if (group === 'categories') {
@@ -3506,8 +3525,7 @@ const lunarBiz = {
         return (slashIndex >= 0 ? raw.slice(slashIndex + 1) : raw).trim();
       }
       if (group === 'users') {
-        const commaIndex = Math.max(raw.lastIndexOf(','), raw.lastIndexOf('，'));
-        return (commaIndex >= 0 ? raw.slice(commaIndex + 1) : raw).trim();
+        return getUserMenuState(input).filter;
       }
       return raw.trim();
     }
@@ -3522,7 +3540,9 @@ const lunarBiz = {
           .split(/[,，]/)
           .map(item => item.trim())
           .filter(Boolean);
-        const currentFilter = getMenuFilterText(input, group);
+        const state = getUserMenuState(input);
+        const currentFilter = state.filter;
+        // 仅移除正在输入的搜索片段；已经从菜单选中的完整姓名必须保留。
         if (currentFilter && existing.length && existing[existing.length - 1] === currentFilter) existing.pop();
         if (!existing.includes(value)) existing.push(value);
         input.value = existing.join(',');
@@ -3542,14 +3562,23 @@ const lunarBiz = {
       const renderItems = () => {
         const options = Array.isArray(menuOptionsCache[group]) ? menuOptionsCache[group] : [];
         const filter = getMenuFilterText(input, group).toLocaleLowerCase('zh-CN');
-        const filtered = filter
+        let filtered = filter
           ? options.filter(item => item.toLocaleLowerCase('zh-CN').includes(filter))
-          : options;
+          : [...options];
+
+        // 使用人是多选菜单：已选人员不再重复显示；选中一人后恢复完整的剩余菜单。
+        if (group === 'users') {
+          const selected = new Set(getUserMenuState(input).selected);
+          filtered = filtered.filter(item => !selected.has(item));
+        }
+
         list.innerHTML = '';
         if (filtered.length === 0) {
           const empty = document.createElement('div');
           empty.className = 'px-3 py-3 text-xs text-gray-400';
-          empty.textContent = '没有匹配项，可直接输入并保存，或点击“管理菜单”新增';
+          empty.textContent = group === 'users' && !filter
+            ? '已选择全部使用人；也可以直接输入自定义姓名'
+            : '没有匹配项，可直接输入并保存，或点击“管理菜单”新增';
           list.appendChild(empty);
           return;
         }
@@ -3583,7 +3612,14 @@ const lunarBiz = {
           const item = event.target.closest('.dropdown-item');
           if (!item || !item.dataset.value) return;
           applyMenuSelection(input, group, item.dataset.value);
-          list.classList.remove('show');
+          if (group === 'users') {
+            // 多选使用人时保持菜单展开，方便连续选择第二、第三个人。
+            renderItems();
+            list.classList.add('show');
+            input.focus({ preventScroll: true });
+          } else {
+            list.classList.remove('show');
+          }
         });
       }
     }

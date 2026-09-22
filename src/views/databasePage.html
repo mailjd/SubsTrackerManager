@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database - 订阅管理系统</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  ${themeResources}
+  <style>
+    .db-card { border-radius: 0.875rem; }
+    .db-toolbar button, .db-toolbar a { min-height: 42px; }
+    .db-help { line-height: 1.7; }
+    .bulk-preview { max-height: 320px; overflow: auto; }
+    .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 9999; display: flex; flex-direction: column; gap: .5rem; }
+    .toast { min-width: 260px; max-width: 420px; padding: .8rem 1rem; border-radius: .5rem; color: white; box-shadow: 0 8px 24px rgba(0,0,0,.16); }
+    .toast.success { background: #059669; }
+    .toast.error { background: #dc2626; }
+    .toast.info { background: #2563eb; }
+    .table-wrap { box-shadow: 0 4px 10px rgba(15,23,42,.06); }
+    html.dark .table-wrap { box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+    @media (max-width: 768px) {
+      .responsive-table thead { display:none; }
+      .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display:block; width:100%; }
+      .responsive-table tr { border-bottom:1px solid #e5e7eb; padding:.5rem 0; }
+      .responsive-table td { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.65rem 1rem; }
+      .responsive-table td::before { content:attr(data-label); font-weight:600; color:#6b7280; flex:0 0 5.5rem; }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div id="toast-container" class="toast-container"></div>
+
+  <nav class="bg-white shadow-md relative z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center shrink-0">
+          <i class="fas fa-calendar-check text-indigo-600 text-2xl mr-2"></i>
+          <span class="font-bold text-xl text-gray-800">订阅管理系统</span>
+        </div>
+        <div class="hidden md:flex items-center space-x-3 ml-auto">
+          <a href="/admin/dashboard" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-chart-line mr-1"></i>仪表盘</a>
+          <a href="/admin" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-list mr-1"></i>订阅记录</a>
+          <a href="/admin/database" class="text-indigo-600 border-b-2 border-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-database mr-1"></i>Database</a>
+          <a href="/admin/notify-logs" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-history mr-1"></i>通知历史</a>
+          <a href="/admin/config" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-cog mr-1"></i>系统配置</a>
+          <a href="/api/logout" class="text-gray-700 hover:text-red-600 border-b-2 border-transparent hover:border-red-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-sign-out-alt mr-1"></i>退出登录</a>
+        </div>
+        <div class="flex items-center md:hidden ml-auto">
+          <button id="mobile-menu-btn" type="button" aria-expanded="false" aria-label="切换导航菜单" class="text-gray-600 hover:text-indigo-600 focus:outline-none p-2 rounded-md hover:bg-gray-100"><i class="fas fa-bars text-xl"></i></button>
+        </div>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-b border-gray-200 w-full">
+      <div class="px-4 pt-2 pb-4 space-y-2">
+        <a href="/admin/dashboard" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-chart-line w-6 text-center mr-2"></i>仪表盘</a>
+        <a href="/admin" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-list w-6 text-center mr-2"></i>订阅记录</a>
+        <a href="/admin/database" class="block px-3 py-3 rounded-md text-base font-medium text-indigo-700 bg-indigo-50"><i class="fas fa-database w-6 text-center mr-2"></i>Database</a>
+        <a href="/admin/notify-logs" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-history w-6 text-center mr-2"></i>通知历史</a>
+        <a href="/admin/config" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-cog w-6 text-center mr-2"></i>系统配置</a>
+        <a href="/api/logout" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600"><i class="fas fa-sign-out-alt w-6 text-center mr-2"></i>退出登录</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+    <section class="db-card bg-white border border-gray-200 shadow-sm p-6 sm:p-7 mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-database text-xl"></i>
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Database · 账号数据库</h1>
+              <span class="inline-flex items-center rounded-full bg-indigo-50 text-indigo-700 px-2.5 py-1 text-xs font-semibold">D1 Accounts</span>
+            </div>
+            <p class="db-help text-sm text-gray-500 mt-2 max-w-3xl">独立管理账号序号、账号和加密密码。账号序号与账号保持一对一映射，一个账号可以关联多条订阅记录。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="db-card db-toolbar bg-white border border-gray-200 shadow-sm p-5 mb-5">
+      <div class="flex flex-col xl:flex-row xl:items-center gap-4">
+        <div class="relative flex-1 min-w-0">
+          <input id="searchInput" type="text" placeholder="搜索账号序号或账号..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-search"></i></span>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 xl:flex-shrink-0">
+          <a href="/api/accounts/import-template" download="SubsTracker_账号数据库批量导入模板.xlsx" class="inline-flex items-center justify-center border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium transition">
+            <i class="fas fa-file-excel text-emerald-600 mr-2"></i>下载模板
+          </a>
+          <button id="openAccountImportBtn" type="button" class="inline-flex items-center justify-center border border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2.5 rounded-lg text-sm font-medium transition">
+            <i class="fas fa-table mr-2"></i>批量导入
+          </button>
+          <button id="addAccountBtn" type="button" class="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shadow-sm">
+            <i class="fas fa-plus mr-2"></i>新增账号
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+      <div class="bg-white rounded-lg border border-gray-200 px-5 py-4">
+        <div class="text-sm text-gray-500">账号总数</div>
+        <div id="totalCount" class="text-2xl font-bold text-gray-900 mt-1">0</div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 px-5 py-4 md:col-span-2">
+        <div class="text-sm text-gray-500">数据规则</div>
+        <div class="text-sm text-gray-700 mt-1">账号序号与账号均为一对一唯一映射；密码在 D1 中仅保存 AES-GCM 密文。</div>
+      </div>
+    </div>
+
+    <div class="table-wrap bg-white rounded-lg overflow-hidden border border-gray-200">
+      <div class="overflow-x-auto">
+        <table class="w-full divide-y divide-gray-200 responsive-table">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">账号序号</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">账号</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">密码</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">更新时间</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">操作</th>
+            </tr>
+          </thead>
+          <tbody id="accountsBody" class="divide-y divide-gray-200"></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="hidden text-center py-14 text-gray-500">
+        <i class="fas fa-database text-4xl text-gray-300 mb-3"></i>
+        <div>暂无账号数据</div>
+      </div>
+      <div class="px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div id="pageSummary" class="text-sm text-gray-500">第 1 页</div>
+        <div class="flex items-center gap-2">
+          <select id="pageSize" class="px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white">
+            <option value="10">10 / 页</option>
+            <option value="20" selected>20 / 页</option>
+            <option value="50">50 / 页</option>
+            <option value="100">100 / 页</option>
+          </select>
+          <button id="prevPage" class="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-40" disabled>上一页</button>
+          <button id="nextPage" class="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-40" disabled>下一页</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="accountImportModal" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-50 overflow-y-auto">
+    <div class="relative max-w-5xl mx-4 md:mx-auto my-8 md:my-12 bg-white rounded-xl shadow-2xl overflow-hidden">
+      <div class="px-6 py-5 border-b border-gray-200 flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900"><i class="fas fa-file-import text-emerald-600 mr-2"></i>账号数据库批量导入</h2>
+          <p class="text-sm text-gray-500 mt-1">支持直接从 Excel 复制并粘贴。默认列顺序：账号序号、账号、密码。</p>
+        </div>
+        <button id="closeAccountImportModal" type="button" class="text-gray-400 hover:text-gray-600 p-1" aria-label="关闭批量导入"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <div class="p-6 space-y-5">
+        <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 db-help">
+          <div><strong>导入规则：</strong>账号序号和账号均必须唯一；相同“账号序号 + 账号”视为同一账号。已有账号遇到非空密码时会更新密码，密码留空则保留原密码。</div>
+          <div class="mt-1"><i class="fas fa-shield-alt mr-1"></i>Excel 中的密码是明文，导入 D1 后才会使用 AES-GCM 加密保存。</div>
+        </div>
+
+        <div>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+            <label for="accountImportPaste" class="text-sm font-semibold text-gray-700">粘贴 Excel 数据</label>
+            <span class="text-xs text-gray-500">支持带表头；也支持按 3 列默认顺序直接粘贴</span>
+          </div>
+          <textarea id="accountImportPaste" rows="8" class="w-full px-3 py-3 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 bg-white" placeholder="账号序号	账号	密码
+001	user@example.com	password"></textarea>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <button id="parseAccountImportBtn" type="button" class="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium"><i class="fas fa-search mr-2"></i>解析并预览</button>
+          <button id="clearAccountImportBtn" type="button" class="inline-flex items-center justify-center border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium"><i class="fas fa-eraser mr-2"></i>清空</button>
+          <a href="/api/accounts/import-template" download="SubsTracker_账号数据库批量导入模板.xlsx" class="inline-flex items-center justify-center border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium"><i class="fas fa-download mr-2"></i>下载 Excel 模板</a>
+          <div id="accountImportSummary" class="sm:ml-auto text-sm text-gray-500"></div>
+        </div>
+
+        <div id="accountImportPreview" class="hidden border border-gray-200 rounded-lg overflow-hidden">
+          <div class="bulk-preview overflow-x-auto">
+            <table class="w-full divide-y divide-gray-200 text-sm">
+              <thead class="bg-gray-50 sticky top-0">
+                <tr>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">Excel 行</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">状态</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">账号序号</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">账号</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">密码</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600">提示</th>
+                </tr>
+              </thead>
+              <tbody id="accountImportPreviewBody" class="divide-y divide-gray-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="accountImportResult" class="hidden rounded-lg border p-4 text-sm"></div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+        <button id="cancelAccountImportBtn" type="button" class="px-4 py-2.5 border border-gray-300 bg-white rounded-lg text-gray-700 hover:bg-gray-50">取消</button>
+        <button id="executeAccountImportBtn" type="button" disabled class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"><i class="fas fa-file-import mr-2"></i>导入有效数据</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="accountModal" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-50 overflow-y-auto">
+    <div class="relative max-w-lg mx-4 md:mx-auto my-16 bg-white rounded-lg shadow-xl">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <h2 id="modalTitle" class="text-lg font-semibold text-gray-900">新增账号</h2>
+        <button id="closeModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <form id="accountForm" class="p-6 space-y-5">
+        <input type="hidden" id="originalSerial">
+        <div>
+          <label for="accountSerial" class="block text-sm font-medium text-gray-700 mb-1">账号序号 *</label>
+          <input id="accountSerial" type="text" required placeholder="例如：001 / A-001" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+          <p class="text-xs text-gray-500 mt-1">按文本保存，001 不会变成 1。</p>
+        </div>
+        <div>
+          <label for="account" class="block text-sm font-medium text-gray-700 mb-1">账号 *</label>
+          <input id="account" type="text" required autocomplete="username" placeholder="邮箱 / 用户名 / 手机号" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+        </div>
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+          <div class="relative">
+            <input id="password" type="password" autocomplete="current-password" class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+            <button id="togglePassword" type="button" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600" aria-label="显示或隐藏密码"><i class="fas fa-eye"></i></button>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">保存到 D1 前会使用 AES-GCM 加密。</p>
+        </div>
+        <div id="modalError" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2"></div>
+        <div class="pt-2 flex justify-end gap-3">
+          <button id="cancelModal" type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">取消</button>
+          <button id="saveAccountBtn" type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md"><i class="fas fa-save mr-2"></i>保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let state = { page: 1, pageSize: 20, q: '', totalPages: 0, total: 0 };
+    const bodyEl = document.getElementById('accountsBody');
+    const emptyEl = document.getElementById('emptyState');
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function showToast(message, type = 'info') {
+      const el = document.createElement('div');
+      el.className = 'toast ' + type;
+      el.textContent = message;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }
+
+    function formatTime(value) {
+      if (!value) return '-';
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return value;
+      return d.toLocaleString('zh-CN', { hour12: false });
+    }
+
+    async function api(url, options = {}) {
+      const response = await fetch(url, { credentials: 'same-origin', ...options });
+      let data = {};
+      try { data = await response.json(); } catch { data = {}; }
+      if (!response.ok || data.success === false) throw new Error(data.message || ('请求失败：' + response.status));
+      return data;
+    }
+
+    async function loadAccounts() {
+      bodyEl.innerHTML = '<tr><td colspan="5" class="px-5 py-10 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在加载...</td></tr>';
+      emptyEl.classList.add('hidden');
+      try {
+        const params = new URLSearchParams({ page: String(state.page), pageSize: String(state.pageSize) });
+        if (state.q) params.set('q', state.q);
+        const data = await api('/api/accounts?' + params.toString());
+        state.page = data.page || 1;
+        state.totalPages = data.totalPages || 0;
+        state.total = data.total || 0;
+        document.getElementById('totalCount').textContent = String(state.total);
+        renderRows(data.items || []);
+        renderPagination();
+      } catch (error) {
+        bodyEl.innerHTML = '<tr><td colspan="5" class="px-5 py-10 text-center text-red-600">' + escapeHtml(error.message) + '</td></tr>';
+      }
+    }
+
+    function renderRows(items) {
+      if (!items.length) {
+        bodyEl.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+      emptyEl.classList.add('hidden');
+      bodyEl.innerHTML = items.map((item) => {
+        const serial = escapeHtml(item.accountSerial);
+        const encoded = encodeURIComponent(item.accountSerial);
+        const passwordCell = item.hasPassword
+          ? '<span class="password-value font-mono text-gray-700">••••••••</span> <button type="button" class="view-password ml-2 text-indigo-600 hover:text-indigo-800 text-xs" data-serial="' + encoded + '"><i class="fas fa-eye mr-1"></i>查看</button>'
+          : '<span class="text-gray-400">未设置</span>';
+        return '<tr class="hover:bg-gray-50">' +
+          '<td data-label="账号序号" class="px-5 py-4 text-sm font-semibold text-gray-900 font-mono">' + serial + '</td>' +
+          '<td data-label="账号" class="px-5 py-4 text-sm text-gray-700 break-all">' + escapeHtml(item.account) + '</td>' +
+          '<td data-label="密码" class="px-5 py-4 text-sm" data-password-cell="' + encoded + '">' + passwordCell + '</td>' +
+          '<td data-label="更新时间" class="px-5 py-4 text-sm text-gray-500">' + escapeHtml(formatTime(item.updatedAt)) + '</td>' +
+          '<td data-label="操作" class="px-5 py-4 text-sm text-right whitespace-nowrap">' +
+            '<button class="edit-account text-indigo-600 hover:text-indigo-800 mr-4" data-serial="' + encoded + '"><i class="fas fa-edit mr-1"></i>编辑</button>' +
+            '<button class="delete-account text-red-600 hover:text-red-800" data-serial="' + encoded + '"><i class="fas fa-trash mr-1"></i>删除</button>' +
+          '</td></tr>';
+      }).join('');
+    }
+
+    function renderPagination() {
+      const totalPages = state.totalPages || 0;
+      document.getElementById('pageSummary').textContent = state.total === 0
+        ? '共 0 条'
+        : '第 ' + state.page + ' / ' + totalPages + ' 页，共 ' + state.total + ' 条';
+      document.getElementById('prevPage').disabled = state.page <= 1;
+      document.getElementById('nextPage').disabled = totalPages === 0 || state.page >= totalPages;
+    }
+
+    function openCreateModal() {
+      document.getElementById('modalTitle').textContent = '新增账号';
+      document.getElementById('originalSerial').value = '';
+      document.getElementById('accountSerial').value = '';
+      document.getElementById('account').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('password').type = 'password';
+      document.getElementById('modalError').classList.add('hidden');
+      document.getElementById('accountModal').classList.remove('hidden');
+      document.getElementById('accountSerial').focus();
+    }
+
+    async function openEditModal(serial) {
+      try {
+        const data = await api('/api/accounts/' + encodeURIComponent(serial));
+        const item = data.account;
+        document.getElementById('modalTitle').textContent = '编辑账号';
+        document.getElementById('originalSerial').value = item.accountSerial;
+        document.getElementById('accountSerial').value = item.accountSerial;
+        document.getElementById('account').value = item.account;
+        document.getElementById('password').value = item.password || '';
+        document.getElementById('password').type = 'password';
+        document.getElementById('modalError').classList.add('hidden');
+        document.getElementById('accountModal').classList.remove('hidden');
+      } catch (error) { showToast(error.message, 'error'); }
+    }
+
+    function closeModal() { document.getElementById('accountModal').classList.add('hidden'); }
+
+    async function saveAccount(event) {
+      event.preventDefault();
+      const originalSerial = document.getElementById('originalSerial').value.trim();
+      const payload = {
+        accountSerial: document.getElementById('accountSerial').value.trim(),
+        account: document.getElementById('account').value.trim(),
+        password: document.getElementById('password').value
+      };
+      const errorEl = document.getElementById('modalError');
+      const saveBtn = document.getElementById('saveAccountBtn');
+      errorEl.classList.add('hidden');
+      saveBtn.disabled = true;
+      try {
+        const isEdit = !!originalSerial;
+        const data = await api(isEdit ? '/api/accounts/' + encodeURIComponent(originalSerial) : '/api/accounts', {
+          method: isEdit ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        closeModal();
+        if (isEdit && data.syncFailures) {
+          showToast('账号已更新，成功同步 ' + (data.affectedSubscriptions || 0) + ' 条订阅，' + data.syncFailures + ' 条同步失败', 'error');
+        } else {
+          showToast(isEdit ? ('账号已更新，已同步 ' + (data.affectedSubscriptions || 0) + ' 条订阅') : '账号已新增', 'success');
+        }
+        await loadAccounts();
+      } catch (error) {
+        errorEl.textContent = error.message;
+        errorEl.classList.remove('hidden');
+      } finally { saveBtn.disabled = false; }
+    }
+
+    async function toggleRowPassword(button) {
+      const encoded = button.dataset.serial || '';
+      const serial = decodeURIComponent(encoded);
+      const cell = document.querySelector('[data-password-cell="' + CSS.escape(encoded) + '"]');
+      if (!cell) return;
+      const valueEl = cell.querySelector('.password-value');
+      if (button.dataset.visible === '1') {
+        if (valueEl) valueEl.textContent = '••••••••';
+        button.dataset.visible = '0';
+        button.innerHTML = '<i class="fas fa-eye mr-1"></i>查看';
+        return;
+      }
+      try {
+        button.disabled = true;
+        const data = await api('/api/accounts/' + encodeURIComponent(serial));
+        if (valueEl) valueEl.textContent = data.account.password || '(空密码)';
+        button.dataset.visible = '1';
+        button.innerHTML = '<i class="fas fa-eye-slash mr-1"></i>隐藏';
+      } catch (error) { showToast(error.message, 'error'); }
+      finally { button.disabled = false; }
+    }
+
+    async function removeAccount(serial) {
+      if (!confirm('确定删除账号序号 “' + serial + '” 吗？\n仍被订阅引用的账号不能删除。')) return;
+      try {
+        await api('/api/accounts/' + encodeURIComponent(serial), { method: 'DELETE' });
+        showToast('账号已删除', 'success');
+        await loadAccounts();
+      } catch (error) { showToast(error.message, 'error'); }
+    }
+
+
+    // Database 批量导入：支持 Excel 复制/粘贴，逐行校验后分批写入 D1。
+    let accountImportRows = [];
+
+    function openAccountImportModal() {
+      document.getElementById('accountImportModal').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      setTimeout(() => document.getElementById('accountImportPaste').focus(), 50);
+    }
+
+    function closeAccountImportModal() {
+      document.getElementById('accountImportModal').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    function parseAccountClipboard(text) {
+      const rows = [];
+      let row = [];
+      let cell = '';
+      let inQuotes = false;
+      const source = String(text || '').replace(/^\uFEFF/, '');
+      for (let i = 0; i < source.length; i++) {
+        const ch = source[i];
+        const next = source[i + 1];
+        if (ch === '"') {
+          if (inQuotes && next === '"') { cell += '"'; i += 1; }
+          else inQuotes = !inQuotes;
+          continue;
+        }
+        if (!inQuotes && ch === '\t') { row.push(cell); cell = ''; continue; }
+        if (!inQuotes && (ch === '\n' || ch === '\r')) {
+          if (ch === '\r' && next === '\n') i += 1;
+          row.push(cell); rows.push(row); row = []; cell = ''; continue;
+        }
+        cell += ch;
+      }
+      row.push(cell);
+      if (row.some((value) => String(value).trim() !== '') || rows.length === 0) rows.push(row);
+      while (rows.length && rows[rows.length - 1].every((value) => String(value).trim() === '')) rows.pop();
+      return rows;
+    }
+
+    function normalizeAccountHeader(value) {
+      return String(value == null ? '' : value).replace(/^\uFEFF/, '').replace(/\s+/g, '').trim();
+    }
+
+    function parseAccountImport() {
+      const table = parseAccountClipboard(document.getElementById('accountImportPaste').value);
+      const summary = document.getElementById('accountImportSummary');
+      const preview = document.getElementById('accountImportPreview');
+      const previewBody = document.getElementById('accountImportPreviewBody');
+      const executeBtn = document.getElementById('executeAccountImportBtn');
+      const resultBox = document.getElementById('accountImportResult');
+      resultBox.classList.add('hidden');
+      resultBox.innerHTML = '';
+
+      if (!table.length || table.every((row) => row.every((value) => String(value).trim() === ''))) {
+        accountImportRows = [];
+        summary.textContent = '请先粘贴 Excel 数据';
+        preview.classList.add('hidden');
+        executeBtn.disabled = true;
+        return;
+      }
+
+      const first = table[0].map(normalizeAccountHeader);
+      const aliases = {
+        accountSerial: ['账号序号', '序号', 'accountserial'],
+        account: ['账号', '账户', '用户名', 'account'],
+        password: ['密码', 'password']
+      };
+      const mapping = {};
+      let recognized = 0;
+      Object.entries(aliases).forEach(([key, names]) => {
+        const index = first.findIndex((value) => names.some((name) => value.toLowerCase() === name.toLowerCase()));
+        if (index >= 0) { mapping[key] = index; recognized += 1; }
+      });
+      const hasHeader = recognized >= 2;
+      if (!hasHeader) {
+        mapping.accountSerial = 0;
+        mapping.account = 1;
+        mapping.password = 2;
+      }
+
+      const dataRows = hasHeader ? table.slice(1) : table;
+      const baseRow = hasHeader ? 2 : 1;
+      accountImportRows = dataRows
+        .map((cells, index) => ({ cells, sourceRow: baseRow + index }))
+        .filter((item) => item.cells.some((value) => String(value).trim() !== ''))
+        .map((item) => {
+          const serial = String(item.cells[mapping.accountSerial] == null ? '' : item.cells[mapping.accountSerial]).trim();
+          const account = String(item.cells[mapping.account] == null ? '' : item.cells[mapping.account]).trim();
+          const password = String(item.cells[mapping.password] == null ? '' : item.cells[mapping.password]);
+          const errors = [];
+          if (!serial) errors.push('账号序号不能为空');
+          if (!account) errors.push('账号不能为空');
+          return {
+            sourceRow: item.sourceRow,
+            data: { __sourceRow: item.sourceRow, accountSerial: serial, account, password },
+            errors
+          };
+        });
+
+      const validCount = accountImportRows.filter((item) => item.errors.length === 0).length;
+      const invalidCount = accountImportRows.length - validCount;
+      summary.innerHTML = `<span class="text-emerald-700">有效 ${validCount}</span>` +
+        (invalidCount ? ` · <span class="text-red-600">错误 ${invalidCount}</span>` : '') +
+        ` · <span class="text-gray-500">共 ${accountImportRows.length} 行</span>`;
+
+      previewBody.innerHTML = accountImportRows.slice(0, 200).map((item) => {
+        const ok = item.errors.length === 0;
+        return `<tr class="${ok ? '' : 'bg-red-50'}">` +
+          `<td class="px-3 py-2 whitespace-nowrap">${item.sourceRow}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${ok ? '<span class="text-emerald-700 font-medium">可导入</span>' : '<span class="text-red-600 font-medium">错误</span>'}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap font-mono">${escapeHtml(item.data.accountSerial)}</td>` +
+          `<td class="px-3 py-2 break-all">${escapeHtml(item.data.account)}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${item.data.password ? '<span class="text-gray-700">已填写</span>' : '<span class="text-gray-400">空 / 保留原密码</span>'}</td>` +
+          `<td class="px-3 py-2 ${ok ? 'text-gray-400' : 'text-red-600'}">${ok ? '—' : escapeHtml(item.errors.join('；'))}</td>` +
+        `</tr>`;
+      }).join('');
+      preview.classList.toggle('hidden', accountImportRows.length === 0);
+      executeBtn.disabled = validCount === 0;
+    }
+
+    function clearAccountImport() {
+      document.getElementById('accountImportPaste').value = '';
+      document.getElementById('accountImportSummary').textContent = '';
+      document.getElementById('accountImportPreviewBody').innerHTML = '';
+      document.getElementById('accountImportPreview').classList.add('hidden');
+      document.getElementById('accountImportResult').classList.add('hidden');
+      document.getElementById('accountImportResult').innerHTML = '';
+      document.getElementById('executeAccountImportBtn').disabled = true;
+      document.getElementById('executeAccountImportBtn').innerHTML = '<i class="fas fa-file-import mr-2"></i>导入有效数据';
+      accountImportRows = [];
+    }
+
+    async function executeAccountImport() {
+      if (!accountImportRows.length) parseAccountImport();
+      const validRows = accountImportRows.filter((item) => item.errors.length === 0);
+      if (!validRows.length) { showToast('没有可导入的有效账号', 'error'); return; }
+
+      const btn = document.getElementById('executeAccountImportBtn');
+      const resultBox = document.getElementById('accountImportResult');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>正在导入...';
+      let created = 0;
+      let updated = 0;
+      let unchanged = 0;
+      let failed = 0;
+      const failures = [];
+      try {
+        for (let i = 0; i < validRows.length; i += 100) {
+          const chunk = validRows.slice(i, i + 100).map((item) => item.data);
+          const response = await fetch('/api/accounts/import', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rows: chunk })
+          });
+          let payload = {};
+          try { payload = await response.json(); } catch { payload = {}; }
+          created += Number(payload.created || 0);
+          updated += Number(payload.updated || 0);
+          unchanged += Number(payload.unchanged || 0);
+          failed += Number(payload.failed || 0);
+          if (Array.isArray(payload.results)) {
+            payload.results.filter((item) => !item.success).forEach((item) => failures.push(item));
+          } else if (!response.ok) {
+            failed += chunk.length;
+            failures.push({ row: '—', message: payload.message || ('请求失败：' + response.status) });
+          }
+        }
+
+        const localInvalid = accountImportRows.filter((item) => item.errors.length > 0);
+        const allFailures = [
+          ...localInvalid.map((item) => ({ row: item.sourceRow, message: item.errors.join('；') })),
+          ...failures
+        ];
+        const parts = [
+          '<div class="font-semibold mb-2">账号批量导入完成</div>',
+          `<div>新增：<strong class="text-emerald-700">${created}</strong> 条；更新密码：<strong class="text-blue-700">${updated}</strong> 条；已有且无需更新：<strong>${unchanged}</strong> 条；失败：<strong class="text-red-600">${failed + localInvalid.length}</strong> 条。</div>`
+        ];
+        if (allFailures.length) {
+          parts.push('<div class="mt-3 font-medium">未导入行：</div>');
+          parts.push('<ul class="mt-1 list-disc pl-5 max-h-40 overflow-y-auto">' + allFailures.slice(0, 100).map((item) =>
+            `<li>第 ${escapeHtml(String(item.row))} 行：${escapeHtml(item.message || '导入失败')}</li>`
+          ).join('') + '</ul>');
+        }
+        resultBox.className = 'rounded-lg border p-4 text-sm ' + (allFailures.length ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900');
+        resultBox.innerHTML = parts.join('');
+        resultBox.classList.remove('hidden');
+        btn.innerHTML = '<i class="fas fa-check mr-2"></i>本次导入已完成';
+        showToast(`账号导入完成：新增 ${created}，更新 ${updated}`, 'success');
+        state.page = 1;
+        await loadAccounts();
+      } catch (error) {
+        resultBox.className = 'rounded-lg border p-4 text-sm bg-red-50 border-red-200 text-red-800';
+        resultBox.textContent = '导入过程中发生错误：' + (error?.message || String(error));
+        resultBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-file-import mr-2"></i>重试导入';
+        showToast('账号批量导入失败', 'error');
+      }
+    }
+
+    document.getElementById('addAccountBtn').addEventListener('click', openCreateModal);
+    document.getElementById('openAccountImportBtn').addEventListener('click', openAccountImportModal);
+    document.getElementById('closeAccountImportModal').addEventListener('click', closeAccountImportModal);
+    document.getElementById('cancelAccountImportBtn').addEventListener('click', closeAccountImportModal);
+    document.getElementById('parseAccountImportBtn').addEventListener('click', parseAccountImport);
+    document.getElementById('clearAccountImportBtn').addEventListener('click', clearAccountImport);
+    document.getElementById('executeAccountImportBtn').addEventListener('click', executeAccountImport);
+    document.getElementById('accountImportPaste').addEventListener('paste', () => {
+      setTimeout(parseAccountImport, 0);
+    });
+    document.getElementById('accountImportModal').addEventListener('click', (e) => {
+      if (e.target.id === 'accountImportModal') closeAccountImportModal();
+    });
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('cancelModal').addEventListener('click', closeModal);
+    document.getElementById('accountForm').addEventListener('submit', saveAccount);
+    document.getElementById('togglePassword').addEventListener('click', () => {
+      const input = document.getElementById('password');
+      const icon = document.querySelector('#togglePassword i');
+      input.type = input.type === 'password' ? 'text' : 'password';
+      icon.className = input.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+    });
+    document.getElementById('prevPage').addEventListener('click', () => { if (state.page > 1) { state.page--; loadAccounts(); } });
+    document.getElementById('nextPage').addEventListener('click', () => { if (state.page < state.totalPages) { state.page++; loadAccounts(); } });
+    document.getElementById('pageSize').addEventListener('change', (e) => { state.pageSize = Number(e.target.value) || 20; state.page = 1; loadAccounts(); });
+    let searchTimer = null;
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => { state.q = e.target.value.trim(); state.page = 1; loadAccounts(); }, 250);
+    });
+    bodyEl.addEventListener('click', (e) => {
+      const view = e.target.closest('.view-password');
+      if (view) return toggleRowPassword(view);
+      const edit = e.target.closest('.edit-account');
+      if (edit) return openEditModal(decodeURIComponent(edit.dataset.serial || ''));
+      const del = e.target.closest('.delete-account');
+      if (del) return removeAccount(decodeURIComponent(del.dataset.serial || ''));
+    });
+    document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden');
+    });
+    document.getElementById('accountModal').addEventListener('click', (e) => { if (e.target.id === 'accountModal') closeModal(); });
+
+    loadAccounts();
+  </script>
+</body>
+</html>

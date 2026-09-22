@@ -138,12 +138,10 @@ function ensureInitialConfig(namespaceId) {
 
   if (isNew) {
     const username = String(process.env.SUBSTRACKER_ADMIN_USERNAME || 'admin').trim() || 'admin';
-    const password = String(process.env.SUBSTRACKER_ADMIN_PASSWORD || '').trim();
-    if (!password) {
-      throw new Error('首次初始化需要设置 SUBSTRACKER_ADMIN_PASSWORD，已停止创建默认弱密码');
-    }
     config.ADMIN_USERNAME = username;
-    config.ADMIN_PASSWORD = password;
+    // 管理员密码不再写入 KV。运行时由 Cloudflare Worker Variable/Secret
+    // `SUBSTRACKER_ADMIN_PASSWORD` 提供；旧环境中的 ADMIN_PASSWORD 仅作为兼容回退。
+    config.ADMIN_PASSWORD = '';
     config.JWT_SECRET = crypto.randomUUID();
     config.CREDENTIALS_ENCRYPTION_KEY = `${crypto.randomUUID()}${crypto.randomUUID()}`;
   }
@@ -156,7 +154,7 @@ function ensureInitialConfig(namespaceId) {
   }
 
   if (!isNew && !superAdminPassword) {
-    console.log('[setup] KV config 已存在，保留现有管理员密码、SuperAdmin 配置与加密密钥');
+    console.log('[setup] KV config 已存在，保留现有兼容配置、SuperAdmin 配置与加密密钥；管理员登录优先使用 Worker SUBSTRACKER_ADMIN_PASSWORD');
     return;
   }
 
@@ -164,7 +162,7 @@ function ensureInitialConfig(namespaceId) {
   try {
     fs.writeFileSync(tempFile, JSON.stringify(config), { encoding: 'utf8', mode: 0o600 });
     wrangler(['kv', 'key', 'put', 'config', '--namespace-id', namespaceId, '--path', tempFile], { inherit: true });
-    if (isNew) console.log(`[setup] 已初始化管理员账号：${config.ADMIN_USERNAME || 'admin'}（密码未输出）`);
+    if (isNew) console.log(`[setup] 已初始化管理员账号：${config.ADMIN_USERNAME || 'admin'}；密码请在 Cloudflare Worker Variables and Secrets 中设置 SUBSTRACKER_ADMIN_PASSWORD`);
     if (superAdminPassword) console.log('[setup] 已写入/更新 SuperAdmin 二级密码哈希（明文未保存）');
   } finally {
     try { fs.unlinkSync(tempFile); } catch {}

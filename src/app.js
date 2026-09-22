@@ -23,7 +23,7 @@ import { getUserFromRequest } from './api/handlers/auth.js';
 import { ensureMigrations } from './data/migrate.js';
 
 /**
- * @typedef {{ SUBSCRIPTIONS_KV: KVNamespace, SUBSCRIPTIONS_DB?: D1Database }} Bindings
+ * @typedef {{ SUBSCRIPTIONS_KV: KVNamespace, SUBSCRIPTIONS_DB?: D1Database, SUBSTRACKER_ADMIN_PASSWORD?: string }} Bindings
  */
 
 /** @type {Hono<{ Bindings: Bindings }>} */

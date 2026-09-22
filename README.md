@@ -51,15 +51,16 @@ npm install
 # Linux / macOS
 export CLOUDFLARE_API_TOKEN=你的token
 export CLOUDFLARE_ACCOUNT_ID=你的AccountID
-export SUBSTRACKER_ADMIN_PASSWORD=你的首次管理员密码
 export SUBSTRACKER_SUPERADMIN_PASSWORD=你的SuperAdmin二级密码
 # Windows PowerShell
 # $env:CLOUDFLARE_API_TOKEN="你的token"
 # $env:CLOUDFLARE_ACCOUNT_ID="你的AccountID"
-# $env:SUBSTRACKER_ADMIN_PASSWORD="你的首次管理员密码"
 # $env:SUBSTRACKER_SUPERADMIN_PASSWORD="你的SuperAdmin二级密码"
 
 npm run deploy:safe
+
+# Worker 首次部署完成后，再设置管理员密码（推荐 Secret）
+npx wrangler secret put SUBSTRACKER_ADMIN_PASSWORD
 ```
 
 `deploy:safe` 会：
@@ -108,7 +109,6 @@ npm run setup:local-d1
 |--------|------|
 | `CLOUDFLARE_API_TOKEN` | **必填**。建议至少具备 Workers 部署权限、Workers KV Storage Write、D1 Edit；首次创建 Worker 时需要可创建 Worker 的权限 |
 | `CLOUDFLARE_ACCOUNT_ID` | **必填**，Cloudflare Account ID |
-| `SUBSTRACKER_ADMIN_PASSWORD` | **必填**，首次部署写入 KV 的管理员密码；不会写入仓库 |
 | `SUBSTRACKER_SUPERADMIN_PASSWORD` | **必填**，Database SuperAdmin mode 的二级密码；部署脚本只保存 PBKDF2 哈希，不保存明文 |
 
 3. 推送到 `master` / `main` 或手动运行 **Deploy** workflow  
@@ -120,13 +120,23 @@ npm run setup:local-d1
 | 项 | 值 |
 |---|---|
 | 用户名 | `admin`（可通过本地部署环境变量 `SUBSTRACKER_ADMIN_USERNAME` 调整） |
-| 密码 | GitHub Actions 使用 `SUBSTRACKER_ADMIN_PASSWORD` Secret；命令行部署使用同名环境变量 |
+| 密码 | Cloudflare Worker → **Settings → Variables and Secrets** 中的 `SUBSTRACKER_ADMIN_PASSWORD` |
 
-首次初始化后，后续部署会保留 KV 中现有管理员密码，不会被 GitHub Secret 反复覆盖。首次创建新环境时必须设置 `SUBSTRACKER_ADMIN_PASSWORD`；脚本不会自动创建默认弱密码。
+管理员密码现在以 Cloudflare Worker 运行时变量为最高优先级来源。推荐把 `SUBSTRACKER_ADMIN_PASSWORD` 建立为 **Secret**，不要写入 `wrangler.toml`、GitHub 仓库或 KV。旧部署若 KV 里仍有 `ADMIN_PASSWORD`，只会在 Worker 尚未配置 `SUBSTRACKER_ADMIN_PASSWORD` 时作为兼容回退。
 
-### 忘记密码
+### 设置 / 修改管理员密码
 
-Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV` → 编辑 key `config` 的 JSON，修改 `ADMIN_PASSWORD` 后保存。
+Cloudflare Dashboard → **Workers & Pages → subscription-manager → Settings → Variables and Secrets → Add**：
+
+- Name：`SUBSTRACKER_ADMIN_PASSWORD`
+- Type：建议 **Secret**
+- Value：你的管理员密码
+
+保存后新密码立即作为登录密码来源。命令行也可以在 Worker 已部署后执行：
+
+```bash
+npx wrangler secret put SUBSTRACKER_ADMIN_PASSWORD
+```
 
 ---
 
@@ -134,9 +144,9 @@ Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV
 
 打开 **系统配置**，建议按顺序做完：
 
-### 1. 改密码
+### 1. 配置管理员密码
 
-管理员用户名 / 密码改成自己的。页面若提示仍是默认 `admin`，请务必处理。
+在 Cloudflare Worker 的 **Settings → Variables and Secrets** 中设置 `SUBSTRACKER_ADMIN_PASSWORD`。系统配置页只显示配置状态，不会读取、回显或保存密码明文。
 
 ### 2. 时区
 
@@ -461,8 +471,8 @@ tests/                 # Vitest + workerd
 
 ## 🔐 安全提醒
 
-1. **立刻修改** 默认 `admin` / `password`  
-2. 不要把 API Token、Bot Token 提交进 Git  
+1. 管理员密码请放在 Cloudflare Worker **Variables and Secrets** 的 `SUBSTRACKER_ADMIN_PASSWORD`，推荐使用 Secret  
+2. 不要把 API Token、Bot Token、管理员密码提交进 Git  
 3. 备份 JSON 若勾选「包含敏感配置」，请当密码一样保管  
 4. 对话、截图里不要长期暴露 Cloudflare API Token；泄露请到 Dashboard **轮换 Token**
 
@@ -474,3 +484,9 @@ tests/                 # Vitest + workerd
 MIT License。
 
 ---
+
+## 关注作者
+
+![image](https://github.com/user-attachments/assets/96bae085-4299-4377-9958-9a3a11294efc)
+
+CDN 加速由 Tencent EdgeOne 赞助。

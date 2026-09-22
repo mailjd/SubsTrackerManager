@@ -12,7 +12,6 @@
 
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
-- `SUBSTRACKER_ADMIN_PASSWORD`
 - `SUBSTRACKER_SUPERADMIN_PASSWORD`
 
 API Token 需要允许自动创建/复用并访问本项目使用的 Worker、KV 和 D1。建议包含 Workers 部署权限、Workers KV Storage Write、D1 Edit；若 Worker 尚不存在，Token 还需要允许创建 Worker。
@@ -27,7 +26,16 @@ API Token 需要允许自动创建/复用并访问本项目使用的 Worker、KV
 4. `npm run setup`：创建/复用 KV、D1，写入绑定并应用 D1 migrations
 5. `cloudflare/wrangler-action@v4`：发布 Worker
 
-首次初始化时必须提供 `SUBSTRACKER_ADMIN_PASSWORD` 和 `SUBSTRACKER_SUPERADMIN_PASSWORD`。已有环境再次部署时会保留 KV 中现有管理员配置和加密密钥。
+首次初始化时 GitHub Actions 必须提供 `SUBSTRACKER_SUPERADMIN_PASSWORD`。管理员密码不再由 GitHub Actions 写入 KV，而是在 Cloudflare Worker 的 Variables and Secrets 中设置 `SUBSTRACKER_ADMIN_PASSWORD`。已有环境再次部署会保留现有 KV / D1 数据与 Worker Secret。
+
+
+## Cloudflare Worker Variables and Secrets
+
+部署 Worker 后，在 `Workers & Pages → subscription-manager → Settings → Variables and Secrets` 设置：
+
+- `SUBSTRACKER_ADMIN_PASSWORD`：**必填**，建议类型选 **Secret**。这是管理员登录密码的最高优先级来源。
+
+旧部署如果 KV 里仍有 `ADMIN_PASSWORD`，只有在上述 Worker 变量尚未配置时才会暂时回退使用。
 
 ## Cloudflare 资源
 

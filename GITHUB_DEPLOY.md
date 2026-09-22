@@ -20,16 +20,15 @@
 
 进入：`Settings → Secrets and variables → Actions → New repository secret`。
 
-必须建立以下 4 个 Secret：
+必须建立以下 3 个 GitHub Actions Secret：
 
 | Secret | 用途 |
 |---|---|
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API Token。建议至少具备 Workers 部署权限、Workers KV Storage Write、D1 Edit；首次创建 Worker 时需要可创建 Worker 的权限 |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID |
-| `SUBSTRACKER_ADMIN_PASSWORD` | SubsTracker 首次管理员密码，只在首次初始化 KV 配置时写入，不写入仓库 |
 | `SUBSTRACKER_SUPERADMIN_PASSWORD` | Database SuperAdmin mode 二级密码；初始化脚本仅保存 PBKDF2 哈希，不保存明文 |
 
-API Token、管理员密码和 SuperAdmin 二级密码不要写进 `wrangler.toml`、源码、README 或任何 Git 提交。
+API Token、管理员密码和 SuperAdmin 二级密码不要写进 `wrangler.toml`、源码、README 或任何 Git 提交。管理员密码改为在 Cloudflare Worker 的 Variables and Secrets 中单独设置。
 
 ## 3. 推送并自动部署
 
@@ -41,17 +40,29 @@ API Token、管理员密码和 SuperAdmin 二级密码不要写进 `wrangler.tom
 4. 自动创建或复用 `SUBSCRIPTIONS_KV`
 5. 自动创建或复用 `subscription-manager-db` D1
 6. `wrangler d1 migrations apply` 初始化/升级数据库
-7. 首次部署初始化管理员密码、SuperAdmin 二级密码哈希、JWT Secret、凭据加密密钥
+7. 首次部署初始化 SuperAdmin 二级密码哈希、JWT Secret、凭据加密密钥
 8. 使用 Cloudflare 官方 `wrangler-action@v4` 执行 `wrangler deploy` 发布 Worker
 
 也可以在 GitHub 的 `Actions → Deploy → Run workflow` 手动触发。
 
-## 4. 首次登录
+## 4. 设置 Cloudflare Worker 管理员密码
+
+GitHub Actions 部署成功后，在 Cloudflare Dashboard 打开：
+
+`Workers & Pages → subscription-manager → Settings → Variables and Secrets → Add`
+
+新增：
+
+- Name：`SUBSTRACKER_ADMIN_PASSWORD`
+- Type：推荐 **Secret**
+- Value：你的管理员密码
+
+首次登录：
 
 - 用户名：`admin`
-- 密码：GitHub Secret `SUBSTRACKER_ADMIN_PASSWORD` 中设置的值
+- 密码：上述 Worker `SUBSTRACKER_ADMIN_PASSWORD` 的值
 
-首次部署完成后，即使以后修改 GitHub Secret，部署脚本也不会覆盖 KV 中已经存在的管理员配置。首次创建新环境时 `SUBSTRACKER_ADMIN_PASSWORD` 为必填，不会回退到默认弱密码。密码请在系统配置中维护。
+运行时会优先读取 Cloudflare Worker Variable/Secret。旧环境 KV 中的 `ADMIN_PASSWORD` 只作为兼容回退；一旦 Worker 已配置 `SUBSTRACKER_ADMIN_PASSWORD`，旧 KV 密码不会再用于登录。
 
 ## 5. D1 数据库
 
@@ -65,7 +76,7 @@ API Token、管理员密码和 SuperAdmin 二级密码不要写进 `wrangler.tom
 
 ## 6. 更新版本
 
-以后把修改后的源码 push 到同一仓库即可。部署脚本会复用现有 KV / D1，不会重新创建业务数据库，也不会覆盖已存在的管理员密码。
+以后把修改后的源码 push 到同一仓库即可。部署脚本会复用现有 KV / D1，不会重新创建业务数据库；Cloudflare Worker 中已有的 `SUBSTRACKER_ADMIN_PASSWORD` 会继续作为管理员登录密码。
 
 ## 7. 本地部署（可选）
 
@@ -74,10 +85,12 @@ API Token、管理员密码和 SuperAdmin 二级密码不要写进 `wrangler.tom
 ```bash
 export CLOUDFLARE_API_TOKEN=...
 export CLOUDFLARE_ACCOUNT_ID=...
-export SUBSTRACKER_ADMIN_PASSWORD=...
 export SUBSTRACKER_SUPERADMIN_PASSWORD=...
 npm ci
 npm run deploy:safe
+
+# Worker 已部署后，交互式设置管理员密码 Secret
+npx wrangler secret put SUBSTRACKER_ADMIN_PASSWORD
 ```
 
 Windows PowerShell 使用 `$env:变量名="值"`。

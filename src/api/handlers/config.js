@@ -1,4 +1,4 @@
-import { getConfig, setConfig } from '../../data/config.js';
+import { getConfig, setConfig, getAdminPasswordSource } from '../../data/config.js';
 import { generateRandomSecret, sanitizeNotificationHours } from '../utils.js';
 
 // 这些字段可能包含 token/密钥，绝不下发到浏览器
@@ -21,9 +21,15 @@ function isConfiguredSecret(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-function buildSafeConfig(config) {
+function buildSafeConfig(config, env) {
   const { JWT_SECRET, ADMIN_PASSWORD, CREDENTIALS_ENCRYPTION_KEY, SUPERADMIN_PASSWORD_HASH, ...safeConfig } = config;
-  const response = { ...safeConfig, SUPERADMIN_CONFIGURED: typeof SUPERADMIN_PASSWORD_HASH === 'string' && SUPERADMIN_PASSWORD_HASH.length > 0 };
+  const adminPasswordSource = getAdminPasswordSource(env, config);
+  const response = {
+    ...safeConfig,
+    SUPERADMIN_CONFIGURED: typeof SUPERADMIN_PASSWORD_HASH === 'string' && SUPERADMIN_PASSWORD_HASH.length > 0,
+    ADMIN_PASSWORD_CONFIGURED: adminPasswordSource !== 'not_configured',
+    ADMIN_PASSWORD_SOURCE: adminPasswordSource
+  };
 
   // 对每个敏感字段：返回空字符串 + 一个 *_CONFIGURED 标记
   SECRET_FIELDS.forEach((key) => {
@@ -66,7 +72,7 @@ function mergeSecretField(existingConfig, newConfig, key, clearSecretFields = []
 async function handleGetConfig(env) {
   const config = await getConfig(env);
   return new Response(
-    JSON.stringify(buildSafeConfig(config)),
+    JSON.stringify(buildSafeConfig(config, env)),
     { headers: { 'Content-Type': 'application/json' } }
   );
 }
@@ -135,9 +141,8 @@ async function handleUpdateConfig(request, env) {
 
     updatedConfig.NOTIFICATION_HOURS = sanitizeNotificationHours(newConfig.NOTIFICATION_HOURS);
 
-    if (newConfig.ADMIN_PASSWORD) {
-      updatedConfig.ADMIN_PASSWORD = newConfig.ADMIN_PASSWORD;
-    }
+    // 管理员密码由 Cloudflare Worker Variable/Secret `SUBSTRACKER_ADMIN_PASSWORD` 管理。
+    // 为避免把运行时密码写回 KV，这里忽略前端传入的 ADMIN_PASSWORD。
 
     if (!updatedConfig.JWT_SECRET || updatedConfig.JWT_SECRET === 'your-secret-key') {
       updatedConfig.JWT_SECRET = generateRandomSecret();

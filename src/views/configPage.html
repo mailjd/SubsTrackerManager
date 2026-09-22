@@ -145,10 +145,6 @@
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="bg-white rounded-lg shadow-md p-6">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">系统配置</h2>
-      <div id="defaultPasswordBanner" class="hidden mb-4 p-3 rounded-md border border-amber-300 bg-amber-50 text-amber-900 text-sm">
-        <i class="fas fa-exclamation-triangle mr-1"></i>
-        检测到仍可能使用默认管理员密码。请立即修改下方「管理员密码」并保存，避免公网被接管。
-      </div>
       
       <form id="configForm" class="space-y-8">
         <div class="border-b border-gray-200 pb-6">
@@ -159,9 +155,11 @@
               <input type="text" id="adminUsername" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
             </div>
             <div>
-              <label for="adminPassword" class="block text-sm font-medium text-gray-700">密码</label>
-              <input type="password" id="adminPassword" placeholder="如不修改密码，请留空" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-              <p class="mt-1 text-sm text-gray-500">留空表示不修改当前密码</p>
+              <label class="block text-sm font-medium text-gray-700">管理员密码</label>
+              <div id="adminPasswordStatus" class="mt-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                <i class="fas fa-circle-notch fa-spin mr-1"></i>正在检测 Cloudflare Worker 配置…
+              </div>
+              <p class="mt-2 text-sm text-gray-500">密码由 Cloudflare Worker → Settings → Variables and Secrets 中的 <code class="px-1 py-0.5 bg-gray-100 rounded">SUBSTRACKER_ADMIN_PASSWORD</code> 管理，系统配置页不会读取或保存密码明文。</p>
             </div>
           </div>
         </div>
@@ -837,10 +835,18 @@
         // 3) 如需清空，请点对应的“清空”按钮（会在保存时生效）。
 
         document.getElementById('adminUsername').value = config.ADMIN_USERNAME || '';
-        const _banner = document.getElementById('defaultPasswordBanner');
-        if (_banner) {
-          // 无法读取密码；用户名仍为 admin 时提示改密（默认部署风险）
-          _banner.classList.toggle('hidden', (config.ADMIN_USERNAME || 'admin') !== 'admin');
+        const passwordStatus = document.getElementById('adminPasswordStatus');
+        if (passwordStatus) {
+          if (config.ADMIN_PASSWORD_SOURCE === 'cloudflare_worker') {
+            passwordStatus.className = 'mt-1 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800';
+            passwordStatus.innerHTML = '<i class="fas fa-check-circle mr-1"></i>已由 Cloudflare Worker Variable / Secret 配置';
+          } else if (config.ADMIN_PASSWORD_SOURCE === 'legacy_kv') {
+            passwordStatus.className = 'mt-1 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800';
+            passwordStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>正在使用旧版 KV 密码兼容模式；建议尽快配置 SUBSTRACKER_ADMIN_PASSWORD';
+          } else {
+            passwordStatus.className = 'mt-1 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800';
+            passwordStatus.innerHTML = '<i class="fas fa-times-circle mr-1"></i>尚未配置管理员密码；请在 Cloudflare Worker Variables and Secrets 中设置 SUBSTRACKER_ADMIN_PASSWORD';
+          }
         }
         document.getElementById('themeModeSelect').value = config.THEME_MODE || 'system';  // 回显主题设置
 
@@ -1125,11 +1131,6 @@
             .filter(item => item.length > 0);
         })()
       };
-
-      const passwordField = document.getElementById('adminPassword');
-      if (passwordField.value.trim()) {
-        config.ADMIN_PASSWORD = passwordField.value.trim();
-      }
 
       const submitButton = e.target.querySelector('button[type="submit"]');
       const originalContent = submitButton.innerHTML;

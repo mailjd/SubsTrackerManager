@@ -1,5 +1,5 @@
 import { generateJWT, verifyJWT } from '../../core/auth.js';
-import { getConfig } from '../../data/config.js';
+import { getConfig, getRuntimeAdminPassword } from '../../data/config.js';
 import { getCookieValue } from '../utils.js';
 
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -46,7 +46,16 @@ async function handleLogin(request, env) {
 
   const config = await getConfig(env);
 
-  if (body.username === config.ADMIN_USERNAME && body.password === config.ADMIN_PASSWORD) {
+  const adminPassword = getRuntimeAdminPassword(env, config);
+
+  if (!adminPassword) {
+    return new Response(
+      JSON.stringify({ success: false, message: '管理员密码尚未配置，请在 Cloudflare Worker Variables and Secrets 中设置 SUBSTRACKER_ADMIN_PASSWORD' }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  if (body.username === config.ADMIN_USERNAME && body.password === adminPassword) {
     await clearAttempts(env, ip);
     const token = await generateJWT(body.username, config.JWT_SECRET);
 

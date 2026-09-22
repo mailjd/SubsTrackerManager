@@ -22,6 +22,8 @@ binding = "ASSETS"
 [triggers]
 crons = ["0 * * * *"]
 
-# 环境变量（可选，也可以在 Cloudflare Dashboard 中设置）
+# 非敏感环境变量。
+# 管理员密码不要写入此文件；请在 Cloudflare Dashboard → Worker → Settings → Variables and Secrets
+# 新增 Secret/Variable：SUBSTRACKER_ADMIN_PASSWORD。
 [vars]
 ENVIRONMENT = "production"

@@ -2,7 +2,7 @@ import { getKVJson, putKVJson } from './kv.js';
 
 const DEFAULT_CONFIG = {
   ADMIN_USERNAME: 'admin',
-  ADMIN_PASSWORD: 'password',
+  ADMIN_PASSWORD: '',
   CREDENTIALS_ENCRYPTION_KEY: '',
   SUPERADMIN_PASSWORD_HASH: '',
   TG_BOT_TOKEN: '',
@@ -42,6 +42,27 @@ const DEFAULT_CONFIG = {
   NTFY_TOPIC: '',
   NTFY_TOKEN: ''
 };
+
+
+function getRuntimeAdminPassword(env, config = {}) {
+  const workerPassword = typeof env?.SUBSTRACKER_ADMIN_PASSWORD === 'string'
+    ? env.SUBSTRACKER_ADMIN_PASSWORD.trim()
+    : '';
+  if (workerPassword) return workerPassword;
+
+  // 兼容旧部署：如果 Worker Variable/Secret 尚未配置，暂时回退 KV 中的旧密码。
+  // 新部署不会再主动把管理员密码写入 KV。
+  return typeof config?.ADMIN_PASSWORD === 'string' ? config.ADMIN_PASSWORD : '';
+}
+
+function getAdminPasswordSource(env, config = {}) {
+  const workerPassword = typeof env?.SUBSTRACKER_ADMIN_PASSWORD === 'string'
+    ? env.SUBSTRACKER_ADMIN_PASSWORD.trim()
+    : '';
+  if (workerPassword) return 'cloudflare_worker';
+  if (typeof config?.ADMIN_PASSWORD === 'string' && config.ADMIN_PASSWORD.length > 0) return 'legacy_kv';
+  return 'not_configured';
+}
 
 async function getConfig(env) {
   if (!env.SUBSCRIPTIONS_KV) {
@@ -89,5 +110,7 @@ async function setConfig(env, config) {
 export {
   DEFAULT_CONFIG,
   getConfig,
-  setConfig
+  setConfig,
+  getRuntimeAdminPassword,
+  getAdminPasswordSource
 };

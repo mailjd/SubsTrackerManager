@@ -3,7 +3,9 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "checkJs": false,
     "allowJs": true,
     "noEmit": true,
@@ -16,8 +18,19 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "types": ["@cloudflare/workers-types"]
+    "types": [
+      "@cloudflare/workers-types"
+    ]
   },
-  "include": ["src/**/*.js"],
-  "exclude": ["node_modules", "dist", ".wrangler", "public", "tests"]
+  "include": [
+    "src/**/*.js",
+    "functions/**/*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".wrangler",
+    "public",
+    "tests"
+  ]
 }

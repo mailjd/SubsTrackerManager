@@ -33,3 +33,6 @@ FULL_AUDIT_REPORT.md
 
 # 首次部署临时配置文件（脚本正常会自动删除）
 .substracker-bootstrap-config.json
+
+# 部署脚本临时配置
+.substracker-*.json

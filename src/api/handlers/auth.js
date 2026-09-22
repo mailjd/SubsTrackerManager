@@ -50,7 +50,7 @@ async function handleLogin(request, env) {
 
   if (!adminPassword) {
     return new Response(
-      JSON.stringify({ success: false, message: '管理员密码尚未配置，请在 Cloudflare Worker Variables and Secrets 中设置 SUBSTRACKER_ADMIN_PASSWORD' }),
+      JSON.stringify({ success: false, message: '管理员密码尚未配置。首次部署可设置 Cloudflare SUBSTRACKER_ADMIN_PASSWORD，登录后请在系统配置中设置正式管理员密码' }),
       { status: 503, headers: { 'Content-Type': 'application/json' } }
     );
   }

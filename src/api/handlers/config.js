@@ -1,5 +1,6 @@
 import { getConfig, setConfig, getAdminPasswordSource } from '../../data/config.js';
 import { generateRandomSecret, sanitizeNotificationHours } from '../utils.js';
+import { getRuntimeSuperAdminCredentials } from '../../core/superadmin.js';
 
 // 这些字段可能包含 token/密钥，绝不下发到浏览器
 const SECRET_FIELDS = [
@@ -24,9 +25,10 @@ function isConfiguredSecret(value) {
 function buildSafeConfig(config, env) {
   const { JWT_SECRET, ADMIN_PASSWORD, CREDENTIALS_ENCRYPTION_KEY, SUPERADMIN_PASSWORD_HASH, ...safeConfig } = config;
   const adminPasswordSource = getAdminPasswordSource(env, config);
+  const runtimeSuperAdmin = getRuntimeSuperAdminCredentials(env);
   const response = {
     ...safeConfig,
-    SUPERADMIN_CONFIGURED: typeof SUPERADMIN_PASSWORD_HASH === 'string' && SUPERADMIN_PASSWORD_HASH.length > 0,
+    SUPERADMIN_CONFIGURED: runtimeSuperAdmin.configured,
     ADMIN_PASSWORD_CONFIGURED: adminPasswordSource !== 'not_configured',
     ADMIN_PASSWORD_SOURCE: adminPasswordSource
   };
@@ -85,7 +87,8 @@ async function handleUpdateConfig(request, env) {
 
     const updatedConfig = {
       ...config,
-      ADMIN_USERNAME: newConfig.ADMIN_USERNAME || config.ADMIN_USERNAME,
+      ADMIN_USERNAME: (newConfig.ADMIN_USERNAME || config.ADMIN_USERNAME || 'admin').trim(),
+      ADMIN_PASSWORD: config.ADMIN_PASSWORD || '',
       THEME_MODE: newConfig.THEME_MODE || 'system',
 
       TG_BOT_TOKEN: mergeSecretField(config, newConfig, 'TG_BOT_TOKEN', clearSecretFields),
@@ -141,8 +144,11 @@ async function handleUpdateConfig(request, env) {
 
     updatedConfig.NOTIFICATION_HOURS = sanitizeNotificationHours(newConfig.NOTIFICATION_HOURS);
 
-    // 管理员密码由 Cloudflare Worker Variable/Secret `SUBSTRACKER_ADMIN_PASSWORD` 管理。
-    // 为避免把运行时密码写回 KV，这里忽略前端传入的 ADMIN_PASSWORD。
+    // 管理员密码由系统配置页管理：留空表示不修改，输入新值则保存到 KV。
+    // SUBSTRACKER_ADMIN_PASSWORD 仅作为首次部署/应急登录的回退，不会覆盖系统配置密码。
+    if (typeof newConfig.ADMIN_PASSWORD === 'string' && newConfig.ADMIN_PASSWORD.trim()) {
+      updatedConfig.ADMIN_PASSWORD = newConfig.ADMIN_PASSWORD.trim();
+    }
 
     if (!updatedConfig.JWT_SECRET || updatedConfig.JWT_SECRET === 'your-secret-key') {
       updatedConfig.JWT_SECRET = generateRandomSecret();

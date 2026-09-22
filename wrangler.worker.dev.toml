@@ -1,0 +1,34 @@
+# 本地开发专用配置
+#
+# 用法：npx wrangler dev --config wrangler.worker.dev.toml
+#
+# 与默认 Pages 配置 wrangler.toml 的差异：
+#   - 内联本地 KV 与 D1 占位绑定，让 Miniflare 可以模拟存储
+#   - 不动 Pages 主配置 wrangler.toml，避免与 npm run setup:pages 自动写入的线上绑定冲突
+name = "subscription-manager-dev"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# 本地用的占位 KV，miniflare 会自动用 .wrangler/state 下的本地 KV 文件
+[[kv_namespaces]]
+binding = "SUBSCRIPTIONS_KV"
+id = "local-dev-kv-placeholder"
+preview_id = "local-dev-kv-preview"
+
+# 本地 D1：保存订阅记录、订阅历史与独立账号 Database
+[[d1_databases]]
+binding = "SUBSCRIPTIONS_DB"
+database_name = "subscription-manager-dev"
+database_id = "local-dev-d1"
+migrations_dir = "migrations"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[triggers]
+crons = ["0 * * * *"]
+
+[vars]
+ENVIRONMENT = "development"

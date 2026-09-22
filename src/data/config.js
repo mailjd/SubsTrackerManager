@@ -45,22 +45,25 @@ const DEFAULT_CONFIG = {
 
 
 function getRuntimeAdminPassword(env, config = {}) {
+  // v3.2.1 起，系统配置页保存的 ADMIN_PASSWORD 为正式登录密码。
+  // Cloudflare 的 SUBSTRACKER_ADMIN_PASSWORD 仅作为首次部署/应急登录的兼容回退。
+  const configuredPassword = typeof config?.ADMIN_PASSWORD === 'string'
+    ? config.ADMIN_PASSWORD
+    : '';
+  if (configuredPassword) return configuredPassword;
+
   const workerPassword = typeof env?.SUBSTRACKER_ADMIN_PASSWORD === 'string'
     ? env.SUBSTRACKER_ADMIN_PASSWORD.trim()
     : '';
-  if (workerPassword) return workerPassword;
-
-  // 兼容旧部署：如果 Worker Variable/Secret 尚未配置，暂时回退 KV 中的旧密码。
-  // 新部署不会再主动把管理员密码写入 KV。
-  return typeof config?.ADMIN_PASSWORD === 'string' ? config.ADMIN_PASSWORD : '';
+  return workerPassword;
 }
 
 function getAdminPasswordSource(env, config = {}) {
+  if (typeof config?.ADMIN_PASSWORD === 'string' && config.ADMIN_PASSWORD.length > 0) return 'system_config';
   const workerPassword = typeof env?.SUBSTRACKER_ADMIN_PASSWORD === 'string'
     ? env.SUBSTRACKER_ADMIN_PASSWORD.trim()
     : '';
-  if (workerPassword) return 'cloudflare_worker';
-  if (typeof config?.ADMIN_PASSWORD === 'string' && config.ADMIN_PASSWORD.length > 0) return 'legacy_kv';
+  if (workerPassword) return 'cloudflare_fallback';
   return 'not_configured';
 }
 

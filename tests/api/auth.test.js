@@ -49,14 +49,14 @@ describe('POST /api/login', () => {
     expect(res.headers.get('Set-Cookie') || '').toMatch(/HttpOnly/i);
   });
 
-  it('Cloudflare Worker SUBSTRACKER_ADMIN_PASSWORD 优先于旧 KV 密码', async () => {
+  it('系统配置 ADMIN_PASSWORD 优先于 Cloudflare 回退密码', async () => {
     await seedAdmin();
     const workerEnv = {
       ...env,
       SUBSTRACKER_ADMIN_PASSWORD: 'worker-secret'
     };
 
-    const oldPasswordRes = await app.request(
+    const configuredPasswordRes = await app.request(
       '/api/login',
       {
         method: 'POST',
@@ -65,9 +65,10 @@ describe('POST /api/login', () => {
       },
       workerEnv
     );
-    expect((await oldPasswordRes.json()).success).toBe(false);
+    expect(configuredPasswordRes.status).toBe(200);
+    expect((await configuredPasswordRes.json()).success).toBe(true);
 
-    const workerPasswordRes = await app.request(
+    const fallbackPasswordRes = await app.request(
       '/api/login',
       {
         method: 'POST',
@@ -76,8 +77,26 @@ describe('POST /api/login', () => {
       },
       workerEnv
     );
-    expect(workerPasswordRes.status).toBe(200);
-    expect((await workerPasswordRes.json()).success).toBe(true);
+    expect((await fallbackPasswordRes.json()).success).toBe(false);
+  });
+
+  it('系统配置未设置密码时使用 SUBSTRACKER_ADMIN_PASSWORD 回退登录', async () => {
+    await env.SUBSCRIPTIONS_KV.put(
+      'config',
+      JSON.stringify({ ADMIN_USERNAME: 'admin', ADMIN_PASSWORD: '', JWT_SECRET: 'test-secret-key' })
+    );
+    const workerEnv = { ...env, SUBSTRACKER_ADMIN_PASSWORD: 'worker-secret' };
+    const res = await app.request(
+      '/api/login',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '10.0.0.3' },
+        body: JSON.stringify({ username: 'admin', password: 'worker-secret' })
+      },
+      workerEnv
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).success).toBe(true);
   });
 
   it('Worker 与 KV 都没有管理员密码时返回 503', async () => {

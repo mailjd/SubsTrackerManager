@@ -1,52 +1,59 @@
-# GitHub → Cloudflare 部署检查清单
+# GitHub → Cloudflare Pages 部署检查清单
 
-这个发布包同时面向 GitHub 仓库和 Cloudflare Workers 部署。
+## GitHub
 
-## GitHub 仓库
-
-将 ZIP 解压后的**全部内容**提交到仓库根目录，包括隐藏目录 `.github/`。不要只上传 `src/`。
+- [ ] ZIP 全部内容已提交到仓库根目录
+- [ ] `.github/` 已提交
+- [ ] `functions/` 已提交
+- [ ] `public/_routes.json` 已提交
+- [ ] `wrangler.toml` 已提交
 
 ## GitHub Secrets
 
-在 `Settings → Secrets and variables → Actions` 创建：
+- [ ] `CLOUDFLARE_API_TOKEN`
+- [ ] `CLOUDFLARE_ACCOUNT_ID`
 
-- `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_ACCOUNT_ID`
-- `SUBSTRACKER_SUPERADMIN_PASSWORD`
-
-API Token 需要允许自动创建/复用并访问本项目使用的 Worker、KV 和 D1。建议包含 Workers 部署权限、Workers KV Storage Write、D1 Edit；若 Worker 尚不存在，Token 还需要允许创建 Worker。
+Cloudflare API Token 需要能管理本项目使用的 Pages、Workers、KV 和 D1。
 
 ## 自动部署
 
-推送到 `main` 或 `master` 后，Deploy workflow 会执行：
+Push 后确认 GitHub Actions 依次完成：
 
-1. `npm ci`
-2. `npm run lint`
-3. `npm test`
-4. `npm run setup`：创建/复用 KV、D1，写入绑定并应用 D1 migrations
-5. `cloudflare/wrangler-action@v4`：发布 Worker
+- [ ] `npm ci`
+- [ ] `npm run lint`
+- [ ] `npm test`
+- [ ] `npm run build:pages`
+- [ ] `npm run setup:pages`
+- [ ] `npm run deploy:pages`
+- [ ] `npm run deploy:pages:cron`
 
-首次初始化时 GitHub Actions 必须提供 `SUBSTRACKER_SUPERADMIN_PASSWORD`。管理员密码不再由 GitHub Actions 写入 KV，而是在 Cloudflare Worker 的 Variables and Secrets 中设置 `SUBSTRACKER_ADMIN_PASSWORD`。已有环境再次部署会保留现有 KV / D1 数据与 Worker Secret。
+## Cloudflare Pages
 
+Pages 项目：`substracker-manager-pages`
 
-## Cloudflare Worker Variables and Secrets
+- [ ] Pages deployment 成功
+- [ ] KV binding：`SUBSCRIPTIONS_KV`
+- [ ] D1 binding：`SUBSCRIPTIONS_DB`
+- [ ] （新部署可选）`SUBSTRACKER_ADMIN_PASSWORD` 已设置为首次登录/应急回退密码
+- [ ] `SUBSTRACKER_SUPERADMIN_USERNAME` 已在 Pages Variables and Secrets 设置
+- [ ] `SUBSTRACKER_SUPERADMIN_PASSWORD` 已在 Pages Variables and Secrets 设置
+- [ ] 登录页可打开
+- [ ] Admin 页面可登录
+- [ ] Database 页面可读取 D1
 
-部署 Worker 后，在 `Workers & Pages → subscription-manager → Settings → Variables and Secrets` 设置：
+## 定时提醒
 
-- `SUBSTRACKER_ADMIN_PASSWORD`：**必填**，建议类型选 **Secret**。这是管理员登录密码的最高优先级来源。
+完整部署会额外创建 `substracker-pages-cron` Worker：
 
-旧部署如果 KV 里仍有 `ADMIN_PASSWORD`，只有在上述 Worker 变量尚未配置时才会暂时回退使用。
-
-## Cloudflare 资源
-
-部署脚本自动使用：
-
-- Worker：`subscription-manager`
-- KV：`SUBSCRIPTIONS_KV` / `SUBSCRIPTIONS_KV_PREVIEW`
-- D1：`subscription-manager-db`，Worker binding 为 `SUBSCRIPTIONS_DB`
-- D1 migrations：`migrations/0001_subscription_history.sql`、`migrations/0002_accounts_database.sql`、`migrations/0003_menu_options_database.sql`
-- Cron：每小时一次
+- [ ] Cron `0 * * * *` 已存在
+- [ ] `SUBSTRACKER_CRON_SECRET` 已自动同步
+- [ ] 通知历史/调度日志有正常执行记录
 
 ## 不应提交
 
-不要提交 API Token、管理员密码、`.dev.vars`、`.env*`、`.wrangler/` 或 `node_modules/`。
+- API Token
+- Admin / SuperAdmin 密码
+- `.env*`
+- `.dev.vars`
+- `.wrangler/`
+- `node_modules/`

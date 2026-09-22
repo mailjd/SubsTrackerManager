@@ -1,0 +1,10 @@
+name = "substracker-pages-cron"
+main = "src/pages-cron-worker.js"
+compatibility_date = "2026-09-22"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+PAGES_BASE_URL = "https://substracker-manager-pages.pages.dev"
+
+[triggers]
+crons = ["0 * * * *"]

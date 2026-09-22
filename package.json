@@ -1,18 +1,27 @@
 {
   "name": "subscription-manager",
-  "version": "3.1.1",
-  "description": "订阅管理系统 - 基于 Cloudflare Workers + Hono",
+  "version": "3.2.1",
+  "description": "订阅管理系统 - 支持 Cloudflare Pages Functions / Workers + Hono + KV + D1",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "build": "echo 'No build step required for Workers runtime'",
-    "setup": "node scripts/setup-kv.cjs",
-    "deploy": "npx wrangler deploy",
-    "deploy:safe": "npm run setup && npm run deploy",
+    "build": "npm run build:pages",
+    "build:pages": "node scripts/build-pages.cjs",
+    "setup": "npm run setup:pages",
+    "setup:pages": "node scripts/setup-pages.cjs",
+    "deploy": "npm run deploy:pages",
+    "deploy:pages": "node scripts/deploy-pages.cjs",
+    "deploy:pages:safe": "npm run setup:pages && npm run build:pages && npm run deploy:pages",
+    "deploy:pages:cron": "node scripts/setup-pages-cron.cjs",
+    "dev:pages": "npx wrangler pages dev public --config wrangler.toml",
+    "setup:worker": "node scripts/setup-kv.cjs --config wrangler.worker.toml",
+    "deploy:worker": "npx wrangler deploy --config wrangler.worker.toml",
+    "deploy:worker:safe": "npm run setup:worker && npm run deploy:worker",
+    "dev:worker": "npx wrangler dev --config wrangler.worker.dev.toml",
     "lint": "tsc --noEmit -p jsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "setup:local-d1": "npx wrangler d1 migrations apply subscription-manager-dev --local --config wrangler.dev.toml"
+    "setup:local-d1": "npx wrangler d1 migrations apply subscription-manager-dev --local --config wrangler.worker.dev.toml"
   },
   "dependencies": {
     "hono": "^4.6.14"

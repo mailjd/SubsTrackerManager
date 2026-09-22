@@ -5,7 +5,9 @@ const { execFileSync } = require('child_process');
 const crypto = require('crypto');
 
 const ROOT = process.cwd();
-const WRANGLER_TOML = path.join(ROOT, 'wrangler.toml');
+const configFlag = process.argv.indexOf('--config');
+const configName = configFlag >= 0 && process.argv[configFlag + 1] ? process.argv[configFlag + 1] : 'wrangler.worker.toml';
+const WRANGLER_TOML = path.join(ROOT, configName);
 const MIGRATIONS_DIR = path.join(ROOT, 'migrations');
 const PROD_TITLE = 'SUBSCRIPTIONS_KV';
 const PREVIEW_TITLE_CANDIDATES = ['SUBSCRIPTIONS_KV_PREVIEW', 'SUBSCRIPTIONS_KV_preview'];
@@ -13,16 +15,9 @@ const D1_BINDING = 'SUBSCRIPTIONS_DB';
 const D1_DATABASE_NAME = 'subscription-manager-db';
 
 
-function hashSuperAdminPassword(password) {
-  const iterations = 210000;
-  const salt = crypto.randomBytes(16);
-  const derived = crypto.pbkdf2Sync(String(password || ''), salt, iterations, 32, 'sha256');
-  return `pbkdf2-sha256$${iterations}$${salt.toString('base64')}$${derived.toString('base64')}`;
-}
-
 function wrangler(args, options = {}) {
   const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-  return execFileSync(npx, ['wrangler', ...args], {
+  return execFileSync(npx, ['wrangler', ...args, '--config', configName], {
     cwd: ROOT,
     encoding: 'utf8',
     stdio: options.inherit ? 'inherit' : ['ignore', 'pipe', 'pipe']
@@ -146,15 +141,8 @@ function ensureInitialConfig(namespaceId) {
     config.CREDENTIALS_ENCRYPTION_KEY = `${crypto.randomUUID()}${crypto.randomUUID()}`;
   }
 
-  const superAdminPassword = String(process.env.SUBSTRACKER_SUPERADMIN_PASSWORD || '').trim();
-  if (superAdminPassword) {
-    config.SUPERADMIN_PASSWORD_HASH = hashSuperAdminPassword(superAdminPassword);
-  } else if (!config.SUPERADMIN_PASSWORD_HASH) {
-    console.warn('[setup] 警告：未设置 SUBSTRACKER_SUPERADMIN_PASSWORD，Database 的 SuperAdmin 密码查看模式将不可用');
-  }
-
-  if (!isNew && !superAdminPassword) {
-    console.log('[setup] KV config 已存在，保留现有兼容配置、SuperAdmin 配置与加密密钥；管理员登录优先使用 Worker SUBSTRACKER_ADMIN_PASSWORD');
+  if (!isNew) {
+    console.log('[setup] KV config 已存在，保留管理员配置与加密密钥');
     return;
   }
 
@@ -162,15 +150,14 @@ function ensureInitialConfig(namespaceId) {
   try {
     fs.writeFileSync(tempFile, JSON.stringify(config), { encoding: 'utf8', mode: 0o600 });
     wrangler(['kv', 'key', 'put', 'config', '--namespace-id', namespaceId, '--path', tempFile], { inherit: true });
-    if (isNew) console.log(`[setup] 已初始化管理员账号：${config.ADMIN_USERNAME || 'admin'}；密码请在 Cloudflare Worker Variables and Secrets 中设置 SUBSTRACKER_ADMIN_PASSWORD`);
-    if (superAdminPassword) console.log('[setup] 已写入/更新 SuperAdmin 二级密码哈希（明文未保存）');
+    if (isNew) console.log(`[setup] 已初始化管理员账号：${config.ADMIN_USERNAME || 'admin'}；首次登录可使用 Cloudflare SUBSTRACKER_ADMIN_PASSWORD，之后可在系统配置中修改`);
   } finally {
     try { fs.unlinkSync(tempFile); } catch {}
   }
 }
 
 function main() {
-  if (!fs.existsSync(WRANGLER_TOML)) throw new Error('未找到 wrangler.toml，请在项目根目录执行');
+  if (!fs.existsSync(WRANGLER_TOML)) throw new Error(`未找到 ${configName}，请在项目根目录执行`);
 
   const prod = ensureNamespace(PROD_TITLE);
   let preview = null;
@@ -191,7 +178,7 @@ function main() {
   console.log(`[setup] SUBSCRIPTIONS_KV: ${prod.id}`);
   console.log(`[setup] SUBSCRIPTIONS_KV_PREVIEW: ${preview.id}`);
   console.log(`[setup] ${D1_BINDING}: ${d1Id}`);
-  console.log('[setup] 已更新 wrangler.toml 并初始化 D1 数据表');
+  console.log(`[setup] 已更新 ${configName} 并初始化 D1 数据表`);
 }
 
 try {

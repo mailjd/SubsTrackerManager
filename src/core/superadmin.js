@@ -64,3 +64,36 @@ export async function verifySuperAdminPassword(password, encoded) {
     return false;
   }
 }
+
+function getRuntimeSuperAdminCredentials(env = {}) {
+  const username = typeof env?.SUBSTRACKER_SUPERADMIN_USERNAME === 'string'
+    ? env.SUBSTRACKER_SUPERADMIN_USERNAME.trim()
+    : '';
+  const password = typeof env?.SUBSTRACKER_SUPERADMIN_PASSWORD === 'string'
+    ? env.SUBSTRACKER_SUPERADMIN_PASSWORD
+    : '';
+  return {
+    username,
+    password,
+    configured: username.length > 0 && password.length > 0
+  };
+}
+
+async function digestString(value) {
+  const bytes = new TextEncoder().encode(String(value ?? ''));
+  return new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+}
+
+export async function verifyRuntimeSuperAdminCredentials(env, username, password) {
+  const runtime = getRuntimeSuperAdminCredentials(env);
+  if (!runtime.configured) return false;
+  const [actualUser, expectedUser, actualPassword, expectedPassword] = await Promise.all([
+    digestString(String(username ?? '').trim()),
+    digestString(runtime.username),
+    digestString(String(password ?? '')),
+    digestString(runtime.password)
+  ]);
+  return constantTimeEqual(actualUser, expectedUser) && constantTimeEqual(actualPassword, expectedPassword);
+}
+
+export { getRuntimeSuperAdminCredentials };

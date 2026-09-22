@@ -21,9 +21,10 @@ import { handleAdminRequest, handleLoginPage } from './api/admin.js';
 import { handleDebug } from './api/debug.js';
 import { getUserFromRequest } from './api/handlers/auth.js';
 import { ensureMigrations } from './data/migrate.js';
+import { checkExpiringSubscriptions } from './services/scheduler.js';
 
 /**
- * @typedef {{ SUBSCRIPTIONS_KV: KVNamespace, SUBSCRIPTIONS_DB?: D1Database, SUBSTRACKER_ADMIN_PASSWORD?: string }} Bindings
+ * @typedef {{ SUBSCRIPTIONS_KV: KVNamespace, SUBSCRIPTIONS_DB?: D1Database, SUBSTRACKER_ADMIN_PASSWORD?: string, SUBSTRACKER_SUPERADMIN_USERNAME?: string, SUBSTRACKER_SUPERADMIN_PASSWORD?: string, SUBSTRACKER_CRON_SECRET?: string }} Bindings
  */
 
 /** @type {Hono<{ Bindings: Bindings }>} */
@@ -79,6 +80,36 @@ app.all('/debug', async (c) => {
     });
   }
   return handleDebug(c.req.raw, c.env);
+});
+
+// ─────────────────────────────────────────────────────────────
+// Cloudflare Pages 调度桥接端点
+// Pages Functions 本身没有 scheduled/cron 事件；完整 Pages 部署模式由一个
+// 极小的 Cron Bridge Worker 每小时调用此端点。
+// ─────────────────────────────────────────────────────────────
+app.post('/api/internal/scheduler', async (c) => {
+  const expected = String(c.env.SUBSTRACKER_CRON_SECRET || '');
+  if (!expected) {
+    return c.json({ success: false, message: '调度密钥尚未配置' }, 503);
+  }
+
+  const auth = c.req.header('Authorization') || '';
+  const supplied = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+
+  // 简单常量时间比较，避免直接字符串短路比较。
+  const safeEqual = (a, b) => {
+    if (a.length !== b.length) return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    return diff === 0;
+  };
+
+  if (!supplied || !safeEqual(supplied, expected)) {
+    return c.json({ success: false, message: '未授权的调度请求' }, 401);
+  }
+
+  const result = await checkExpiringSubscriptions(c.env);
+  return c.json({ success: true, result });
 });
 
 // ─────────────────────────────────────────────────────────────

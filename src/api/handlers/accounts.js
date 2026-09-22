@@ -1,7 +1,7 @@
 import { getConfig } from '../../data/config.js';
 import { decryptCredential, encryptCredential } from '../../core/credentials.js';
 import { generateJWT, verifyJWT } from '../../core/auth.js';
-import { verifySuperAdminPassword } from '../../core/superadmin.js';
+import { getRuntimeSuperAdminCredentials, verifyRuntimeSuperAdminCredentials } from '../../core/superadmin.js';
 import { getCookieValue } from '../utils.js';
 import {
   ACCOUNT_IMPORT_TEMPLATE_BASE64,
@@ -48,11 +48,13 @@ function getClientIp(request) {
   return request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
 }
 
-async function isSuperAdminUnlocked(request, config) {
+async function isSuperAdminUnlocked(request, config, env) {
+  const runtime = getRuntimeSuperAdminCredentials(env);
+  if (!runtime.configured) return false;
   const token = getCookieValue(request.headers.get('Cookie'), SUPERADMIN_COOKIE);
   if (!token) return false;
   const payload = await verifyJWT(token, `${config.JWT_SECRET}:superadmin`);
-  return !!(payload && payload.role === 'superadmin');
+  return !!(payload && payload.role === 'superadmin' && payload.username === runtime.username);
 }
 
 async function getSuperAdminAttempts(env, ip) {
@@ -88,10 +90,11 @@ export async function handleAccounts(request, env, path) {
 
   if (path === '/accounts/superadmin/status' && method === 'GET') {
     const config = await getConfig(env);
+    const runtime = getRuntimeSuperAdminCredentials(env);
     return json({
       success: true,
-      configured: !!config.SUPERADMIN_PASSWORD_HASH,
-      unlocked: await isSuperAdminUnlocked(request, config),
+      configured: runtime.configured,
+      unlocked: await isSuperAdminUnlocked(request, config, env),
       expiresInSeconds: SUPERADMIN_TTL_SECONDS
     });
   }
@@ -105,17 +108,19 @@ export async function handleAccounts(request, env, path) {
     let body;
     try { body = await request.json(); } catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
     const config = await getConfig(env);
-    if (!config.SUPERADMIN_PASSWORD_HASH) {
-      return json({ success: false, message: '尚未配置 SuperAdmin 二级密码，请先设置部署密钥 SUBSTRACKER_SUPERADMIN_PASSWORD 并重新部署' }, 503);
+    const runtime = getRuntimeSuperAdminCredentials(env);
+    if (!runtime.configured) {
+      return json({ success: false, message: '尚未配置 SuperAdmin，请在 Cloudflare Pages / Worker Variables and Secrets 中设置 SUBSTRACKER_SUPERADMIN_USERNAME 和 SUBSTRACKER_SUPERADMIN_PASSWORD' }, 503);
     }
+    const username = typeof body?.username === 'string' ? body.username.trim() : '';
     const password = typeof body?.password === 'string' ? body.password : '';
-    if (!password || !(await verifySuperAdminPassword(password, config.SUPERADMIN_PASSWORD_HASH))) {
+    if (!username || !password || !(await verifyRuntimeSuperAdminCredentials(env, username, password))) {
       const failedAttempts = await recordSuperAdminFailure(env, ip);
       const remaining = Math.max(0, SUPERADMIN_MAX_ATTEMPTS - failedAttempts);
-      return json({ success: false, message: remaining > 0 ? `二级密码错误（还可尝试 ${remaining} 次）` : '尝试过多，请 5 分钟后再试' }, remaining > 0 ? 403 : 429);
+      return json({ success: false, message: remaining > 0 ? `SuperAdmin 用户名或二级密码错误（还可尝试 ${remaining} 次）` : '尝试过多，请 5 分钟后再试' }, remaining > 0 ? 403 : 429);
     }
     await clearSuperAdminFailures(env, ip);
-    const token = await generateJWT(config.ADMIN_USERNAME || 'admin', `${config.JWT_SECRET}:superadmin`, {
+    const token = await generateJWT(runtime.username, `${config.JWT_SECRET}:superadmin`, {
       ttlSeconds: SUPERADMIN_TTL_SECONDS,
       extra: { role: 'superadmin' }
     });
@@ -283,7 +288,7 @@ export async function handleAccounts(request, env, path) {
     const row = await getBySerial(env, serial);
     if (!row) return json({ success: false, message: '账号记录不存在' }, 404);
     const config = await getConfig(env);
-    const superAdminUnlocked = await isSuperAdminUnlocked(request, config);
+    const superAdminUnlocked = await isSuperAdminUnlocked(request, config, env);
     let password = '';
     let passwordDecryptFailed = false;
     if (superAdminUnlocked && row.passwordEncrypted) {

@@ -25,10 +25,9 @@ import {
 import { lunarCalendar, lunarBiz } from '../core/lunar.js';
 import { resolveReminderSetting } from '../services/notify/reminder.js';
 import * as subRepo from './subscriptions.repo.js';
-import { encryptCredential } from '../core/credentials.js';
 import { addCategory } from './categories.js';
 import { addMenuOption } from './menu-options.js';
-import { validatePair, syncFromSubscription, getBySerial as getAccountBySerial } from './accounts.repo.js';
+import { validatePair, syncFromSubscription } from './accounts.repo.js';
 import {
   mirrorCurrentSubscription,
   recordSubscriptionChange,
@@ -47,11 +46,18 @@ async function syncSubscriptionMenuOptions(env, subscription) {
   const name = String((subscription && subscription.name) || '').trim();
   const type = String((subscription && subscription.customType) || '').trim();
   const category = String((subscription && subscription.category) || '').trim();
+  const memberLevel = String((subscription && subscription.memberLevel) || '').trim();
+  const users = String((subscription && subscription.users) || '').trim();
   if (name) tasks.push(addMenuOption(env, 'subscriptionNames', name));
   if (type) tasks.push(addMenuOption(env, 'subscriptionTypes', type));
   if (category) {
     const tokens = category.split(/[\/,，\s]+/).map((item) => item.trim()).filter(Boolean);
     for (const token of [...new Set(tokens)]) tasks.push(addMenuOption(env, 'categories', token));
+  }
+  if (memberLevel) tasks.push(addMenuOption(env, 'memberLevels', memberLevel));
+  if (users) {
+    const tokens = users.split(/[,，]/).map((item) => item.trim()).filter(Boolean);
+    for (const token of [...new Set(tokens)]) tasks.push(addMenuOption(env, 'users', token));
   }
   if (tasks.length > 0) await Promise.allSettled(tasks);
 }
@@ -250,10 +256,6 @@ async function createSubscription(subscription, env, options = {}) {
       account: typeof subscription.account === 'string' ? subscription.account.trim() : '',
       accountSerial: typeof subscription.accountSerial === 'string' ? subscription.accountSerial.trim() : '',
       users: normalizeSubscriptionUsers(subscription.users),
-      passwordEncrypted:
-        typeof subscription.password === 'string' && subscription.password.length > 0
-          ? await encryptCredential(subscription.password, config.CREDENTIALS_ENCRYPTION_KEY)
-          : '',
       startDate: normalizedStartDate,
       expiryDate: normalizedExpiryDate,
       periodValue: isSinglePeriod ? 1 : (subscription.periodValue || 1),
@@ -297,20 +299,13 @@ async function createSubscription(subscription, env, options = {}) {
         if (!accountCheck.ok) {
           return { success: false, message: accountCheck.message || '账号与账号序号冲突' };
         }
-        // 新订阅引用已有账号且未另填密码时，沿用账号数据库中的统一密码。
-        if (!newSubscription.passwordEncrypted) {
-          const accountRecord = await getAccountBySerial(env, newSubscription.accountSerial);
-          if (accountRecord && accountRecord.account === newSubscription.account) {
-            newSubscription.passwordEncrypted = accountRecord.passwordEncrypted || '';
-          }
-        }
       }
     }
 
     await subRepo.save(env, newSubscription);
     await syncFromSubscription(env, newSubscription, {
       action: options.historyAction === 'import' ? 'subscription_import' : 'subscription_create',
-      syncPassword: typeof subscription.password === 'string' && subscription.password.length > 0
+      syncPassword: false
     });
     await recordSubscriptionChange(
       env,
@@ -434,8 +429,9 @@ async function updateSubscription(id, subscription, env) {
       });
     }
 
+    const { passwordEncrypted: _legacyPasswordEncrypted, password: _legacyPassword, ...existingWithoutPassword } = existing;
     const merged = {
-      ...existing,
+      ...existingWithoutPassword,
       name: subscription.name,
       subscriptionMode: subscription.subscriptionMode || existing.subscriptionMode || 'cycle',
       customType: subscription.customType || existing.customType || '',
@@ -465,12 +461,6 @@ async function updateSubscription(id, subscription, env) {
         subscription.users !== undefined
           ? normalizeSubscriptionUsers(subscription.users)
           : existing.users || '',
-      passwordEncrypted:
-        subscription.password !== undefined
-          ? (typeof subscription.password === 'string' && subscription.password.length > 0
-              ? await encryptCredential(subscription.password, config.CREDENTIALS_ENCRYPTION_KEY)
-              : '')
-          : existing.passwordEncrypted || '',
       startDate:
         subscription.startDate !== undefined
           ? incomingStartDate
@@ -520,7 +510,7 @@ async function updateSubscription(id, subscription, env) {
     await subRepo.save(env, merged);
     await syncFromSubscription(env, merged, {
       action: 'subscription_update',
-      syncPassword: subscription.password !== undefined
+      syncPassword: false
     });
     await recordSubscriptionChange(env, 'update', merged);
     if (merged.category) await addCategory(env, merged.category);

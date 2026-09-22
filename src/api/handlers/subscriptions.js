@@ -15,9 +15,7 @@ import { lunarCalendar } from '../../core/lunar.js';
 import { formatTimeInTimezone, formatTimezoneDisplay, getTimezoneDateParts } from '../../core/time.js';
 import { formatAmount } from '../../core/currency-format.js';
 import { extractTagsFromSubscriptions } from '../utils.js';
-import { decryptCredential } from '../../core/credentials.js';
 import { hasD1, listSubscriptionHistory } from '../../data/subscription-history.repo.js';
-import { getBySerial as getAccountBySerial } from '../../data/accounts.repo.js';
 import {
   SUBSCRIPTION_IMPORT_TEMPLATE_BASE64,
   SUBSCRIPTION_IMPORT_TEMPLATE_FILENAME,
@@ -53,36 +51,11 @@ async function persistCreatedReminderRules(env, subscriptionId, incomingRules) {
 function sanitizeSubscription(subscription) {
   if (!subscription || typeof subscription !== 'object') return subscription;
   const { passwordEncrypted: _passwordEncrypted, password: _password, ...safe } = subscription;
-  return {
-    ...safe,
-    hasPassword: !!subscription.passwordEncrypted
-  };
+  return safe;
 }
 
-async function buildEditableSubscription(subscription, env) {
-  const safe = sanitizeSubscription(subscription);
-  if (!subscription) return { ...safe, password: '' };
-
-  try {
-    const config = await getConfig(env);
-    let encrypted = subscription.passwordEncrypted || '';
-    if (subscription.accountSerial) {
-      try {
-        const accountRecord = await getAccountBySerial(env, subscription.accountSerial);
-        if (accountRecord && accountRecord.account === String(subscription.account || '').trim()) {
-          encrypted = accountRecord.passwordEncrypted;
-        }
-      } catch (error) {
-        console.warn('[subscriptions] 读取账号数据库失败，回退订阅凭据:', error);
-      }
-    }
-    if (!encrypted) return { ...safe, password: '', hasPassword: false };
-    const password = await decryptCredential(encrypted, config.CREDENTIALS_ENCRYPTION_KEY);
-    return { ...safe, password, hasPassword: true };
-  } catch (error) {
-    console.error('[subscriptions] 解密账号密码失败:', error);
-    return { ...safe, password: '', passwordDecryptFailed: true };
-  }
+async function buildEditableSubscription(subscription) {
+  return sanitizeSubscription(subscription);
 }
 
 async function testSingleSubscriptionNotification(id, env) {

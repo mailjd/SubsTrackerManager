@@ -22,8 +22,8 @@ function isConfiguredSecret(value) {
 }
 
 function buildSafeConfig(config) {
-  const { JWT_SECRET, ADMIN_PASSWORD, CREDENTIALS_ENCRYPTION_KEY, ...safeConfig } = config;
-  const response = { ...safeConfig };
+  const { JWT_SECRET, ADMIN_PASSWORD, CREDENTIALS_ENCRYPTION_KEY, SUPERADMIN_PASSWORD_HASH, ...safeConfig } = config;
+  const response = { ...safeConfig, SUPERADMIN_CONFIGURED: typeof SUPERADMIN_PASSWORD_HASH === 'string' && SUPERADMIN_PASSWORD_HASH.length > 0 };
 
   // 对每个敏感字段：返回空字符串 + 一个 *_CONFIGURED 标记
   SECRET_FIELDS.forEach((key) => {

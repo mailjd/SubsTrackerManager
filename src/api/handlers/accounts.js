@@ -1,5 +1,8 @@
 import { getConfig } from '../../data/config.js';
 import { decryptCredential, encryptCredential } from '../../core/credentials.js';
+import { generateJWT, verifyJWT } from '../../core/auth.js';
+import { verifySuperAdminPassword } from '../../core/superadmin.js';
+import { getCookieValue } from '../utils.js';
 import {
   ACCOUNT_IMPORT_TEMPLATE_BASE64,
   ACCOUNT_IMPORT_TEMPLATE_FILENAME,
@@ -35,6 +38,39 @@ function decodePathPart(value) {
   try { return decodeURIComponent(value || ''); } catch { return value || ''; }
 }
 
+
+const SUPERADMIN_COOKIE = 'superadmin_token';
+const SUPERADMIN_TTL_SECONDS = 30 * 60;
+const SUPERADMIN_MAX_ATTEMPTS = 5;
+const SUPERADMIN_LOCKOUT_SECONDS = 300;
+
+function getClientIp(request) {
+  return request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+}
+
+async function isSuperAdminUnlocked(request, config) {
+  const token = getCookieValue(request.headers.get('Cookie'), SUPERADMIN_COOKIE);
+  if (!token) return false;
+  const payload = await verifyJWT(token, `${config.JWT_SECRET}:superadmin`);
+  return !!(payload && payload.role === 'superadmin');
+}
+
+async function getSuperAdminAttempts(env, ip) {
+  const raw = await env.SUBSCRIPTIONS_KV.get(`superadmin_attempts:${ip}`);
+  return raw ? Number(raw) || 0 : 0;
+}
+
+async function recordSuperAdminFailure(env, ip) {
+  const key = `superadmin_attempts:${ip}`;
+  const attempts = (await getSuperAdminAttempts(env, ip)) + 1;
+  await env.SUBSCRIPTIONS_KV.put(key, String(attempts), { expirationTtl: SUPERADMIN_LOCKOUT_SECONDS });
+  return attempts;
+}
+
+async function clearSuperAdminFailures(env, ip) {
+  await env.SUBSCRIPTIONS_KV.delete(`superadmin_attempts:${ip}`);
+}
+
 /**
  * /api/accounts*
  * @param {Request} request
@@ -49,6 +85,58 @@ export async function handleAccounts(request, env, path) {
 
   const method = request.method;
   const url = new URL(request.url);
+
+  if (path === '/accounts/superadmin/status' && method === 'GET') {
+    const config = await getConfig(env);
+    return json({
+      success: true,
+      configured: !!config.SUPERADMIN_PASSWORD_HASH,
+      unlocked: await isSuperAdminUnlocked(request, config),
+      expiresInSeconds: SUPERADMIN_TTL_SECONDS
+    });
+  }
+
+  if (path === '/accounts/superadmin/unlock' && method === 'POST') {
+    const ip = getClientIp(request);
+    const attempts = await getSuperAdminAttempts(env, ip);
+    if (attempts >= SUPERADMIN_MAX_ATTEMPTS) {
+      return json({ success: false, message: 'SuperAdmin 二级密码尝试过多，请 5 分钟后再试' }, 429);
+    }
+    let body;
+    try { body = await request.json(); } catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
+    const config = await getConfig(env);
+    if (!config.SUPERADMIN_PASSWORD_HASH) {
+      return json({ success: false, message: '尚未配置 SuperAdmin 二级密码，请先设置部署密钥 SUBSTRACKER_SUPERADMIN_PASSWORD 并重新部署' }, 503);
+    }
+    const password = typeof body?.password === 'string' ? body.password : '';
+    if (!password || !(await verifySuperAdminPassword(password, config.SUPERADMIN_PASSWORD_HASH))) {
+      const failedAttempts = await recordSuperAdminFailure(env, ip);
+      const remaining = Math.max(0, SUPERADMIN_MAX_ATTEMPTS - failedAttempts);
+      return json({ success: false, message: remaining > 0 ? `二级密码错误（还可尝试 ${remaining} 次）` : '尝试过多，请 5 分钟后再试' }, remaining > 0 ? 403 : 429);
+    }
+    await clearSuperAdminFailures(env, ip);
+    const token = await generateJWT(config.ADMIN_USERNAME || 'admin', `${config.JWT_SECRET}:superadmin`, {
+      ttlSeconds: SUPERADMIN_TTL_SECONDS,
+      extra: { role: 'superadmin' }
+    });
+    return new Response(JSON.stringify({ success: true, unlocked: true, expiresInSeconds: SUPERADMIN_TTL_SECONDS }), {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'Set-Cookie': `${SUPERADMIN_COOKIE}=${token}; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=${SUPERADMIN_TTL_SECONDS}`
+      }
+    });
+  }
+
+  if (path === '/accounts/superadmin/lock' && method === 'POST') {
+    return new Response(JSON.stringify({ success: true, unlocked: false }), {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'Set-Cookie': `${SUPERADMIN_COOKIE}=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0`
+      }
+    });
+  }
 
   if (path === '/accounts/import-template' && method === 'GET') {
     const bytes = base64ToBytes(ACCOUNT_IMPORT_TEMPLATE_BASE64);
@@ -194,11 +282,12 @@ export async function handleAccounts(request, env, path) {
   if (method === 'GET') {
     const row = await getBySerial(env, serial);
     if (!row) return json({ success: false, message: '账号记录不存在' }, 404);
+    const config = await getConfig(env);
+    const superAdminUnlocked = await isSuperAdminUnlocked(request, config);
     let password = '';
     let passwordDecryptFailed = false;
-    if (row.passwordEncrypted) {
+    if (superAdminUnlocked && row.passwordEncrypted) {
       try {
-        const config = await getConfig(env);
         password = await decryptCredential(row.passwordEncrypted, config.CREDENTIALS_ENCRYPTION_KEY);
       } catch (error) {
         console.error('[accounts] 解密账号密码失败:', error);
@@ -207,12 +296,13 @@ export async function handleAccounts(request, env, path) {
     }
     return json({
       success: true,
+      superAdminUnlocked,
       account: {
         accountSerial: row.accountSerial,
         account: row.account,
-        password,
+        ...(superAdminUnlocked ? { password } : {}),
         hasPassword: !!row.passwordEncrypted,
-        passwordDecryptFailed,
+        passwordDecryptFailed: superAdminUnlocked ? passwordDecryptFailed : false,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt
       }

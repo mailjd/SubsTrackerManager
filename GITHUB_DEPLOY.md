@@ -20,15 +20,16 @@
 
 进入：`Settings → Secrets and variables → Actions → New repository secret`。
 
-必须建立以下 3 个 Secret：
+必须建立以下 4 个 Secret：
 
 | Secret | 用途 |
 |---|---|
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API Token。建议至少具备 Workers 部署权限、Workers KV Storage Write、D1 Edit；首次创建 Worker 时需要可创建 Worker 的权限 |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID |
 | `SUBSTRACKER_ADMIN_PASSWORD` | SubsTracker 首次管理员密码，只在首次初始化 KV 配置时写入，不写入仓库 |
+| `SUBSTRACKER_SUPERADMIN_PASSWORD` | Database SuperAdmin mode 二级密码；初始化脚本仅保存 PBKDF2 哈希，不保存明文 |
 
-API Token 和管理员密码不要写进 `wrangler.toml`、源码、README 或任何 Git 提交。
+API Token、管理员密码和 SuperAdmin 二级密码不要写进 `wrangler.toml`、源码、README 或任何 Git 提交。
 
 ## 3. 推送并自动部署
 
@@ -40,7 +41,7 @@ API Token 和管理员密码不要写进 `wrangler.toml`、源码、README 或�
 4. 自动创建或复用 `SUBSCRIPTIONS_KV`
 5. 自动创建或复用 `subscription-manager-db` D1
 6. `wrangler d1 migrations apply` 初始化/升级数据库
-7. 首次部署初始化管理员密码、JWT Secret、凭据加密密钥
+7. 首次部署初始化管理员密码、SuperAdmin 二级密码哈希、JWT Secret、凭据加密密钥
 8. 使用 Cloudflare 官方 `wrangler-action@v4` 执行 `wrangler deploy` 发布 Worker
 
 也可以在 GitHub 的 `Actions → Deploy → Run workflow` 手动触发。
@@ -58,6 +59,7 @@ API Token 和管理员密码不要写进 `wrangler.toml`、源码、README 或�
 
 - `0001_subscription_history.sql`：订阅当前镜像 + 历史记录
 - `0002_accounts_database.sql`：独立 Database 账号库（账号序号 / 账号 / AES-GCM 加密密码）
+- `0003_menu_options_database.sql`：五组订阅菜单（名称 / 类型 / 分类 / 会员级别 / 使用人）
 
 后续新增 migration，只需继续放进 `migrations/`，部署时会按 Wrangler migration 记录只执行未应用的版本。
 
@@ -73,6 +75,7 @@ API Token 和管理员密码不要写进 `wrangler.toml`、源码、README 或�
 export CLOUDFLARE_API_TOKEN=...
 export CLOUDFLARE_ACCOUNT_ID=...
 export SUBSTRACKER_ADMIN_PASSWORD=...
+export SUBSTRACKER_SUPERADMIN_PASSWORD=...
 npm ci
 npm run deploy:safe
 ```

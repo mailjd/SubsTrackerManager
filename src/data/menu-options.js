@@ -1,48 +1,45 @@
 import { getKVJson, putKVJson } from './kv.js';
+import { ensureD1Schema, hasD1Binding } from './d1-schema.js';
 
-const KEY = 'menu_options_v1';
+const LEGACY_KEY = 'menu_options_v1';
 const MAX_OPTION_LENGTH = 120;
-const MAX_OPTIONS_PER_GROUP = 300;
+const MAX_OPTIONS_PER_GROUP = 500;
 
 export const MENU_DEFAULTS = Object.freeze({
   subscriptionNames: [
-    'Tapnow',
-    'LibTV',
-    '即梦',
-    '豆包',
-    '小云雀',
-    'SUNO',
-    '剪映',
-    'AdobeCC',
-    'ChatGPT',
-    'Gemini',
-    'higgsfield',
-    'LovArt',
-    'Askgo',
-    'Midjourney',
-    'TopazLabs',
-    'ClaudeCode(CC)',
-    '19584618860',
-    '19042608266',
-    '配音',
-    '千问办公'
+    'Tapnow', 'LibTV', '即梦', '豆包', '小云雀', 'SUNO', '剪映', 'AdobeCC',
+    'ChatGPT', 'Gemini', 'higgsfield', 'LovArt', 'Askgo', 'Midjourney',
+    'TopazLabs', 'ClaudeCode(CC)', '19584618860', '19042608266', '配音', '千问办公'
   ],
-  subscriptionTypes: [
-    '开会员',
-    '充积分',
-    '充话费',
-    '服务费用',
-    '配音费用'
+  subscriptionTypes: ['开会员', '充积分', '充话费', '服务费用', '配音费用'],
+  categories: ['未完成', '钉钉报销中', '已完成', '未还代支付'],
+  memberLevels: [
+    '高级会员',
+    '豪华版VIP会员',
+    '专业版会员',
+    'Ultimate会员',
+    'Ultra会员',
+    'Pro会员',
+    'Plus会员',
+    'Pro5X会员',
+    '摄影计划（1 TB）',
+    '团队会员',
+    'TopazStudio',
+    '至尊版VIP会员(升级)',
+    '个人标准版',
+    'Standard Plan'
   ],
-  categories: [
-    '未完成',
-    '钉钉报销中',
-    '已完成',
-    '未还代支付'
+  users: [
+    '张重华', '向芸', '邱展金', '李玉蓉', '郑会锦', '李家乐', '王崴', '韦良志', '黄晓', '李钊',
+    '杨泽宇', '周鑫', '蔡锦昌', '王子豪', '刘靖磊', '王乙', '林舜才', '王静秋', '谢金金', '陈成颖',
+    '吕洁', '刘哲', '袁鑫', '尹嘉慧', '林钦豪', '陈博源', '黄一一', '林佳楠', '雷嘉慧', '刘乾',
+    '王子怡', '黄维静', '吴丽君', '郑欣钒', '刘语欣', '林瑾', '盛芳', '王跃', '胡钢', '李叶',
+    '曾碧华', '秦琦', '卢洁铭', '许建丁', '蔡慧娴'
   ]
 });
 
-const GROUPS = new Set(Object.keys(MENU_DEFAULTS));
+const GROUPS = Object.freeze(Object.keys(MENU_DEFAULTS));
+const GROUP_SET = new Set(GROUPS);
 
 function cleanOption(value) {
   return typeof value === 'string' ? value.trim().slice(0, MAX_OPTION_LENGTH) : '';
@@ -65,7 +62,6 @@ function normalizeStored(raw) {
   const hasStoredObject = raw && typeof raw === 'object' && !Array.isArray(raw);
   const result = {};
   for (const group of GROUPS) {
-    // 只有整个组从未存在时才使用默认值。空数组代表用户明确删空，不重新补默认项。
     const source = hasStoredObject && Object.prototype.hasOwnProperty.call(raw, group)
       ? raw[group]
       : MENU_DEFAULTS[group];
@@ -75,79 +71,194 @@ function normalizeStored(raw) {
 }
 
 export function isValidMenuGroup(group) {
-  return GROUPS.has(group);
+  return GROUP_SET.has(group);
 }
 
-/**
- * 读取三组可配置菜单。首次读取会以当前默认值初始化 KV。
- * @param {{ SUBSCRIPTIONS_KV: KVNamespace }} env
- */
-export async function getMenuOptions(env) {
-  const stored = await getKVJson(env, KEY);
+async function getLegacyMenus(env) {
+  try {
+    return await getKVJson(env, LEGACY_KEY);
+  } catch {
+    return null;
+  }
+}
+
+async function ensureD1MenusInitialized(env) {
+  await ensureD1Schema(env);
+  const db = env.SUBSCRIPTIONS_DB;
+  const legacy = await getLegacyMenus(env);
+  const now = new Date().toISOString();
+
+  for (const group of GROUPS) {
+    const marker = await db.prepare('SELECT group_key FROM menu_option_groups WHERE group_key = ?').bind(group).first();
+    if (marker) continue;
+
+    const source = legacy && typeof legacy === 'object' && Object.prototype.hasOwnProperty.call(legacy, group)
+      ? legacy[group]
+      : MENU_DEFAULTS[group];
+    const items = normalizeList(source);
+    const statements = [
+      db.prepare('INSERT OR IGNORE INTO menu_option_groups (group_key, initialized_at, updated_at) VALUES (?, ?, ?)')
+        .bind(group, now, now)
+    ];
+    items.forEach((value, index) => {
+      statements.push(
+        db.prepare(`INSERT OR IGNORE INTO menu_options (group_key, value, sort_order, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?)`)
+          .bind(group, value, index, now, now)
+      );
+    });
+    await db.batch(statements);
+  }
+}
+
+async function getD1Menus(env) {
+  await ensureD1MenusInitialized(env);
+  const result = {};
+  for (const group of GROUPS) result[group] = [];
+  const rows = await env.SUBSCRIPTIONS_DB.prepare(`
+    SELECT group_key, value
+    FROM menu_options
+    ORDER BY group_key ASC, sort_order ASC, rowid ASC
+  `).all();
+  for (const row of rows.results || []) {
+    const group = String(row.group_key || '');
+    if (!isValidMenuGroup(group)) continue;
+    const value = cleanOption(row.value);
+    if (value && !result[group].includes(value)) result[group].push(value);
+  }
+  return result;
+}
+
+async function getFallbackMenus(env) {
+  const stored = await getLegacyMenus(env);
   const normalized = normalizeStored(stored);
   if (!stored || JSON.stringify(stored) !== JSON.stringify(normalized)) {
-    await putKVJson(env, KEY, normalized);
+    await putKVJson(env, LEGACY_KEY, normalized);
   }
   return normalized;
 }
 
 /**
- * @param {{ SUBSCRIPTIONS_KV: KVNamespace }} env
- * @param {string} group
- * @param {string} value
+ * 读取可配置菜单。D1 为主存储；仅在 D1 未绑定时回退旧 KV。
+ * @param {any} env
  */
+export async function getMenuOptions(env) {
+  return hasD1Binding(env) ? getD1Menus(env) : getFallbackMenus(env);
+}
+
+/** @param {any} env @param {string} group @param {string} value */
 export async function addMenuOption(env, group, value) {
   if (!isValidMenuGroup(group)) throw new Error('无效的菜单分组');
   const item = cleanOption(value);
   if (!item) throw new Error('菜单项不能为空');
-  const all = await getMenuOptions(env);
-  const list = all[group];
-  if (!list.includes(item)) {
-    if (list.length >= MAX_OPTIONS_PER_GROUP) throw new Error('菜单项数量已达到上限');
-    list.push(item);
-    await putKVJson(env, KEY, all);
+
+  if (!hasD1Binding(env)) {
+    const all = await getFallbackMenus(env);
+    if (!all[group].includes(item)) {
+      if (all[group].length >= MAX_OPTIONS_PER_GROUP) throw new Error('菜单项数量已达到上限');
+      all[group].push(item);
+      await putKVJson(env, LEGACY_KEY, all);
+    }
+    return all;
   }
-  return all;
+
+  await ensureD1MenusInitialized(env);
+  const db = env.SUBSCRIPTIONS_DB;
+  const count = await db.prepare('SELECT COUNT(*) AS count FROM menu_options WHERE group_key = ?').bind(group).first();
+  if (Number(count?.count || 0) >= MAX_OPTIONS_PER_GROUP) throw new Error('菜单项数量已达到上限');
+  const maxRow = await db.prepare('SELECT COALESCE(MAX(sort_order), -1) AS max_sort FROM menu_options WHERE group_key = ?').bind(group).first();
+  const now = new Date().toISOString();
+  await db.batch([
+    db.prepare(`INSERT OR IGNORE INTO menu_options (group_key, value, sort_order, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)`)
+      .bind(group, item, Number(maxRow?.max_sort ?? -1) + 1, now, now),
+    db.prepare('UPDATE menu_option_groups SET updated_at = ? WHERE group_key = ?').bind(now, group)
+  ]);
+  return getD1Menus(env);
 }
 
-/**
- * @param {{ SUBSCRIPTIONS_KV: KVNamespace }} env
- * @param {string} group
- * @param {string} value
- */
+/** @param {any} env @param {string} group @param {string} value */
 export async function removeMenuOption(env, group, value) {
   if (!isValidMenuGroup(group)) throw new Error('无效的菜单分组');
   const item = cleanOption(value);
   if (!item) throw new Error('菜单项不能为空');
-  const all = await getMenuOptions(env);
-  all[group] = all[group].filter((entry) => entry !== item);
-  await putKVJson(env, KEY, all);
-  return all;
-}
 
-/**
- * @param {{ SUBSCRIPTIONS_KV: KVNamespace }} env
- * @param {string|null} group
- */
-export async function resetMenuOptions(env, group = null) {
-  const all = await getMenuOptions(env);
-  if (group != null) {
-    if (!isValidMenuGroup(group)) throw new Error('无效的菜单分组');
-    all[group] = [...MENU_DEFAULTS[group]];
-  } else {
-    for (const key of GROUPS) all[key] = [...MENU_DEFAULTS[key]];
+  if (!hasD1Binding(env)) {
+    const all = await getFallbackMenus(env);
+    all[group] = all[group].filter((entry) => entry !== item);
+    await putKVJson(env, LEGACY_KEY, all);
+    return all;
   }
-  await putKVJson(env, KEY, all);
-  return all;
+
+  await ensureD1MenusInitialized(env);
+  const now = new Date().toISOString();
+  await env.SUBSCRIPTIONS_DB.batch([
+    env.SUBSCRIPTIONS_DB.prepare('DELETE FROM menu_options WHERE group_key = ? AND value = ?').bind(group, item),
+    env.SUBSCRIPTIONS_DB.prepare('UPDATE menu_option_groups SET updated_at = ? WHERE group_key = ?').bind(now, group)
+  ]);
+  return getD1Menus(env);
+}
+
+/** @param {any} env @param {string|null} group */
+export async function resetMenuOptions(env, group = null) {
+  if (group != null && !isValidMenuGroup(group)) throw new Error('无效的菜单分组');
+  const targets = group ? [group] : [...GROUPS];
+
+  if (!hasD1Binding(env)) {
+    const all = await getFallbackMenus(env);
+    for (const key of targets) all[key] = [...MENU_DEFAULTS[key]];
+    await putKVJson(env, LEGACY_KEY, all);
+    return all;
+  }
+
+  await ensureD1MenusInitialized(env);
+  const db = env.SUBSCRIPTIONS_DB;
+  const now = new Date().toISOString();
+  const statements = [];
+  for (const key of targets) {
+    statements.push(db.prepare('DELETE FROM menu_options WHERE group_key = ?').bind(key));
+    MENU_DEFAULTS[key].forEach((value, index) => {
+      statements.push(db.prepare(`INSERT INTO menu_options (group_key, value, sort_order, created_at, updated_at)
+                                  VALUES (?, ?, ?, ?, ?)`)
+        .bind(key, value, index, now, now));
+    });
+    statements.push(db.prepare(`INSERT INTO menu_option_groups (group_key, initialized_at, updated_at)
+                                VALUES (?, ?, ?)
+                                ON CONFLICT(group_key) DO UPDATE SET updated_at = excluded.updated_at`)
+      .bind(key, now, now));
+  }
+  await db.batch(statements);
+  return getD1Menus(env);
 }
 
 /**
- * 备份恢复使用：完整覆盖三组菜单。
- * @param {{ SUBSCRIPTIONS_KV: KVNamespace }} env
+ * 备份恢复使用：完整覆盖所有菜单组。旧备份缺少的新组自动使用默认值。
+ * @param {any} env
  * @param {any} value
  */
 export async function setMenuOptions(env, value) {
   const normalized = normalizeStored(value || {});
-  await putKVJson(env, KEY, normalized);
-  return normalized;
+  if (!hasD1Binding(env)) {
+    await putKVJson(env, LEGACY_KEY, normalized);
+    return normalized;
+  }
+
+  await ensureD1MenusInitialized(env);
+  const db = env.SUBSCRIPTIONS_DB;
+  const now = new Date().toISOString();
+  const statements = [];
+  for (const group of GROUPS) {
+    statements.push(db.prepare('DELETE FROM menu_options WHERE group_key = ?').bind(group));
+    normalized[group].forEach((item, index) => {
+      statements.push(db.prepare(`INSERT INTO menu_options (group_key, value, sort_order, created_at, updated_at)
+                                  VALUES (?, ?, ?, ?, ?)`)
+        .bind(group, item, index, now, now));
+    });
+    statements.push(db.prepare(`INSERT INTO menu_option_groups (group_key, initialized_at, updated_at)
+                                VALUES (?, ?, ?)
+                                ON CONFLICT(group_key) DO UPDATE SET updated_at = excluded.updated_at`)
+      .bind(group, now, now));
+  }
+  await db.batch(statements);
+  return getD1Menus(env);
 }

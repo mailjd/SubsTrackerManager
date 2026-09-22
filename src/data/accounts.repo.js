@@ -287,7 +287,7 @@ export async function syncFromSubscription(env, subscription, options = {}) {
 }
 
 /**
- * 修改账号库，同时把账号/序号/密码同步到所有关联订阅 KV + D1 镜像。
+ * 修改账号库，同时把账号/序号同步到所有关联订阅 KV + D1 镜像。密码只保存在账号 Database。
  * @param {any} env
  * @param {string} originalSerial
  * @param {{ accountSerial: string, account: string, passwordEncrypted?: string }} data
@@ -338,11 +338,11 @@ export async function updateAndPropagate(env, originalSerial, data) {
     let syncedSubscriptions = 0;
     let syncFailures = 0;
     for (const sub of affected) {
+      const { passwordEncrypted: _legacyPasswordEncrypted, password: _legacyPassword, ...subscriptionWithoutPassword } = sub;
       const updated = {
-        ...sub,
+        ...subscriptionWithoutPassword,
         accountSerial: newSerial,
         account: newAccount,
-        passwordEncrypted,
         updatedAt: new Date().toISOString()
       };
       try {

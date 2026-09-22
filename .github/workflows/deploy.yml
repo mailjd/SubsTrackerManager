@@ -31,10 +31,12 @@ jobs:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           ADMIN_PASSWORD: ${{ secrets.SUBSTRACKER_ADMIN_PASSWORD }}
+          SUPERADMIN_PASSWORD: ${{ secrets.SUBSTRACKER_SUPERADMIN_PASSWORD }}
         run: |
           test -n "$CF_API_TOKEN" || (echo "缺少 CLOUDFLARE_API_TOKEN" && exit 1)
           test -n "$CF_ACCOUNT_ID" || (echo "缺少 CLOUDFLARE_ACCOUNT_ID" && exit 1)
           test -n "$ADMIN_PASSWORD" || (echo "缺少 SUBSTRACKER_ADMIN_PASSWORD" && exit 1)
+          test -n "$SUPERADMIN_PASSWORD" || (echo "缺少 SUBSTRACKER_SUPERADMIN_PASSWORD" && exit 1)
 
       - name: Install dependencies
         run: npm ci
@@ -50,6 +52,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           SUBSTRACKER_ADMIN_PASSWORD: ${{ secrets.SUBSTRACKER_ADMIN_PASSWORD }}
+          SUBSTRACKER_SUPERADMIN_PASSWORD: ${{ secrets.SUBSTRACKER_SUPERADMIN_PASSWORD }}
 
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v4

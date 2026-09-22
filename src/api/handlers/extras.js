@@ -24,7 +24,7 @@ import { getCategories, addCategory } from '../../data/categories.js';
 import { getMenuOptions, addMenuOption, removeMenuOption, resetMenuOptions, isValidMenuGroup } from '../../data/menu-options.js';
 import { getNextFireTime } from '../../services/notify/reminder-engine.js';
 
-export const VERSION = '3.0.0';
+export const VERSION = '3.1.0';
 
 /** 标准 JSON 响应 */
 function json(data, status = 200) {
@@ -100,7 +100,7 @@ export async function handleExtraRoutes(request, env, path) {
     return json({ success: true, version: VERSION });
   }
 
-  // /menu-options：订阅名称 / 订阅类型 / 分类标签的可配置菜单
+  // /menu-options：订阅名称 / 订阅类型 / 分类标签 / 会员级别 / 使用人的 D1 可配置菜单
   if (path === '/menu-options') {
     if (method === 'GET') {
       return json({ success: true, menus: await getMenuOptions(env) });

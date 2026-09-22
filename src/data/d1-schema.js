@@ -86,7 +86,22 @@ export async function ensureD1Schema(env) {
         has_password INTEGER NOT NULL DEFAULT 0,
         metadata_json TEXT
       )`),
-      db.prepare('CREATE INDEX IF NOT EXISTS idx_account_history_serial_time ON account_history(account_serial, changed_at DESC)')
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_account_history_serial_time ON account_history(account_serial, changed_at DESC)'),
+      db.prepare(`CREATE TABLE IF NOT EXISTS menu_option_groups (
+        group_key TEXT PRIMARY KEY,
+        initialized_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`),
+      db.prepare(`CREATE TABLE IF NOT EXISTS menu_options (
+        group_key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (group_key, value),
+        FOREIGN KEY (group_key) REFERENCES menu_option_groups(group_key) ON DELETE CASCADE
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_menu_options_group_sort ON menu_options(group_key, sort_order ASC)')
     ];
 
     await db.batch(statements);

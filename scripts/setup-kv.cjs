@@ -12,6 +12,14 @@ const PREVIEW_TITLE_CANDIDATES = ['SUBSCRIPTIONS_KV_PREVIEW', 'SUBSCRIPTIONS_KV_
 const D1_BINDING = 'SUBSCRIPTIONS_DB';
 const D1_DATABASE_NAME = 'subscription-manager-db';
 
+
+function hashSuperAdminPassword(password) {
+  const iterations = 210000;
+  const salt = crypto.randomBytes(16);
+  const derived = crypto.pbkdf2Sync(String(password || ''), salt, iterations, 32, 'sha256');
+  return `pbkdf2-sha256$${iterations}$${salt.toString('base64')}$${derived.toString('base64')}`;
+}
+
 function wrangler(args, options = {}) {
   const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
   return execFileSync(npx, ['wrangler', ...args], {
@@ -110,34 +118,54 @@ function applyD1Migrations() {
 }
 
 function ensureInitialConfig(namespaceId) {
-  let existing = '';
+  let existingRaw = '';
   try {
-    existing = wrangler(['kv', 'key', 'get', 'config', '--namespace-id', namespaceId]).trim();
+    existingRaw = wrangler(['kv', 'key', 'get', 'config', '--namespace-id', namespaceId]).trim();
   } catch {
-    existing = '';
+    existingRaw = '';
   }
-  if (existing) {
-    console.log('[setup] KV config 已存在，保留现有管理员密码与加密密钥');
+
+  let config = {};
+  let isNew = true;
+  if (existingRaw) {
+    try {
+      config = JSON.parse(existingRaw);
+      isNew = false;
+    } catch {
+      throw new Error('现有 KV config 不是合法 JSON，请先修复配置');
+    }
+  }
+
+  if (isNew) {
+    const username = String(process.env.SUBSTRACKER_ADMIN_USERNAME || 'admin').trim() || 'admin';
+    const password = String(process.env.SUBSTRACKER_ADMIN_PASSWORD || '').trim();
+    if (!password) {
+      throw new Error('首次初始化需要设置 SUBSTRACKER_ADMIN_PASSWORD，已停止创建默认弱密码');
+    }
+    config.ADMIN_USERNAME = username;
+    config.ADMIN_PASSWORD = password;
+    config.JWT_SECRET = crypto.randomUUID();
+    config.CREDENTIALS_ENCRYPTION_KEY = `${crypto.randomUUID()}${crypto.randomUUID()}`;
+  }
+
+  const superAdminPassword = String(process.env.SUBSTRACKER_SUPERADMIN_PASSWORD || '').trim();
+  if (superAdminPassword) {
+    config.SUPERADMIN_PASSWORD_HASH = hashSuperAdminPassword(superAdminPassword);
+  } else if (!config.SUPERADMIN_PASSWORD_HASH) {
+    console.warn('[setup] 警告：未设置 SUBSTRACKER_SUPERADMIN_PASSWORD，Database 的 SuperAdmin 密码查看模式将不可用');
+  }
+
+  if (!isNew && !superAdminPassword) {
+    console.log('[setup] KV config 已存在，保留现有管理员密码、SuperAdmin 配置与加密密钥');
     return;
   }
 
-  const username = String(process.env.SUBSTRACKER_ADMIN_USERNAME || 'admin').trim() || 'admin';
-  const password = String(process.env.SUBSTRACKER_ADMIN_PASSWORD || '').trim();
-  if (!password) {
-    throw new Error('首次初始化需要设置 SUBSTRACKER_ADMIN_PASSWORD，已停止创建默认弱密码');
-  }
-
-  const initialConfig = {
-    ADMIN_USERNAME: username,
-    ADMIN_PASSWORD: password,
-    JWT_SECRET: crypto.randomUUID(),
-    CREDENTIALS_ENCRYPTION_KEY: `${crypto.randomUUID()}${crypto.randomUUID()}`
-  };
   const tempFile = path.join(ROOT, '.substracker-bootstrap-config.json');
   try {
-    fs.writeFileSync(tempFile, JSON.stringify(initialConfig), { encoding: 'utf8', mode: 0o600 });
+    fs.writeFileSync(tempFile, JSON.stringify(config), { encoding: 'utf8', mode: 0o600 });
     wrangler(['kv', 'key', 'put', 'config', '--namespace-id', namespaceId, '--path', tempFile], { inherit: true });
-    console.log(`[setup] 已初始化管理员账号：${username}（密码未输出）`);
+    if (isNew) console.log(`[setup] 已初始化管理员账号：${config.ADMIN_USERNAME || 'admin'}（密码未输出）`);
+    if (superAdminPassword) console.log('[setup] 已写入/更新 SuperAdmin 二级密码哈希（明文未保存）');
   } finally {
     try { fs.unlinkSync(tempFile); } catch {}
   }

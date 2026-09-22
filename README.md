@@ -44,18 +44,20 @@
 ### 方式一：命令行（推荐）
 
 ```bash
-git clone https://github.com/wangwangit/SubsTracker.git
-cd SubsTracker
+git clone https://github.com/mailjd/SubsTrackerManager.git
+cd SubsTrackerManager
 npm install
 
 # Linux / macOS
 export CLOUDFLARE_API_TOKEN=你的token
 export CLOUDFLARE_ACCOUNT_ID=你的AccountID
 export SUBSTRACKER_ADMIN_PASSWORD=你的首次管理员密码
+export SUBSTRACKER_SUPERADMIN_PASSWORD=你的SuperAdmin二级密码
 # Windows PowerShell
 # $env:CLOUDFLARE_API_TOKEN="你的token"
 # $env:CLOUDFLARE_ACCOUNT_ID="你的AccountID"
 # $env:SUBSTRACKER_ADMIN_PASSWORD="你的首次管理员密码"
+# $env:SUBSTRACKER_SUPERADMIN_PASSWORD="你的SuperAdmin二级密码"
 
 npm run deploy:safe
 ```
@@ -75,17 +77,19 @@ npm run deploy:safe
 
 - `migrations/0001_subscription_history.sql`：订阅当前镜像与历史。
 - `migrations/0002_accounts_database.sql`：独立账号 Database。
+- `migrations/0003_menu_options_database.sql`：订阅名称、类型、分类、会员级别、使用人等可配置菜单。
 
-D1 现在分成两个业务区域：
+D1 现在分成三个业务区域：
 
 - **订阅记录**：`subscriptions_current` 保存当前订阅结构化镜像，`subscription_history` 保存创建、编辑、续订、支付、启停、删除、备份恢复等不可变历史。
 - **Database / 账号数据库**：`accounts` 独立保存 `账号序号 / 账号 / 密码密文`，`account_history` 保存账号变更审计（只记录是否有密码，不保存密码内容）。
+- **订阅菜单数据库**：`menu_option_groups / menu_options` 保存订阅名称、订阅类型、分类标签、会员级别、使用人五组菜单；D1 是主存储，旧 KV 菜单只在升级时迁移或在没有 D1 时兼容回退。
 
-`accounts.account_serial` 与 `accounts.account` 都具有唯一约束，一个账号可被多条订阅引用。Database 页面位于 `/admin/database`，可分页搜索、新增、编辑、查看密码、批量导入和删除账号；仍被订阅引用的账号禁止删除。
+`accounts.account_serial` 与 `accounts.account` 都具有唯一约束，一个账号可被多条订阅引用。Database 页面位于 `/admin/database`，可分页搜索、新增、编辑、批量导入和删除账号；普通 Admin 只能看到密码“已设置/未设置”，不会收到或显示已保存密码。输入独立的 SuperAdmin 二级密码解锁后，当前分页会自动显示账号明文密码，并可单独隐藏/再次查看；30 分钟后自动锁定。仍被订阅引用的账号禁止删除。
 
-正常部署仍会执行 D1 migrations；同时 Worker 运行时增加了幂等的 `CREATE TABLE IF NOT EXISTS` 兜底初始化。如果使用 Cloudflare Git 直连部署、手动 `wrangler deploy` 或曾遗漏 migration，首次访问也会自动补齐 `subscriptions_current / subscription_history / accounts / account_history` 等基础表，避免出现 `no such table: accounts`。
+正常部署仍会执行 D1 migrations；同时 Worker 运行时增加了幂等的 `CREATE TABLE IF NOT EXISTS` 兜底初始化。如果使用 Cloudflare Git 直连部署、手动 `wrangler deploy` 或曾遗漏 migration，首次访问也会自动补齐 `subscriptions_current / subscription_history / accounts / account_history / menu_option_groups / menu_options` 等基础表，避免出现 `no such table: accounts`。
 
-账号密码使用部署环境的 `CREDENTIALS_ENCRYPTION_KEY` 通过 AES-GCM 加密后保存到 D1，列表默认只显示遮罩。已有部署升级后，首次访问会自动从现有 KV 订阅抽取账号序号、账号与已有密码密文到 `accounts`，最新有效映射优先。
+账号密码使用部署环境的 `CREDENTIALS_ENCRYPTION_KEY` 通过 AES-GCM 加密后保存到 D1。普通 Admin 不下发明文密码；只有 SuperAdmin 二级认证通过后，单条查看接口才会解密返回。已有部署升级后，首次访问会自动从现有 KV 订阅抽取账号序号、账号与已有密码密文到 `accounts`，最新有效映射优先。
 
 单条订阅历史可通过 `GET /api/subscriptions/{id}/history?limit=100` 查询。账号 API 为 `/api/accounts`，订阅编辑页的账号/序号联动优先使用该账号库。
 
@@ -105,6 +109,7 @@ npm run setup:local-d1
 | `CLOUDFLARE_API_TOKEN` | **必填**。建议至少具备 Workers 部署权限、Workers KV Storage Write、D1 Edit；首次创建 Worker 时需要可创建 Worker 的权限 |
 | `CLOUDFLARE_ACCOUNT_ID` | **必填**，Cloudflare Account ID |
 | `SUBSTRACKER_ADMIN_PASSWORD` | **必填**，首次部署写入 KV 的管理员密码；不会写入仓库 |
+| `SUBSTRACKER_SUPERADMIN_PASSWORD` | **必填**，Database SuperAdmin mode 的二级密码；部署脚本只保存 PBKDF2 哈希，不保存明文 |
 
 3. 推送到 `master` / `main` 或手动运行 **Deploy** workflow  
 
@@ -191,15 +196,17 @@ Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV
 
 ### 可配置订阅菜单
 
-订阅编辑窗口中的 **订阅名称 / 订阅类型 / 分类标签** 都支持下拉选择和自定义输入，并提供“管理菜单”入口，可新增、删除或恢复默认菜单。菜单保存在 KV 的 `menu_options_v1` 中，刷新页面或更换设备后仍然保留；删除菜单项只影响后续可选列表，不会删除或修改已有订阅记录。
+订阅编辑窗口中的 **订阅名称 / 订阅类型 / 分类标签 / 会员级别 / 使用人** 都支持下拉选择和自定义输入，并提供“管理菜单”入口，可新增、删除或恢复默认菜单。五组菜单统一保存在 D1 的 `menu_option_groups / menu_options` 中；删除菜单项只影响后续可选列表，不会删除或修改已有订阅记录。
 
-当前默认菜单：
+当前默认菜单包括：
 
 - 订阅名称：`Tapnow / LibTV / 即梦 / 豆包 / 小云雀 / SUNO / 剪映 / AdobeCC / ChatGPT / Gemini / higgsfield / LovArt / Askgo / Midjourney / TopazLabs / ClaudeCode(CC) / 19584618860 / 19042608266 / 配音 / 千问办公`
 - 订阅类型：`开会员 / 充积分 / 充话费 / 服务费用 / 配音费用`
 - 分类标签：`未完成 / 钉钉报销中 / 已完成 / 未还代支付`
+- 会员级别：内置 `高级会员 / 豪华版VIP会员 / 专业版会员 / Ultimate会员 / Ultra会员 / Pro会员 / Plus会员 / Pro5X会员 / 摄影计划（1 TB） / 团队会员 / TopazStudio / 至尊版VIP会员(升级) / 个人标准版 / Standard Plan`。
+- 使用人：内置当前人员名单，并支持多人选择；保存时统一使用英文逗号 `,` 分隔并去重。
 
-直接输入新的名称、类型或分类并保存订阅时，该值也会自动加入对应菜单。分类标签仍支持用 `/` 分隔多个标签。备份格式 v4 会同时保存这三组可配置菜单。
+直接输入新的名称、类型、分类、会员级别或使用人并保存订阅时，该值会自动加入对应 D1 菜单。分类标签仍支持用 `/` 分隔多个标签；使用人支持用 `,` 分隔多人。备份会同时保存五组菜单。
 
 ### Database / 账号数据库
 
@@ -207,10 +214,10 @@ Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV
 
 - 账号序号：唯一，例如 `001`、`A-001`。
 - 账号：唯一，例如邮箱、用户名或手机号。
-- 密码：AES-GCM 加密保存，列表默认遮罩，需要时可查看。
-- 修改账号序号、账号或密码后，会同步所有引用该账号的订阅记录。
+- 密码：AES-GCM 加密保存。Admin mode 不显示已保存密码；进入 SuperAdmin mode 并输入二级密码后，当前分页会自动显示明文密码，30 分钟后自动锁定。
+- 修改账号序号或账号后，会同步所有引用该账号的订阅记录；账号密码只保存在 Database，不再复制到订阅记录。
 - 如果账号仍被订阅引用，系统会阻止删除。
-- 订阅编辑页选择已有账号或账号序号时，会自动双向切换，并读取该账号的统一密码。
+- 订阅编辑页选择已有账号或账号序号时会自动双向切换；订阅新增/编辑表单不再挂载密码字段。
 - 页面提供独立的 **下载模板 / 批量导入 / 新增账号** 工具栏，支持直接从 Excel 复制粘贴。
 
 账号 Database 批量导入默认 3 列：`账号序号、账号、密码`。可带表头，也可按默认顺序直接粘贴。相同“账号序号 + 账号”会视为同一账号：密码非空时更新密码，密码留空时保留原密码；账号序号或账号与现有一对一关系冲突时，该行会拒绝导入并显示 Excel 行号。单次 API 最多 200 条，前端按每批 100 条提交。
@@ -224,14 +231,14 @@ Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV
 推荐流程：
 
 1. 下载默认 `.xlsx` 模板。
-2. 在 `订阅导入` 工作表填写数据。模板包含全部 22 个业务字段。
+2. 在 `订阅导入` 工作表填写数据。模板包含全部 21 个订阅业务字段（不含账号密码）。
 3. 在 Excel 中复制包含表头的数据区域。
 4. 打开「批量录入」，直接粘贴并点击「解析并预览」。
 5. 系统逐行校验后，仅导入有效行；错误行会显示具体 Excel 行号和原因。
 
 默认字段顺序：
 
-`订阅名称、账号、账号序号、会员级别、积分、使用人、订阅类型、分类标签、费用、币种、订阅模式、密码、开始日期、周期数值、周期单位、到期日期、农历周期、每月最后一天、提醒规则、启用订阅、自动续订、备注`。
+`订阅名称、账号、账号序号、会员级别、积分、使用人、订阅类型、分类标签、费用、币种、订阅模式、开始日期、周期数值、周期单位、到期日期、农历周期、每月最后一天、提醒规则、启用订阅、自动续订、备注`。
 
 常用填写规则：
 
@@ -244,7 +251,7 @@ Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV
 - 单次导入最多 100 条；前端会自动按每批 50 条提交。
 - 导入记录会正常写入 KV、D1 当前镜像，并在 D1 历史中标记为 `import`。
 
-**密码安全提醒：**模板中的密码单元格是明文；只有写入 SubsTracker 后才会按现有 AES-GCM 逻辑加密保存。请妥善保管或在导入完成后删除含密码的 Excel 文件。
+**密码归属：**订阅模板不再包含密码列。账号密码请使用 Database 页单独新增或使用 `templates/SubsTracker_账号数据库批量导入模板.xlsx` 批量维护，写入 D1 前会使用 AES-GCM 加密。
 
 仓库内也附带一份模板：`templates/SubsTracker_订阅批量导入模板.xlsx`。
 
@@ -434,7 +441,7 @@ npm install
 npm test           # 单元 / 集成测试
 npm run lint
 npx wrangler dev --config wrangler.dev.toml --local
-# http://127.0.0.1:8787  默认 admin / password
+# http://127.0.0.1:8787  使用当前本地配置中的管理员账号/密码登录
 ```
 
 ```text

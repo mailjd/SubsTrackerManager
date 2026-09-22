@@ -24,9 +24,11 @@ const CryptoJS = {
   }
 };
 
-async function generateJWT(username, secret) {
+async function generateJWT(username, secret, options = {}) {
   const header = { alg: 'HS256', typ: 'JWT' };
-  const payload = { username, exp: Math.floor(Date.now() / 1000) + 86400 };
+  const ttlSeconds = Number.isFinite(Number(options.ttlSeconds)) ? Math.max(60, Math.floor(Number(options.ttlSeconds))) : 86400;
+  const extra = options.extra && typeof options.extra === 'object' ? options.extra : {};
+  const payload = { username, ...extra, exp: Math.floor(Date.now() / 1000) + ttlSeconds };
 
   const base64Header = btoa(JSON.stringify(header));
   const base64Payload = btoa(JSON.stringify(payload));

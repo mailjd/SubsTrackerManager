@@ -41,6 +41,8 @@ export const MENU_DEFAULTS = Object.freeze({
 const GROUPS = Object.freeze(Object.keys(MENU_DEFAULTS));
 const GROUP_SET = new Set(GROUPS);
 
+let d1MenusInitPromise = null;
+
 function cleanOption(value) {
   return typeof value === 'string' ? value.trim().slice(0, MAX_OPTION_LENGTH) : '';
 }
@@ -83,32 +85,42 @@ async function getLegacyMenus(env) {
 }
 
 async function ensureD1MenusInitialized(env) {
-  await ensureD1Schema(env);
-  const db = env.SUBSCRIPTIONS_DB;
-  const legacy = await getLegacyMenus(env);
-  const now = new Date().toISOString();
+  if (d1MenusInitPromise) return d1MenusInitPromise;
 
-  for (const group of GROUPS) {
-    const marker = await db.prepare('SELECT group_key FROM menu_option_groups WHERE group_key = ?').bind(group).first();
-    if (marker) continue;
+  d1MenusInitPromise = (async () => {
+    await ensureD1Schema(env);
+    const db = env.SUBSCRIPTIONS_DB;
+    const legacy = await getLegacyMenus(env);
+    const now = new Date().toISOString();
 
-    const source = legacy && typeof legacy === 'object' && Object.prototype.hasOwnProperty.call(legacy, group)
-      ? legacy[group]
-      : MENU_DEFAULTS[group];
-    const items = normalizeList(source);
-    const statements = [
-      db.prepare('INSERT OR IGNORE INTO menu_option_groups (group_key, initialized_at, updated_at) VALUES (?, ?, ?)')
-        .bind(group, now, now)
-    ];
-    items.forEach((value, index) => {
-      statements.push(
-        db.prepare(`INSERT OR IGNORE INTO menu_options (group_key, value, sort_order, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?)`)
-          .bind(group, value, index, now, now)
-      );
-    });
-    await db.batch(statements);
-  }
+    for (const group of GROUPS) {
+      const marker = await db.prepare('SELECT group_key FROM menu_option_groups WHERE group_key = ?').bind(group).first();
+      if (marker) continue;
+
+      const source = legacy && typeof legacy === 'object' && Object.prototype.hasOwnProperty.call(legacy, group)
+        ? legacy[group]
+        : MENU_DEFAULTS[group];
+      const items = normalizeList(source);
+      const statements = [
+        db.prepare('INSERT OR IGNORE INTO menu_option_groups (group_key, initialized_at, updated_at) VALUES (?, ?, ?)')
+          .bind(group, now, now)
+      ];
+      items.forEach((value, index) => {
+        statements.push(
+          db.prepare(`INSERT OR IGNORE INTO menu_options (group_key, value, sort_order, created_at, updated_at)
+                      VALUES (?, ?, ?, ?, ?)`)
+            .bind(group, value, index, now, now)
+        );
+      });
+      await db.batch(statements);
+    }
+    return true;
+  })().catch((error) => {
+    d1MenusInitPromise = null;
+    throw error;
+  });
+
+  return d1MenusInitPromise;
 }
 
 async function getD1Menus(env) {
@@ -147,7 +159,7 @@ export async function getMenuOptions(env) {
 }
 
 /** @param {any} env @param {string} group @param {string} value */
-export async function addMenuOption(env, group, value) {
+export async function addMenuOption(env, group, value, options = {}) {
   if (!isValidMenuGroup(group)) throw new Error('无效的菜单分组');
   const item = cleanOption(value);
   if (!item) throw new Error('菜单项不能为空');
@@ -159,11 +171,17 @@ export async function addMenuOption(env, group, value) {
       all[group].push(item);
       await putKVJson(env, LEGACY_KEY, all);
     }
-    return all;
+    return options.returnMenus === false ? null : all;
   }
 
   await ensureD1MenusInitialized(env);
   const db = env.SUBSCRIPTIONS_DB;
+
+  const existing = await db.prepare(
+    'SELECT 1 AS found FROM menu_options WHERE group_key = ? AND value = ? LIMIT 1'
+  ).bind(group, item).first();
+  if (existing) return options.returnMenus === false ? null : getD1Menus(env);
+
   const count = await db.prepare('SELECT COUNT(*) AS count FROM menu_options WHERE group_key = ?').bind(group).first();
   if (Number(count?.count || 0) >= MAX_OPTIONS_PER_GROUP) throw new Error('菜单项数量已达到上限');
   const maxRow = await db.prepare('SELECT COALESCE(MAX(sort_order), -1) AS max_sort FROM menu_options WHERE group_key = ?').bind(group).first();
@@ -174,7 +192,7 @@ export async function addMenuOption(env, group, value) {
       .bind(group, item, Number(maxRow?.max_sort ?? -1) + 1, now, now),
     db.prepare('UPDATE menu_option_groups SET updated_at = ? WHERE group_key = ?').bind(now, group)
   ]);
-  return getD1Menus(env);
+  return options.returnMenus === false ? null : getD1Menus(env);
 }
 
 /** @param {any} env @param {string} group @param {string} value */

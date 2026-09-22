@@ -79,3 +79,13 @@ API Token 需要允许自动创建/复用并访问本项目使用的 Worker、KV
 - [ ] 系统配置可保存页面内容对齐模式：居中 / 左贴边 / 右贴边 / 左右贴边宽屏。
 - [ ] 系统配置可设置 1200–2560px 最大内容宽度。
 - [ ] 订阅记录与 Database 页面均应用相同内容布局设置。
+
+
+## v3.3.1 订阅批量导入稳定性检查
+
+- [ ] Excel 批量导入前端每批最多 4 条
+- [ ] `/api/subscriptions/import` 单次最多接收 6 条
+- [ ] 重复检测优先使用 D1 `subscriptions_current` 轻量字段查询
+- [ ] 导入时不再读取所有订阅的 reminder rules
+- [ ] 创建后提醒规则不再重复执行 legacy 回写
+- [ ] 大批量导入不会出现 `Too many API requests by single Worker invocation`

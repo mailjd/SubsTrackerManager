@@ -16,7 +16,7 @@ import { lunarCalendar } from '../../core/lunar.js';
 import { formatTimeInTimezone, formatTimezoneDisplay, getTimezoneDateParts } from '../../core/time.js';
 import { formatAmount } from '../../core/currency-format.js';
 import { extractTagsFromSubscriptions } from '../utils.js';
-import { hasD1, listSubscriptionHistory } from '../../data/subscription-history.repo.js';
+import { hasD1, listSubscriptionHistory, syncCurrentSubscriptions } from '../../data/subscription-history.repo.js';
 import {
   SUBSCRIPTION_IMPORT_TEMPLATE_BASE64,
   SUBSCRIPTION_IMPORT_TEMPLATE_FILENAME,
@@ -31,16 +31,18 @@ function base64ToBytes(base64) {
   return bytes;
 }
 
-async function persistCreatedReminderRules(env, subscriptionId, incomingRules) {
+async function persistCreatedReminderRules(env, subscriptionId, incomingRules, options = {}) {
   try {
     const remindersRepo = await import('../../data/reminders.repo.js');
-    const { syncLegacyReminderFields } = await import('../../data/subscriptions.js');
     const incoming = Array.isArray(incomingRules) ? incomingRules : null;
     const rules = incoming && incoming.length > 0
       ? incoming.map(remindersRepo.normalizeRule)
       : remindersRepo.defaultPresetRules();
     await remindersRepo.replaceForSubscription(env, subscriptionId, rules);
-    await syncLegacyReminderFields(env, subscriptionId, rules);
+    if (options.syncLegacy !== false) {
+      const { syncLegacyReminderFields } = await import('../../data/subscriptions.js');
+      await syncLegacyReminderFields(env, subscriptionId, rules);
+    }
     return true;
   } catch (err) {
     console.error('[subscriptions] 写入提醒规则失败（订阅本身已创建）:', err);
@@ -73,6 +75,73 @@ function makeSubscriptionImportFingerprint(subscription) {
   if (name && account) return `account|${name}|${account}`;
   if (name && serial && serial !== '配音供应商') return `serial|${name}|${serial}`;
   return `fallback|${name}|${customType}|${expiry}|${amount}|${currency}`;
+}
+
+
+const IMPORT_ROWS_PER_REQUEST = 6;
+
+async function loadExistingImportFingerprints(env) {
+  const subRepo = await import('../../data/subscriptions.repo.js');
+
+  if (hasD1(env)) {
+    try {
+      const result = await env.SUBSCRIPTIONS_DB.prepare(`
+        SELECT name, account, account_serial, custom_type, expiry_date, amount, currency
+        FROM subscriptions_current
+      `).all();
+      const d1Rows = result.results || [];
+      const fingerprints = new Set(d1Rows.map((row) => makeSubscriptionImportFingerprint({
+        name: row.name,
+        account: row.account,
+        accountSerial: row.account_serial,
+        customType: row.custom_type,
+        expiryDate: row.expiry_date,
+        amount: row.amount,
+        currency: row.currency
+      })));
+
+      // 只读一次 KV 索引做一致性检查。若旧版批量导入曾在“KV 已写入、
+      // D1 镜像尚未写入”时触发子请求上限，则两边数量会不同。
+      // 这种情况下读取一次 KV 当前记录并顺手修复 D1，避免重新导入产生重复。
+      const ids = await subRepo.listIds(env);
+      if (ids.length === d1Rows.length) return fingerprints;
+
+      console.warn(`[subscription-import] 检测到 KV/D1 数量不一致（KV=${ids.length}, D1=${d1Rows.length}），执行轻量修复`);
+      const kvRows = await subRepo.listAll(env);
+      for (const row of kvRows) fingerprints.add(makeSubscriptionImportFingerprint(row));
+      await syncCurrentSubscriptions(env, kvRows, { replace: false, recordHistory: false });
+      return fingerprints;
+    } catch (error) {
+      console.warn('[subscription-import] D1 指纹查询失败，回退 KV 轻量读取:', error?.message || error);
+    }
+  }
+
+  try {
+    const rows = await subRepo.listAll(env);
+    return new Set(rows.map(makeSubscriptionImportFingerprint));
+  } catch (error) {
+    console.error('[subscription-import] 读取现有订阅指纹失败:', error);
+    return new Set();
+  }
+}
+
+async function applyImportReminderLegacy(subscription) {
+  if (!Array.isArray(subscription?.reminderRules) || subscription.reminderRules.length === 0) return subscription;
+  try {
+    const remindersRepo = await import('../../data/reminders.repo.js');
+    const rules = subscription.reminderRules.map(remindersRepo.normalizeRule);
+    const legacy = remindersRepo.deriveLegacyFromRules(rules);
+    return {
+      ...subscription,
+      reminderUnit: legacy.unit,
+      reminderValue: legacy.value,
+      reminderDays: legacy.unit === 'day' ? legacy.value : undefined,
+      reminderHours: legacy.unit === 'hour' ? legacy.value : undefined,
+      reminderRules: rules
+    };
+  } catch {
+    return subscription;
+  }
 }
 
 function changesObject(value) {
@@ -204,9 +273,12 @@ async function handleSubscriptions(request, env, path) {
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    if (rows.length > 100) {
+    if (rows.length > IMPORT_ROWS_PER_REQUEST) {
       return new Response(
-        JSON.stringify({ success: false, message: '单次最多导入 100 条，请分批提交' }),
+        JSON.stringify({
+          success: false,
+          message: `单次最多导入 ${IMPORT_ROWS_PER_REQUEST} 条。系统会自动分批，请使用订阅记录页的 Excel 批量导入。`
+        }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -215,8 +287,7 @@ async function handleSubscriptions(request, env, path) {
     let imported = 0;
     let failed = 0;
     let skipped = 0;
-    const existingSubscriptions = await getAllSubscriptions(env);
-    const existingFingerprints = new Set(existingSubscriptions.map(makeSubscriptionImportFingerprint));
+    const existingFingerprints = await loadExistingImportFingerprints(env);
 
     for (let index = 0; index < rows.length; index++) {
       const raw = rows[index];
@@ -227,7 +298,8 @@ async function handleSubscriptions(request, env, path) {
         continue;
       }
 
-      const { __sourceRow: _sourceRow, ...subscription } = raw;
+      const { __sourceRow: _sourceRow, ...rawSubscription } = raw;
+      const subscription = await applyImportReminderLegacy(rawSubscription);
       const fingerprint = makeSubscriptionImportFingerprint(subscription);
       if (existingFingerprints.has(fingerprint)) {
         skipped += 1;
@@ -247,7 +319,7 @@ async function handleSubscriptions(request, env, path) {
       });
 
       if (result.success && result.subscription) {
-        await persistCreatedReminderRules(env, result.subscription.id, subscription.reminderRules);
+        await persistCreatedReminderRules(env, result.subscription.id, subscription.reminderRules, { syncLegacy: false });
         imported += 1;
         existingFingerprints.add(fingerprint);
         results.push({
@@ -413,7 +485,7 @@ async function handleSubscriptions(request, env, path) {
       const result = await createSubscription(subscription, env);
       // 创建成功后写入提醒规则，并同步 legacy 提醒字段（列表展示依赖）
       if (result.success && result.subscription) {
-        await persistCreatedReminderRules(env, result.subscription.id, subscription.reminderRules);
+        await persistCreatedReminderRules(env, result.subscription.id, subscription.reminderRules, { syncLegacy: false });
       }
       const responseResult = result.success && result.subscription
         ? { ...result, subscription: sanitizeSubscription(result.subscription) }

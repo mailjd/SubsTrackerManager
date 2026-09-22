@@ -48,16 +48,16 @@ async function syncSubscriptionMenuOptions(env, subscription) {
   const category = String((subscription && subscription.category) || '').trim();
   const memberLevel = String((subscription && subscription.memberLevel) || '').trim();
   const users = String((subscription && subscription.users) || '').trim();
-  if (name) tasks.push(addMenuOption(env, 'subscriptionNames', name));
-  if (type) tasks.push(addMenuOption(env, 'subscriptionTypes', type));
+  if (name) tasks.push(addMenuOption(env, 'subscriptionNames', name, { returnMenus: false }));
+  if (type) tasks.push(addMenuOption(env, 'subscriptionTypes', type, { returnMenus: false }));
   if (category) {
     const tokens = category.split(/[\/,，\s]+/).map((item) => item.trim()).filter(Boolean);
-    for (const token of [...new Set(tokens)]) tasks.push(addMenuOption(env, 'categories', token));
+    for (const token of [...new Set(tokens)]) tasks.push(addMenuOption(env, 'categories', token, { returnMenus: false }));
   }
-  if (memberLevel) tasks.push(addMenuOption(env, 'memberLevels', memberLevel));
+  if (memberLevel) tasks.push(addMenuOption(env, 'memberLevels', memberLevel, { returnMenus: false }));
   if (users) {
     const tokens = users.split(/[,，]/).map((item) => item.trim()).filter(Boolean);
-    for (const token of [...new Set(tokens)]) tasks.push(addMenuOption(env, 'users', token));
+    for (const token of [...new Set(tokens)]) tasks.push(addMenuOption(env, 'users', token, { returnMenus: false }));
   }
   if (tasks.length > 0) await Promise.allSettled(tasks);
 }

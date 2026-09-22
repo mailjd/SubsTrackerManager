@@ -1101,6 +1101,7 @@
         </div>
 
         <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><i class="fas fa-shield-alt mr-2"></i><strong>导入保护：</strong>Excel 导入只会创建新记录；检测到与现有订阅重复时自动跳过，绝不会覆盖原记录。</div>
+        <div class="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900"><i class="fas fa-cloud mr-2"></i><strong>Cloudflare 稳定模式：</strong>大量数据会自动拆分为每批 4 条独立 Worker 请求；若极端情况下仍触发单次 API/Subrequest 上限，受影响行会自动改为单条请求重试。</div>
 
         <div>
           <div class="flex items-center justify-between mb-2 gap-3">
@@ -5682,33 +5683,93 @@ const lunarBiz = {
         const failures = [];
         const skippedRows = [];
         try {
-          const chunkSize = 50;
+          const chunkSize = 4; // Cloudflare Worker 子请求保护：每次只处理少量记录
           for (let i = 0; i < validRows.length; i += chunkSize) {
             const chunk = validRows.slice(i, i + chunkSize).map((item) => item.data);
+            if (executeBtn) {
+              const finished = Math.min(i, validRows.length);
+              executeBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>正在导入 ${finished}/${validRows.length}...`;
+            }
             const response = await apiFetch('/api/subscriptions/import', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ rows: chunk })
             });
             const payload = await response.json();
-            imported += Number(payload.imported || 0);
-            failed += Number(payload.failed || 0);
-            skipped += Number(payload.skipped || 0);
-            if (Array.isArray(payload.results)) {
-              payload.results.filter((item) => !item.success && !item.skipped).forEach((item) => failures.push(item));
-              payload.results.filter((item) => item.skipped).forEach((item) => skippedRows.push(item));
+            const resultItems = Array.isArray(payload.results) ? payload.results : null;
+            const apiLimitRows = [];
+
+            if (resultItems) {
+              for (const item of resultItems) {
+                if (item.success) {
+                  imported += 1;
+                } else if (item.skipped) {
+                  skipped += 1;
+                  skippedRows.push(item);
+                } else if (/too many api requests|subrequests?|api requests by single worker/i.test(String(item.message || ''))) {
+                  const original = chunk.find((row) => Number(row.__sourceRow) === Number(item.row));
+                  if (original) apiLimitRows.push(original);
+                  else {
+                    failed += 1;
+                    failures.push(item);
+                  }
+                } else {
+                  failed += 1;
+                  failures.push(item);
+                }
+              }
+            } else if (!response.ok) {
+              if (/too many api requests|subrequests?|api requests by single worker/i.test(String(payload.message || '')) && chunk.length > 1) {
+                apiLimitRows.push(...chunk);
+              } else {
+                failed += chunk.length;
+                failures.push({ row: '—', message: payload.message || '服务器导入失败' });
+              }
             }
-            if (!response.ok && !payload.results) {
-              failed += chunk.length;
-              failures.push({ row: '—', message: payload.message || '服务器导入失败' });
+
+            // 极端情况下仍碰到 Cloudflare 单次调用上限时，把受影响行拆成
+            // 单条新 invocation 自动重试。服务端会先做“只新增”指纹检查，
+            // 因此前一次若已部分写入也不会重复创建。
+            for (const retryRow of apiLimitRows) {
+              await new Promise((resolve) => setTimeout(resolve, 80));
+              const retryResponse = await apiFetch('/api/subscriptions/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rows: [retryRow] })
+              });
+              const retryPayload = await retryResponse.json();
+              const retryItem = Array.isArray(retryPayload.results) ? retryPayload.results[0] : null;
+              if (retryItem?.success) {
+                imported += 1;
+              } else if (retryItem?.skipped) {
+                skipped += 1;
+                skippedRows.push(retryItem);
+              } else {
+                failed += 1;
+                failures.push(retryItem || {
+                  row: retryRow.__sourceRow || '—',
+                  message: retryPayload.message || '自动重试后仍导入失败'
+                });
+              }
             }
+
+            // 每个小批次都是独立 Worker invocation；轻微让出事件循环，
+            // 避免大批 Excel 导入时连续请求挤在一起。
+            if (i + chunkSize < validRows.length) {
+              await new Promise((resolve) => setTimeout(resolve, 60));
+            }
+          }
+
+          if (executeBtn) {
+            executeBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>正在整理结果 ${validRows.length}/${validRows.length}...`;
           }
 
           const localInvalid = parsedRows.filter((item) => item.errors.length > 0);
           const totalSkipped = localInvalid.length;
           const summaryParts = [
             `<div class="font-semibold mb-2">批量录入完成</div>`,
-            `<div>成功新增：<strong class="text-emerald-700">${imported}</strong> 条；原有记录跳过：<strong class="text-blue-700">${skipped}</strong> 条；服务器失败：<strong class="text-red-600">${failed}</strong> 条；本地校验跳过：<strong class="text-amber-600">${totalSkipped}</strong> 条。</div>`
+            `<div>成功新增：<strong class="text-emerald-700">${imported}</strong> 条；原有记录跳过：<strong class="text-blue-700">${skipped}</strong> 条；服务器失败：<strong class="text-red-600">${failed}</strong> 条；本地校验跳过：<strong class="text-amber-600">${totalSkipped}</strong> 条。</div>`,
+            `<div class="mt-1 text-xs opacity-75">已启用 Cloudflare 安全分批导入，每批最多 ${chunkSize} 条，避免单次 Worker 调用超过 API/Subrequest 限制。</div>`
           ];
           if (skippedRows.length > 0) {
             summaryParts.push('<div class="mt-3 font-medium text-blue-800">未覆盖的原有记录：</div>');

@@ -550,6 +550,9 @@
             <button type="button" id="tableViewBtn" data-view-mode="table" class="px-3 py-2 text-sm bg-white text-gray-700 border-r border-gray-300"><i class="fas fa-table mr-1"></i>表格模式</button>
             <button type="button" id="cardViewBtn" data-view-mode="card" class="px-3 py-2 text-sm bg-white text-gray-700"><i class="fas fa-th-large mr-1"></i>卡片模式</button>
           </div>
+          <div class="inline-flex gap-2">
+            <button type="button" id="resetTableLayoutBtn" class="px-3 py-2 text-sm border rounded-lg bg-white"><i class="fas fa-table mr-1"></i>重置Layout</button>
+          </div>
         </div>
         <div class="flex flex-wrap gap-2 items-center">
           <button id="downloadImportTemplateBtn" class="bg-white hover:bg-gray-50 text-indigo-700 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
@@ -557,6 +560,9 @@
           </button>
           <button id="openBulkImportBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
             <i class="fas fa-file-import mr-2"></i>批量导入
+          </button>
+          <button id="redoClassificationBtn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
+            <i class="fas fa-redo mr-2"></i>重做
           </button>
           <button id="openBulkExportBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
             <i class="fas fa-file-export mr-2"></i>批量导出
@@ -6179,5 +6185,51 @@ const lunarBiz = {
       }
     }).catch(()=>{});
   </script>
+
+<script>
+(function(){
+  const layoutKey='subscriptionTableLayoutV1';
+  const defaultWidths={0:60,1:180,2:140,3:90,4:100,5:90,6:140,7:120,8:140,9:80,10:80,11:120,12:110,13:90,14:90,15:110,16:100,17:110,18:160,19:90,20:90,21:240,22:160};
+  function saveLayout(){
+    const table=document.querySelector('.subscription-excel-table'); if(!table)return;
+    const widths=[...table.querySelectorAll('thead th')].map(th=>th.offsetWidth);
+    localStorage.setItem(layoutKey,JSON.stringify(widths));
+  }
+  function applyLayout(){
+    const table=document.querySelector('.subscription-excel-table'); if(!table)return;
+    let widths; try{widths=JSON.parse(localStorage.getItem(layoutKey)||'null')}catch(e){}
+    widths=widths||Object.values(defaultWidths);
+    table.querySelectorAll('tr').forEach(tr=>[...tr.children].forEach((td,i)=>{if(widths[i])td.style.width=widths[i]+'px'}));
+  }
+  function enableResize(){
+    const table=document.querySelector('.subscription-excel-table'); if(!table)return;
+    table.querySelectorAll('thead th').forEach((th)=>{
+      if(th.dataset.resize)return; th.dataset.resize='1';
+      const grip=document.createElement('span'); grip.style.cssText='float:right;width:6px;cursor:col-resize;height:20px'; th.appendChild(grip);
+      let startX,startW;
+      grip.onmousedown=e=>{startX=e.clientX;startW=th.offsetWidth;const move=e2=>{th.style.width=Math.max(50,startW+e2.clientX-startX)+'px';applyLayout()};const up=()=>{saveLayout();document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up)};document.addEventListener('mousemove',move);document.addEventListener('mouseup',up)};
+    });
+  }
+  function resetLayout(){localStorage.removeItem(layoutKey);location.reload()}
+  window.addEventListener('load',()=>{setTimeout(()=>{applyLayout();enableResize()},500);});
+  document.addEventListener('click',e=>{if(e.target.closest('#resetTableLayoutBtn'))resetLayout()});
+  document.addEventListener('dblclick',e=>{
+    const th=e.target.closest('.subscription-excel-table thead th');
+    if(!th)return;
+    const idx=[...th.parentNode.children].indexOf(th);
+    const rows=[...document.querySelectorAll('#subscriptionsExcelBody tr')];
+    rows.sort((a,b)=>a.children[idx].innerText.localeCompare(b.children[idx].innerText,'zh'));
+    document.querySelector('#subscriptionsExcelBody')?.append(...rows);
+  });
+  document.addEventListener('click',e=>{
+    if(e.target.closest('#redoClassificationBtn')){
+      if(confirm('确定重新执行分类？当前分类结果将重新生成。')){
+        if(typeof renderSubscriptionTable==='function')renderSubscriptionTable();
+        if(typeof showToast==='function')showToast('已重新执行分类刷新','success');
+      }
+    }
+  });
+})();
+</script>
 </body>
 </html>

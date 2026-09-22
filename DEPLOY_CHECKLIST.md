@@ -35,7 +35,7 @@ API Token 需要允许自动创建/复用并访问本项目使用的 Worker、KV
 - Worker：`subscription-manager`
 - KV：`SUBSCRIPTIONS_KV` / `SUBSCRIPTIONS_KV_PREVIEW`
 - D1：`subscription-manager-db`，Worker binding 为 `SUBSCRIPTIONS_DB`
-- D1 migrations：`migrations/0001_subscription_history.sql`、`migrations/0002_accounts_database.sql`、`migrations/0003_menu_options_database.sql`、`migrations/0004_account_profiles_credentials.sql`
+- D1 migrations：`migrations/0001_subscription_history.sql`、`migrations/0002_accounts_database.sql`、`migrations/0003_menu_options_database.sql`、`migrations/0004_account_profiles_credentials.sql`、`migrations/0005_account_database_backups.sql`
 - Cron：每小时一次
 
 ## 不应提交
@@ -50,3 +50,5 @@ API Token 需要允许自动创建/复用并访问本项目使用的 Worker、KV
 - `SUBSTRACKER_SUPERADMIN_PASSWORD`（推荐 Secret）
 
 登录页可以使用管理员用户名 + 该密码直接进入 SuperAdmin。
+
+- [ ] 确认 D1 migration `0005_account_database_backups.sql` 已应用（全覆盖导入最近两版备份）

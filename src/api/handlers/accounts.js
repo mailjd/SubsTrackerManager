@@ -19,6 +19,12 @@ import {
   updateAndPropagate,
   deleteAccount
 } from '../../data/accounts.repo.js';
+import {
+  createAccountDatabaseBackup,
+  listAccountDatabaseBackups,
+  getAccountDatabaseBackup,
+  restoreAccountDatabaseBackup
+} from '../../data/account-database-backups.repo.js';
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -161,14 +167,158 @@ export async function handleAccounts(request, env, path) {
     });
   }
 
+  if (path === '/accounts/backups' && method === 'GET') {
+    return json({ success: true, items: await listAccountDatabaseBackups(env), keep: 2 });
+  }
+
+  if (path.startsWith('/accounts/backups/') && path.endsWith('/restore') && method === 'POST') {
+    const config = await getConfig(env);
+    if (!(await isSuperAdminUnlocked(request, config))) {
+      return json({ success: false, message: '恢复 Database 备份需要先进入 SuperAdmin mode' }, 403);
+    }
+    const backupId = Number(path.split('/')[3] || 0);
+    if (!backupId) return json({ success: false, message: '无效的备份版本' }, 400);
+    let body = {};
+    try { body = await request.json(); } catch { body = {}; }
+    if (body?.confirm !== 'RESTORE') return json({ success: false, message: '恢复备份需要再次确认' }, 400);
+
+    // 先读取目标备份，再创建恢复前快照；否则新增快照清理旧版本时可能淘汰正在恢复的最旧备份。
+    const targetBackup = await getAccountDatabaseBackup(env, backupId);
+    if (!targetBackup) return json({ success: false, message: '备份不存在或已损坏' }, 404);
+    const safetyBackup = await createAccountDatabaseBackup(env, {
+      reason: 'before_backup_restore',
+      sourceFilename: `restore-backup-${backupId}`
+    });
+    const result = await restoreAccountDatabaseBackup(env, backupId, targetBackup);
+    if (!result.success) {
+      return json({ ...result, safetyBackup }, 500);
+    }
+    return json({ success: true, restored: result.restored, restoredFromBackupId: backupId, safetyBackup });
+  }
+
   if (path === '/accounts/import' && method === 'POST') {
     let payload;
     try { payload = await request.json(); } catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
     const rows = Array.isArray(payload) ? payload : payload && Array.isArray(payload.rows) ? payload.rows : null;
+    const mode = !Array.isArray(payload) && payload?.mode === 'replace' ? 'replace' : 'merge';
+    const sourceFilename = !Array.isArray(payload) ? String(payload?.sourceFilename || '') : '';
     if (!rows || rows.length === 0) return json({ success: false, message: '没有可导入的账号数据' }, 400);
-    if (rows.length > 200) return json({ success: false, message: '单次最多导入 200 条账号，请分批提交' }, 400);
+    const maxRows = mode === 'replace' ? 1000 : 200;
+    if (rows.length > maxRows) return json({ success: false, message: `${mode === 'replace' ? '全覆盖' : '单次'}最多导入 ${maxRows} 条账号` }, 400);
 
     const config = await getConfig(env);
+
+    if (mode === 'replace') {
+      if (!(await isSuperAdminUnlocked(request, config))) {
+        return json({ success: false, message: '全覆盖导入属于高风险操作，需要先进入 SuperAdmin mode' }, 403);
+      }
+      if (payload?.confirmReplace !== true) {
+        return json({ success: false, message: '全覆盖导入需要再次确认' }, 400);
+      }
+
+      // 全覆盖必须整批一次验证通过，任何一行错误都不会删除原数据。
+      const prepared = [];
+      const errors = [];
+      const serials = new Map();
+      const accounts = new Map();
+      for (let index = 0; index < rows.length; index++) {
+        const raw = rows[index];
+        const sourceRow = raw && Number(raw.__sourceRow) > 0 ? Number(raw.__sourceRow) : index + 2;
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+          errors.push({ row: sourceRow, success: false, message: '该行数据格式无效' });
+          continue;
+        }
+        const accountSerial = String(raw.accountSerial || '').trim();
+        const account = String(raw.account || '').trim();
+        const realName = String(raw.realName || '').trim();
+        const accountType = String(raw.accountType || '').trim();
+        if (!accountSerial || !account) {
+          errors.push({ row: sourceRow, success: false, accountSerial, account, message: '账号序号和账号不能为空' });
+          continue;
+        }
+        if (serials.has(accountSerial)) {
+          errors.push({ row: sourceRow, success: false, accountSerial, account, message: `账号序号 ${accountSerial} 在导入表中重复（首次出现在第 ${serials.get(accountSerial)} 行）` });
+          continue;
+        }
+        if (accounts.has(account)) {
+          errors.push({ row: sourceRow, success: false, accountSerial, account, message: `账号 ${account} 在导入表中重复（首次出现在第 ${accounts.get(account)} 行）` });
+          continue;
+        }
+        serials.set(accountSerial, sourceRow);
+        accounts.set(account, sourceRow);
+
+        const plainPasswords = {
+          tapnow: typeof raw.tapnowPassword === 'string' ? raw.tapnowPassword : '',
+          jimeng: typeof raw.jimengPassword === 'string' ? raw.jimengPassword : '',
+          wechat: typeof raw.wechatPassword === 'string' ? raw.wechatPassword : '',
+          qq: typeof raw.qqPassword === 'string' ? raw.qqPassword : ''
+        };
+        const passwordUpdates = {};
+        for (const type of ACCOUNT_CREDENTIAL_TYPES) {
+          if (plainPasswords[type].length > 0) passwordUpdates[type] = plainPasswords[type];
+        }
+        const credentialsEncrypted = await encryptPasswordUpdates(passwordUpdates, config);
+        const legacyPlainPassword = typeof raw.legacyPassword === 'string' ? raw.legacyPassword : '';
+        const legacyPasswordEncrypted = legacyPlainPassword.length > 0
+          ? await encryptCredential(legacyPlainPassword, config.CREDENTIALS_ENCRYPTION_KEY)
+          : undefined;
+        prepared.push({ sourceRow, accountSerial, account, realName, accountType, credentialsEncrypted, legacyPasswordEncrypted });
+      }
+
+      if (errors.length) {
+        return json({ success: false, validationFailed: true, failed: errors.length, total: rows.length, results: errors, message: '全覆盖导入已取消：请先修正所有错误行，原 Database 未发生任何变化' }, 400);
+      }
+
+      const backup = await createAccountDatabaseBackup(env, {
+        reason: 'full_overwrite_import',
+        sourceFilename
+      });
+
+      try {
+        await env.SUBSCRIPTIONS_DB.batch([
+          env.SUBSCRIPTIONS_DB.prepare('DELETE FROM account_credentials'),
+          env.SUBSCRIPTIONS_DB.prepare('DELETE FROM accounts')
+        ]);
+
+        const results = [];
+        for (const item of prepared) {
+          const result = await upsert(env, {
+            accountSerial: item.accountSerial,
+            account: item.account,
+            realName: item.realName,
+            accountType: item.accountType,
+            credentialsEncrypted: item.credentialsEncrypted,
+            ...(item.legacyPasswordEncrypted !== undefined ? { legacyPasswordEncrypted: item.legacyPasswordEncrypted } : {})
+          }, { action: 'full_overwrite_import', metadata: { source: 'excel_file', sourceRow: item.sourceRow, sourceFilename } });
+          if (!result.success) throw new Error(`第 ${item.sourceRow} 行：${result.message || '导入失败'}`);
+          results.push({ row: item.sourceRow, success: true, status: 'created', accountSerial: item.accountSerial, account: item.account });
+        }
+
+        return json({
+          success: true,
+          mode: 'replace',
+          created: prepared.length,
+          updated: 0,
+          unchanged: 0,
+          failed: 0,
+          total: prepared.length,
+          results,
+          backup,
+          backupsKept: 2
+        });
+      } catch (error) {
+        console.error('[accounts] 全覆盖导入失败，正在自动恢复:', error);
+        const rollback = backup.backupId ? await restoreAccountDatabaseBackup(env, backup.backupId) : { success: false, message: '没有可用备份' };
+        return json({
+          success: false,
+          message: `全覆盖导入失败：${error?.message || String(error)}`,
+          backup,
+          rollback
+        }, 500);
+      }
+    }
+
+    // 合并导入：保留原有逐行容错行为。
     const results = [];
     let created = 0; let updated = 0; let unchanged = 0; let failed = 0;
 
@@ -225,7 +375,7 @@ export async function handleAccounts(request, env, path) {
           ...(existing ? (accountType ? { accountType } : {}) : { accountType }),
           credentialsEncrypted,
           ...(legacyPasswordEncrypted !== undefined ? { legacyPasswordEncrypted } : {})
-        }, { action: existing ? 'bulk_import_update' : 'bulk_import_create', metadata: { source: 'excel_paste', sourceRow } });
+        }, { action: existing ? 'bulk_import_update' : 'bulk_import_create', metadata: { source: 'excel_import', sourceRow, sourceFilename } });
         if (!result.success) {
           failed += 1; results.push({ row: sourceRow, success: false, accountSerial, account, message: result.message || '导入失败' }); continue;
         }
@@ -237,7 +387,7 @@ export async function handleAccounts(request, env, path) {
     }
 
     const processed = created + updated + unchanged;
-    return json({ success: failed === 0, partial: processed > 0 && failed > 0, created, updated, unchanged, failed, total: rows.length, results }, processed > 0 ? 200 : 400);
+    return json({ success: failed === 0, partial: processed > 0 && failed > 0, mode: 'merge', created, updated, unchanged, failed, total: rows.length, results }, processed > 0 ? 200 : 400);
   }
 
   if (path === '/accounts/options' && method === 'GET') return json({ success: true, items: await listOptions(env) });

@@ -113,7 +113,16 @@ export async function ensureD1Schema(env) {
         PRIMARY KEY (group_key, value),
         FOREIGN KEY (group_key) REFERENCES menu_option_groups(group_key) ON DELETE CASCADE
       )`),
-      db.prepare('CREATE INDEX IF NOT EXISTS idx_menu_options_group_sort ON menu_options(group_key, sort_order ASC)')
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_menu_options_group_sort ON menu_options(group_key, sort_order ASC)'),
+      db.prepare(`CREATE TABLE IF NOT EXISTS account_database_backups (
+        backup_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT NOT NULL,
+        reason TEXT NOT NULL DEFAULT 'full_overwrite_import',
+        account_count INTEGER NOT NULL DEFAULT 0,
+        source_filename TEXT NOT NULL DEFAULT '',
+        snapshot_json TEXT NOT NULL
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_account_database_backups_created_at ON account_database_backups(created_at DESC)')
     ];
 
     await db.batch(statements);

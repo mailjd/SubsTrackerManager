@@ -6,6 +6,7 @@
   <title>Database - 订阅管理系统</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   ${themeResources}
   <style>
     .db-card { border-radius: 0.875rem; }
@@ -163,7 +164,7 @@
       <div class="px-6 py-5 border-b border-gray-200 flex items-start justify-between gap-4">
         <div>
           <h2 class="text-xl font-semibold text-gray-900"><i class="fas fa-file-import text-emerald-600 mr-2"></i>账号数据库批量导入</h2>
-          <p class="text-sm text-gray-500 mt-1">支持直接从 Excel 复制并粘贴。默认列顺序：账号序号、账号、实名人、账号类型、Tapnow密码、即梦密码、微信密码、QQ密码。</p>
+          <p class="text-sm text-gray-500 mt-1">支持直接选择 Excel 文件导入，也支持从 Excel 复制并粘贴。默认列顺序：账号序号、账号、实名人、账号类型、Tapnow密码、即梦密码、微信密码、QQ密码。</p>
         </div>
         <button id="closeAccountImportModal" type="button" class="text-gray-400 hover:text-gray-600 p-1" aria-label="关闭批量导入"><i class="fas fa-times text-xl"></i></button>
       </div>
@@ -174,9 +175,31 @@
           <div class="mt-1 text-amber-800">兼容旧版 3 列“账号序号 / 账号 / 密码”模板；旧单一密码会进入 legacy 兼容槽，不会自动归类到四个工具。</div>
         </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">直接导入 Excel 文件</label>
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <input id="accountImportFile" type="file" accept=".xlsx,.xls,.csv,.tsv" class="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
+              <button id="readAccountExcelBtn" type="button" class="inline-flex items-center justify-center border border-emerald-600 bg-white hover:bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap"><i class="fas fa-file-excel mr-2"></i>读取文件</button>
+            </div>
+            <div id="accountImportFileInfo" class="text-xs text-gray-500 mt-2">支持 .xlsx / .xls / .csv / .tsv；默认读取第一个工作表。</div>
+          </div>
+
+          <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input id="accountImportReplaceAll" type="checkbox" class="mt-1 h-4 w-4 text-red-600 border-red-300 rounded focus:ring-red-500">
+              <span>
+                <span class="block text-sm font-semibold text-red-800">全覆盖 Database</span>
+                <span class="block text-xs text-red-700 mt-1">勾选后，本次 Excel 数据将成为完整账号库，当前 Database 中未出现在导入表的账号会被删除。</span>
+              </span>
+            </label>
+            <div class="text-xs text-red-700 mt-2"><i class="fas fa-shield-alt mr-1"></i>系统会在覆盖前自动保存当前 Database，并只保留最近 2 个完整备份版本。全覆盖需要 SuperAdmin mode。</div>
+          </div>
+        </div>
+
         <div>
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-            <label for="accountImportPaste" class="text-sm font-semibold text-gray-700">粘贴 Excel 数据</label>
+            <label for="accountImportPaste" class="text-sm font-semibold text-gray-700">或粘贴 Excel 数据</label>
             <span class="text-xs text-gray-500">支持带表头；也支持按 8 列默认顺序直接粘贴</span>
           </div>
           <textarea id="accountImportPaste" rows="8" class="w-full px-3 py-3 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 bg-white" placeholder="账号序号	账号	实名人	账号类型	Tapnow密码	即梦密码	微信密码	QQ密码
@@ -211,6 +234,17 @@
               <tbody id="accountImportPreviewBody" class="divide-y divide-gray-200"></tbody>
             </table>
           </div>
+        </div>
+
+        <div id="accountBackupPanel" class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <div class="text-sm font-semibold text-gray-800"><i class="fas fa-history mr-2 text-indigo-600"></i>全覆盖自动备份</div>
+              <div class="text-xs text-gray-500 mt-1">仅保留最近 2 个完整 Database 版本；备份中的工具密码仍为 AES-GCM 密文。</div>
+            </div>
+            <button id="refreshAccountBackupsBtn" type="button" class="text-xs px-3 py-2 rounded-md border border-gray-300 bg-white hover:bg-gray-100 text-gray-700"><i class="fas fa-sync-alt mr-1"></i>刷新</button>
+          </div>
+          <div id="accountBackupList" class="mt-3 text-sm text-gray-500">正在读取备份...</div>
         </div>
 
         <div id="accountImportResult" class="hidden rounded-lg border p-4 text-sm"></div>
@@ -721,12 +755,15 @@
     }
 
 
-    // Database 批量导入：支持 Excel 复制/粘贴，逐行校验后分批写入 D1。
+    // Database 批量导入：支持 Excel 文件直读 / 复制粘贴；合并导入或高风险全覆盖。
     let accountImportRows = [];
+    let accountImportTable = [];
+    let accountImportSourceFilename = '';
 
     function openAccountImportModal() {
       document.getElementById('accountImportModal').classList.remove('hidden');
       document.body.classList.add('overflow-hidden');
+      loadAccountBackups();
       setTimeout(() => document.getElementById('accountImportPaste').focus(), 50);
     }
 
@@ -766,8 +803,127 @@
       return String(value == null ? '' : value).replace(/^\uFEFF/, '').replace(/\s+/g, '').trim();
     }
 
-    function parseAccountImport() {
-      const table = parseAccountClipboard(document.getElementById('accountImportPaste').value);
+    async function readAccountExcelFile() {
+      const input = document.getElementById('accountImportFile');
+      const info = document.getElementById('accountImportFileInfo');
+      const file = input && input.files ? input.files[0] : null;
+      if (!file) { showToast('请先选择 Excel 文件', 'error'); return; }
+      accountImportSourceFilename = file.name || '';
+      try {
+        if (typeof XLSX === 'undefined') throw new Error('Excel 解析组件未加载，请检查网络后重试；也可以使用复制粘贴导入');
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        let workbook;
+        if (ext === 'csv' || ext === 'tsv') {
+          workbook = XLSX.read(await file.text(), { type: 'string', cellDates: false });
+        } else {
+          workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false });
+        }
+        if (!workbook.SheetNames || !workbook.SheetNames.length) throw new Error('Excel 文件没有可读取的工作表');
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const table = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+        accountImportTable = table;
+        document.getElementById('accountImportPaste').value = '';
+        info.innerHTML = '<span class="text-emerald-700"><i class="fas fa-check-circle mr-1"></i>已读取：</span>' + escapeHtml(file.name) + ' · 工作表：' + escapeHtml(sheetName);
+        parseAccountImport(table);
+        showToast('Excel 文件已读取并完成预览', 'success');
+      } catch (error) {
+        accountImportRows = [];
+        accountImportTable = [];
+        accountImportSourceFilename = '';
+        info.innerHTML = '<span class="text-red-600">读取失败：' + escapeHtml(error?.message || String(error)) + '</span>';
+        document.getElementById('executeAccountImportBtn').disabled = true;
+        showToast('Excel 文件读取失败', 'error');
+      }
+    }
+
+    async function loadAccountBackups() {
+      const listEl = document.getElementById('accountBackupList');
+      if (!listEl) return;
+      listEl.innerHTML = '<span class="text-gray-400"><i class="fas fa-spinner fa-spin mr-1"></i>正在读取备份...</span>';
+      try {
+        const data = await api('/api/accounts/backups');
+        const items = Array.isArray(data.items) ? data.items : [];
+        if (!items.length) {
+          listEl.innerHTML = '<span class="text-gray-400">暂无全覆盖备份。第一次执行全覆盖时会自动保存当前 Database。</span>';
+          return;
+        }
+        listEl.innerHTML = items.map((item, index) => `
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-2 ${index ? 'border-t border-gray-200' : ''}">
+            <div>
+              <div class="font-medium text-gray-700">版本 ${index + 1} · ${escapeHtml(formatTime(item.createdAt))}</div>
+              <div class="text-xs text-gray-500 mt-0.5">${Number(item.accountCount || 0)} 个账号${item.sourceFilename ? ' · 来源：' + escapeHtml(item.sourceFilename) : ''}</div>
+            </div>
+            <button type="button" class="restore-account-backup inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-indigo-300 bg-white hover:bg-indigo-50 text-indigo-700 text-xs font-medium" data-backup-id="${Number(item.backupId || 0)}"><i class="fas fa-undo mr-1"></i>恢复此版本</button>
+          </div>`).join('');
+      } catch (error) {
+        listEl.innerHTML = '<span class="text-red-600">读取备份失败：' + escapeHtml(error.message || String(error)) + '</span>';
+      }
+    }
+
+    async function restoreAccountBackup(backupId) {
+      if (!backupId) return;
+      await loadSuperAdminStatus();
+      if (!superAdminState.unlocked) {
+        showToast('恢复备份前需要进入 SuperAdmin mode', 'error');
+        openSuperAdminModal();
+        return;
+      }
+      if (!confirm('警告：恢复备份会用该版本完整替换当前 Database。\n系统会先自动备份当前数据，并仍只保留最近 2 个版本。\n\n确定继续吗？')) return;
+      if (!confirm('再次确认：现在将执行 Database 备份恢复。此操作会覆盖当前账号库。')) return;
+      try {
+        const data = await api('/api/accounts/backups/' + encodeURIComponent(String(backupId)) + '/restore', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ confirm: 'RESTORE' })
+        });
+        showToast(`备份恢复完成：${Number(data.restored || 0)} 个账号`, 'success');
+        state.page = 1;
+        await loadAccounts();
+        await loadAccountBackups();
+      } catch (error) { showToast(error.message, 'error'); }
+    }
+
+    async function handleReplaceAllToggle(event) {
+      const checkbox = event.target;
+      if (!checkbox.checked) { updateAccountImportModeUi(); return; }
+      await loadSuperAdminStatus();
+      if (!superAdminState.unlocked) {
+        checkbox.checked = false;
+        updateAccountImportModeUi();
+        alert('全覆盖 Database 需要先进入 SuperAdmin mode。');
+        openSuperAdminModal();
+        return;
+      }
+      const accepted = confirm('高风险操作警告：\n\n勾选“全覆盖 Database”后，本次 Excel 将成为完整账号库；当前 Database 中未出现在 Excel 的账号会被删除。\n\n覆盖前系统会自动备份当前账号库，并只保留最近 2 个完整备份版本。\n\n是否继续启用全覆盖模式？');
+      if (!accepted) checkbox.checked = false;
+      updateAccountImportModeUi();
+    }
+
+    function updateAccountImportModeUi() {
+      const replace = document.getElementById('accountImportReplaceAll').checked;
+      const btn = document.getElementById('executeAccountImportBtn');
+      if (replace) {
+        btn.className = 'px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-40 disabled:cursor-not-allowed';
+        btn.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>全覆盖导入';
+      } else {
+        btn.className = 'px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg disabled:opacity-40 disabled:cursor-not-allowed';
+        btn.innerHTML = '<i class="fas fa-file-import mr-2"></i>导入有效数据';
+      }
+    }
+
+    function parseAccountImport(tableOverride = null) {
+      let table;
+      if (Array.isArray(tableOverride)) {
+        table = tableOverride;
+      } else {
+        table = parseAccountClipboard(document.getElementById('accountImportPaste').value);
+        if (table.some((row) => row.some((value) => String(value).trim() !== ''))) {
+          accountImportSourceFilename = 'Excel剪贴板';
+          accountImportTable = table;
+        } else {
+          table = accountImportTable;
+        }
+      }
+
       const summary = document.getElementById('accountImportSummary');
       const preview = document.getElementById('accountImportPreview');
       const previewBody = document.getElementById('accountImportPreviewBody');
@@ -776,11 +932,12 @@
       resultBox.classList.add('hidden');
       resultBox.innerHTML = '';
 
-      if (!table.length || table.every((row) => row.every((value) => String(value).trim() === ''))) {
+      if (!table || !table.length || table.every((row) => row.every((value) => String(value).trim() === ''))) {
         accountImportRows = [];
-        summary.textContent = '请先粘贴 Excel 数据';
+        summary.textContent = '请先选择 Excel 文件或粘贴 Excel 数据';
         preview.classList.add('hidden');
         executeBtn.disabled = true;
+        updateAccountImportModeUi();
         return;
       }
 
@@ -807,16 +964,9 @@
         const maxCols = Math.max(...table.map((row) => row.length));
         mapping.accountSerial = 0;
         mapping.account = 1;
-        if (maxCols <= 3) {
-          // 兼容旧版 3 列模板：账号序号 / 账号 / 单一密码。
-          mapping.legacyPassword = 2;
-        } else {
-          mapping.realName = 2;
-          mapping.accountType = 3;
-          mapping.tapnowPassword = 4;
-          mapping.jimengPassword = 5;
-          mapping.wechatPassword = 6;
-          mapping.qqPassword = 7;
+        if (maxCols <= 3) mapping.legacyPassword = 2;
+        else {
+          mapping.realName = 2; mapping.accountType = 3; mapping.tapnowPassword = 4; mapping.jimengPassword = 5; mapping.wechatPassword = 6; mapping.qqPassword = 7;
         }
       }
 
@@ -838,19 +988,29 @@
           const errors = [];
           if (!serial) errors.push('账号序号不能为空');
           if (!account) errors.push('账号不能为空');
-          return {
-            sourceRow: item.sourceRow,
-            data: { __sourceRow: item.sourceRow, accountSerial: serial, account, realName, accountType, tapnowPassword, jimengPassword, wechatPassword, qqPassword, legacyPassword },
-            errors
-          };
+          return { sourceRow: item.sourceRow, data: { __sourceRow: item.sourceRow, accountSerial: serial, account, realName, accountType, tapnowPassword, jimengPassword, wechatPassword, qqPassword, legacyPassword }, errors };
         });
+
+      // 文件内部重复也在前端先拦截；全覆盖后端还会再次验证。
+      const serialSeen = new Map();
+      const accountSeen = new Map();
+      for (const item of accountImportRows) {
+        const { accountSerial, account } = item.data;
+        if (accountSerial) {
+          if (serialSeen.has(accountSerial)) item.errors.push(`账号序号与第 ${serialSeen.get(accountSerial)} 行重复`);
+          else serialSeen.set(accountSerial, item.sourceRow);
+        }
+        if (account) {
+          if (accountSeen.has(account)) item.errors.push(`账号与第 ${accountSeen.get(account)} 行重复`);
+          else accountSeen.set(account, item.sourceRow);
+        }
+      }
 
       const validCount = accountImportRows.filter((item) => item.errors.length === 0).length;
       const invalidCount = accountImportRows.length - validCount;
-      summary.innerHTML = `<span class="text-emerald-700">有效 ${validCount}</span>` +
-        (invalidCount ? ` · <span class="text-red-600">错误 ${invalidCount}</span>` : '') +
-        ` · <span class="text-gray-500">共 ${accountImportRows.length} 行</span>`;
-
+      summary.innerHTML = `<span class="text-emerald-700">有效 ${validCount}</span>` + (invalidCount ? ` · <span class="text-red-600">错误 ${invalidCount}</span>` : '') + ` · <span class="text-gray-500">共 ${accountImportRows.length} 行</span>`;
+      const replaceMode = document.getElementById('accountImportReplaceAll').checked;
+      const blankPasswordLabel = replaceMode ? '<span class="text-gray-400">空白</span>' : '<span class="text-gray-400">保留</span>';
       previewBody.innerHTML = accountImportRows.slice(0, 200).map((item) => {
         const ok = item.errors.length === 0;
         return `<tr class="${ok ? '' : 'bg-red-50'}">` +
@@ -860,15 +1020,16 @@
           `<td class="px-3 py-2 break-all">${escapeHtml(item.data.account)}</td>` +
           `<td class="px-3 py-2 whitespace-nowrap">${escapeHtml(item.data.realName || '') || '—'}</td>` +
           `<td class="px-3 py-2 whitespace-nowrap">${escapeHtml(item.data.accountType || '') || '—'}</td>` +
-          `<td class="px-3 py-2 whitespace-nowrap">${item.data.tapnowPassword ? '已填写' : '<span class="text-gray-400">保留</span>'}</td>` +
-          `<td class="px-3 py-2 whitespace-nowrap">${item.data.jimengPassword ? '已填写' : '<span class="text-gray-400">保留</span>'}</td>` +
-          `<td class="px-3 py-2 whitespace-nowrap">${item.data.wechatPassword ? '已填写' : '<span class="text-gray-400">保留</span>'}</td>` +
-          `<td class="px-3 py-2 whitespace-nowrap">${item.data.qqPassword ? '已填写' : '<span class="text-gray-400">保留</span>'}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${item.data.tapnowPassword ? '已填写' : blankPasswordLabel}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${item.data.jimengPassword ? '已填写' : blankPasswordLabel}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${item.data.wechatPassword ? '已填写' : blankPasswordLabel}</td>` +
+          `<td class="px-3 py-2 whitespace-nowrap">${item.data.qqPassword ? '已填写' : blankPasswordLabel}</td>` +
           `<td class="px-3 py-2 ${ok ? (item.data.legacyPassword ? 'text-amber-700' : 'text-gray-400') : 'text-red-600'}">${ok ? (item.data.legacyPassword ? '旧版单一密码将保存在兼容槽' : '—') : escapeHtml(item.errors.join('；'))}</td>` +
         `</tr>`;
       }).join('');
       preview.classList.toggle('hidden', accountImportRows.length === 0);
       executeBtn.disabled = validCount === 0;
+      updateAccountImportModeUi();
     }
 
     function clearAccountImport() {
@@ -879,8 +1040,14 @@
       document.getElementById('accountImportResult').classList.add('hidden');
       document.getElementById('accountImportResult').innerHTML = '';
       document.getElementById('executeAccountImportBtn').disabled = true;
-      document.getElementById('executeAccountImportBtn').innerHTML = '<i class="fas fa-file-import mr-2"></i>导入有效数据';
+      document.getElementById('accountImportReplaceAll').checked = false;
+      const fileInput = document.getElementById('accountImportFile');
+      if (fileInput) fileInput.value = '';
+      document.getElementById('accountImportFileInfo').textContent = '支持 .xlsx / .xls / .csv / .tsv；默认读取第一个工作表。';
+      accountImportSourceFilename = '';
+      accountImportTable = [];
       accountImportRows = [];
+      updateAccountImportModeUi();
     }
 
     async function executeAccountImport() {
@@ -888,67 +1055,77 @@
       const validRows = accountImportRows.filter((item) => item.errors.length === 0);
       if (!validRows.length) { showToast('没有可导入的有效账号', 'error'); return; }
 
+      const replaceAll = document.getElementById('accountImportReplaceAll').checked;
+      if (replaceAll) {
+        await loadSuperAdminStatus();
+        if (!superAdminState.unlocked) { showToast('全覆盖导入需要先进入 SuperAdmin mode', 'error'); openSuperAdminModal(); return; }
+        if (validRows.length !== accountImportRows.length) { showToast('全覆盖模式要求所有行都通过校验，请先修正错误行', 'error'); return; }
+        if (!confirm(`再次确认全覆盖导入：\n\n即将使用 Excel 中的 ${validRows.length} 条账号完整替换当前 Database。\n当前数据会先自动备份，系统只保留最近 2 个备份版本。\n\n确定立即执行吗？`)) return;
+      }
+
       const btn = document.getElementById('executeAccountImportBtn');
       const resultBox = document.getElementById('accountImportResult');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>正在导入...';
-      let created = 0;
-      let updated = 0;
-      let unchanged = 0;
-      let failed = 0;
+      btn.innerHTML = replaceAll ? '<i class="fas fa-spinner fa-spin mr-2"></i>正在备份并全覆盖...' : '<i class="fas fa-spinner fa-spin mr-2"></i>正在导入...';
+      let created = 0, updated = 0, unchanged = 0, failed = 0;
       const failures = [];
+      let replacePayload = null;
       try {
-        for (let i = 0; i < validRows.length; i += 100) {
-          const chunk = validRows.slice(i, i + 100).map((item) => item.data);
+        if (replaceAll) {
           const response = await fetch('/api/accounts/import', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rows: chunk })
+            method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rows: validRows.map((item) => item.data), mode: 'replace', confirmReplace: true, sourceFilename: accountImportSourceFilename || 'Excel/粘贴导入' })
           });
-          let payload = {};
-          try { payload = await response.json(); } catch { payload = {}; }
-          created += Number(payload.created || 0);
-          updated += Number(payload.updated || 0);
-          unchanged += Number(payload.unchanged || 0);
-          failed += Number(payload.failed || 0);
-          if (Array.isArray(payload.results)) {
-            payload.results.filter((item) => !item.success).forEach((item) => failures.push(item));
-          } else if (!response.ok) {
-            failed += chunk.length;
-            failures.push({ row: '—', message: payload.message || ('请求失败：' + response.status) });
+          try { replacePayload = await response.json(); } catch { replacePayload = {}; }
+          if (!response.ok || replacePayload.success === false) {
+            if (Array.isArray(replacePayload.results)) replacePayload.results.filter((item) => !item.success).forEach((item) => failures.push(item));
+            throw new Error(replacePayload.message || ('全覆盖导入失败：' + response.status));
+          }
+          created = Number(replacePayload.created || 0);
+        } else {
+          for (let i = 0; i < validRows.length; i += 100) {
+            const chunk = validRows.slice(i, i + 100).map((item) => item.data);
+            const response = await fetch('/api/accounts/import', {
+              method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ rows: chunk, mode: 'merge', sourceFilename: accountImportSourceFilename || 'Excel/粘贴导入' })
+            });
+            let payload = {};
+            try { payload = await response.json(); } catch { payload = {}; }
+            created += Number(payload.created || 0); updated += Number(payload.updated || 0); unchanged += Number(payload.unchanged || 0); failed += Number(payload.failed || 0);
+            if (Array.isArray(payload.results)) payload.results.filter((item) => !item.success).forEach((item) => failures.push(item));
+            else if (!response.ok) { failed += chunk.length; failures.push({ row: '—', message: payload.message || ('请求失败：' + response.status) }); }
           }
         }
 
-        const localInvalid = accountImportRows.filter((item) => item.errors.length > 0);
-        const allFailures = [
-          ...localInvalid.map((item) => ({ row: item.sourceRow, message: item.errors.join('；') })),
-          ...failures
-        ];
+        const localInvalid = replaceAll ? [] : accountImportRows.filter((item) => item.errors.length > 0);
+        const allFailures = [...localInvalid.map((item) => ({ row: item.sourceRow, message: item.errors.join('；') })), ...failures];
         const parts = [
-          '<div class="font-semibold mb-2">账号批量导入完成</div>',
-          `<div>新增：<strong class="text-emerald-700">${created}</strong> 条；更新资料/密码：<strong class="text-blue-700">${updated}</strong> 条；已有且无需更新：<strong>${unchanged}</strong> 条；失败：<strong class="text-red-600">${failed + localInvalid.length}</strong> 条。</div>`
+          `<div class="font-semibold mb-2">${replaceAll ? 'Database 全覆盖导入完成' : '账号批量导入完成'}</div>`,
+          replaceAll
+            ? `<div>当前 Database 已替换为 <strong class="text-emerald-700">${created}</strong> 条账号。覆盖前数据已自动保存，系统保留最近 2 版。</div>`
+            : `<div>新增：<strong class="text-emerald-700">${created}</strong> 条；更新资料/密码：<strong class="text-blue-700">${updated}</strong> 条；已有且无需更新：<strong>${unchanged}</strong> 条；失败：<strong class="text-red-600">${failed + localInvalid.length}</strong> 条。</div>`
         ];
+        if (replaceAll && replacePayload?.backup) parts.push(`<div class="mt-2 text-xs">覆盖前备份：#${Number(replacePayload.backup.backupId || 0)} · ${escapeHtml(formatTime(replacePayload.backup.createdAt))} · ${Number(replacePayload.backup.accountCount || 0)} 个原账号</div>`);
         if (allFailures.length) {
           parts.push('<div class="mt-3 font-medium">未导入行：</div>');
-          parts.push('<ul class="mt-1 list-disc pl-5 max-h-40 overflow-y-auto">' + allFailures.slice(0, 100).map((item) =>
-            `<li>第 ${escapeHtml(String(item.row))} 行：${escapeHtml(item.message || '导入失败')}</li>`
-          ).join('') + '</ul>');
+          parts.push('<ul class="mt-1 list-disc pl-5 max-h-40 overflow-y-auto">' + allFailures.slice(0, 100).map((item) => `<li>第 ${escapeHtml(String(item.row))} 行：${escapeHtml(item.message || '导入失败')}</li>`).join('') + '</ul>');
         }
         resultBox.className = 'rounded-lg border p-4 text-sm ' + (allFailures.length ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900');
         resultBox.innerHTML = parts.join('');
         resultBox.classList.remove('hidden');
         btn.innerHTML = '<i class="fas fa-check mr-2"></i>本次导入已完成';
-        showToast(`账号导入完成：新增 ${created}，更新 ${updated}`, 'success');
+        showToast(replaceAll ? `全覆盖完成：${created} 条账号` : `账号导入完成：新增 ${created}，更新 ${updated}`, 'success');
         state.page = 1;
         await loadAccounts();
+        await loadAccountBackups();
       } catch (error) {
         resultBox.className = 'rounded-lg border p-4 text-sm bg-red-50 border-red-200 text-red-800';
-        resultBox.textContent = '导入过程中发生错误：' + (error?.message || String(error));
+        resultBox.innerHTML = '导入过程中发生错误：' + escapeHtml(error?.message || String(error)) + (replacePayload?.rollback ? `<div class="mt-2">自动回滚：${replacePayload.rollback.success ? '成功，原 Database 已恢复' : '失败，请立即从备份恢复'}</div>` : '');
         resultBox.classList.remove('hidden');
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-file-import mr-2"></i>重试导入';
-        showToast('账号批量导入失败', 'error');
+        updateAccountImportModeUi();
+        showToast(replaceAll ? '全覆盖导入失败' : '账号批量导入失败', 'error');
+        await loadAccountBackups();
       }
     }
 
@@ -959,13 +1136,21 @@
     document.getElementById('superAdminModal').addEventListener('click', (e) => { if (e.target.id === 'superAdminModal') closeSuperAdminModal(); });
     document.getElementById('addAccountBtn').addEventListener('click', openCreateModal);
     document.getElementById('openAccountImportBtn').addEventListener('click', openAccountImportModal);
+    document.getElementById('readAccountExcelBtn').addEventListener('click', readAccountExcelFile);
+    document.getElementById('accountImportFile').addEventListener('change', readAccountExcelFile);
+    document.getElementById('accountImportReplaceAll').addEventListener('change', handleReplaceAllToggle);
+    document.getElementById('refreshAccountBackupsBtn').addEventListener('click', loadAccountBackups);
+    document.getElementById('accountBackupList').addEventListener('click', (e) => { const button = e.target.closest('.restore-account-backup'); if (button) restoreAccountBackup(Number(button.dataset.backupId || 0)); });
     document.getElementById('closeAccountImportModal').addEventListener('click', closeAccountImportModal);
     document.getElementById('cancelAccountImportBtn').addEventListener('click', closeAccountImportModal);
     document.getElementById('parseAccountImportBtn').addEventListener('click', parseAccountImport);
     document.getElementById('clearAccountImportBtn').addEventListener('click', clearAccountImport);
     document.getElementById('executeAccountImportBtn').addEventListener('click', executeAccountImport);
     document.getElementById('accountImportPaste').addEventListener('paste', () => {
-      setTimeout(parseAccountImport, 0);
+      accountImportSourceFilename = 'Excel剪贴板';
+      document.getElementById('accountImportFile').value = '';
+      document.getElementById('accountImportFileInfo').textContent = '当前使用：Excel 剪贴板数据';
+      setTimeout(() => parseAccountImport(), 0);
     });
     document.getElementById('accountImportModal').addEventListener('click', (e) => {
       if (e.target.id === 'accountImportModal') closeAccountImportModal();

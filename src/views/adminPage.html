@@ -372,12 +372,49 @@
     /* 订阅批量管理 / 显示模式 */
     .subscription-view-toggle button.active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
     .subscription-card-grid { display:grid; grid-template-columns:repeat(1,minmax(0,1fr)); gap:1rem; }
+    /* Tailwind .hidden 与 grid display 的优先级冲突会造成隐藏卡片仍显示，必须显式覆盖。 */
+    .subscription-card-grid.hidden { display:none !important; }
     @media (min-width: 768px) { .subscription-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (min-width: 1280px) { .subscription-card-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
     .subscription-card { border:1px solid #e5e7eb; border-radius:.85rem; background:#fff; padding:1rem; box-shadow:0 2px 8px rgba(15,23,42,.05); }
     .subscription-card.selected { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,.14); }
     .bulk-action-bar { background:#f8fafc; border:1px solid #e2e8f0; border-radius:.75rem; }
-    html.dark .subscription-card, html.dark .bulk-action-bar { background:#1f2937; border-color:#374151; }
+
+    /* Excel 风格宽表：一行一条订阅，字段与导入/导出模板顺序一致。 */
+    .subscription-excel-shell {
+      background:#fff; border:1px solid #cbd5e1; border-radius:.65rem; overflow:hidden;
+      box-shadow:0 2px 8px rgba(15,23,42,.06);
+    }
+    .subscription-excel-scroll { overflow:auto; max-height:calc(100vh - 230px); min-height:240px; }
+    .subscription-excel-table {
+      border-collapse:separate; border-spacing:0; table-layout:auto; min-width:2920px; width:max-content;
+      font-size:13px; color:#111827;
+    }
+    .subscription-excel-table th {
+      position:sticky; top:0; z-index:5; background:#4f46e5; color:#fff; font-weight:600;
+      padding:9px 10px; border-right:1px solid rgba(255,255,255,.25); border-bottom:1px solid #4338ca;
+      text-align:center; white-space:nowrap; min-width:92px;
+    }
+    .subscription-excel-table td {
+      padding:7px 10px; border-right:1px solid #dbe3ee; border-bottom:1px solid #dbe3ee;
+      background:#fff; white-space:nowrap; vertical-align:middle; line-height:1.35;
+    }
+    .subscription-excel-table tbody tr:hover td { background:#eef2ff; }
+    .subscription-excel-table tbody tr.excel-row-selected td { background:#eef2ff; }
+    .subscription-excel-table .excel-select-col { min-width:44px; width:44px; text-align:center; }
+    .subscription-excel-table .excel-name-col { min-width:150px; }
+    .subscription-excel-table .excel-account-col { min-width:180px; }
+    .subscription-excel-table .excel-serial-col { min-width:135px; }
+    .subscription-excel-table .excel-users-col { min-width:260px; max-width:320px; white-space:normal; }
+    .subscription-excel-table .excel-category-col { min-width:170px; max-width:240px; white-space:normal; }
+    .subscription-excel-table .excel-notes-col { min-width:260px; max-width:360px; white-space:normal; }
+    .subscription-excel-table .excel-actions-col { min-width:230px; }
+    .subscription-excel-table .excel-date-col { min-width:120px; text-align:center; }
+    .subscription-excel-table .excel-number-col { min-width:92px; text-align:right; font-variant-numeric:tabular-nums; }
+    .subscription-excel-table .excel-center-col { text-align:center; }
+    html.dark .subscription-card, html.dark .bulk-action-bar, html.dark .subscription-excel-shell { background:#1f2937; border-color:#374151; }
+    html.dark .subscription-excel-table td { background:#1f2937; color:#e5e7eb; border-color:#374151; }
+    html.dark .subscription-excel-table tbody tr:hover td, html.dark .subscription-excel-table tbody tr.excel-row-selected td { background:#273449; }
 
     /* 模态框动画 */
     #subscriptionModal { transition: opacity 0.2s ease; opacity: 0; }
@@ -509,7 +546,8 @@
             <span class="text-gray-700 ml-2 text-sm">显示农历</span>
           </label>
           <div class="subscription-view-toggle inline-flex rounded-lg border border-gray-300 overflow-hidden" aria-label="订阅显示模式">
-            <button type="button" id="tableViewBtn" data-view-mode="table" class="active px-3 py-2 text-sm bg-white text-gray-700 border-r border-gray-300"><i class="fas fa-table mr-1"></i>表格模式</button>
+            <button type="button" id="originalViewBtn" data-view-mode="original" class="active px-3 py-2 text-sm bg-white text-gray-700 border-r border-gray-300"><i class="fas fa-list mr-1"></i>原始模式</button>
+            <button type="button" id="tableViewBtn" data-view-mode="table" class="px-3 py-2 text-sm bg-white text-gray-700 border-r border-gray-300"><i class="fas fa-table mr-1"></i>表格模式</button>
             <button type="button" id="cardViewBtn" data-view-mode="card" class="px-3 py-2 text-sm bg-white text-gray-700"><i class="fas fa-th-large mr-1"></i>卡片模式</button>
           </div>
         </div>
@@ -541,7 +579,8 @@
       </div>
     </div>
     
-    <div id="subscriptionsTableView" class="table-container bg-white rounded-lg overflow-hidden">
+    <!-- 原始模式：保持历史版本的摘要表格布局不变 -->
+    <div id="subscriptionsOriginalView" class="table-container bg-white rounded-lg overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full divide-y divide-gray-200 responsive-table">
           <thead class="bg-gray-50">
@@ -577,6 +616,43 @@
         </table>
       </div>
     </div>
+
+    <!-- 表格模式：Excel 风格宽表，一行对应一条订阅 -->
+    <div id="subscriptionsTableView" class="subscription-excel-shell hidden">
+      <div class="subscription-excel-scroll">
+        <table class="subscription-excel-table">
+          <thead>
+            <tr>
+              <th class="excel-select-col">选择</th>
+              <th class="excel-name-col">订阅名称</th>
+              <th class="excel-account-col">账号</th>
+              <th class="excel-serial-col">账号序号</th>
+              <th>会员级别</th>
+              <th>积分</th>
+              <th class="excel-users-col">使用人</th>
+              <th>订阅类型</th>
+              <th class="excel-category-col">分类标签</th>
+              <th>费用</th>
+              <th>币种</th>
+              <th>订阅模式</th>
+              <th>开始日期</th>
+              <th>周期数值</th>
+              <th>周期单位</th>
+              <th>到期日期</th>
+              <th>农历周期</th>
+              <th>每月最后一天</th>
+              <th>提醒规则</th>
+              <th>启用订阅</th>
+              <th>自动续订</th>
+              <th class="excel-notes-col">备注</th>
+              <th class="excel-actions-col">操作</th>
+            </tr>
+          </thead>
+          <tbody id="subscriptionsExcelBody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <div id="subscriptionsCardView" class="subscription-card-grid hidden"></div>
   </div>
 
@@ -1643,7 +1719,11 @@ const lunarBiz = {
     let searchDebounceTimer = null;
     let lastFilteredSubscriptions = [];
     const selectedSubscriptionIds = new Set();
-    let subscriptionViewMode = localStorage.getItem('subscriptionViewMode') === 'card' ? 'card' : 'table';
+    const storedSubscriptionViewMode = localStorage.getItem('subscriptionViewModeV2');
+    // v3.2.8 只有 table/card，其中 table 实际是历史原始摘要表格；首次升级时安全映射回 original。
+    let subscriptionViewMode = ['original', 'table', 'card'].includes(storedSubscriptionViewMode)
+      ? storedSubscriptionViewMode
+      : (localStorage.getItem('subscriptionViewMode') === 'card' ? 'card' : 'original');
 
     function normalizeCategoryTokens(category = '') {
       return category
@@ -1869,20 +1949,104 @@ const lunarBiz = {
         input.checked = selectedSubscriptionIds.has(id);
         const card = input.closest('.subscription-card');
         if (card) card.classList.toggle('selected', input.checked);
+        const excelRow = input.closest('#subscriptionsTableView tr');
+        if (excelRow) excelRow.classList.toggle('excel-row-selected', input.checked);
       });
     }
 
     function setSubscriptionViewMode(mode) {
-      subscriptionViewMode = mode === 'card' ? 'card' : 'table';
+      subscriptionViewMode = ['original', 'table', 'card'].includes(mode) ? mode : 'original';
+      localStorage.setItem('subscriptionViewModeV2', subscriptionViewMode);
       localStorage.setItem('subscriptionViewMode', subscriptionViewMode);
+      const original = document.getElementById('subscriptionsOriginalView');
       const table = document.getElementById('subscriptionsTableView');
       const cards = document.getElementById('subscriptionsCardView');
+      const originalBtn = document.getElementById('originalViewBtn');
       const tableBtn = document.getElementById('tableViewBtn');
       const cardBtn = document.getElementById('cardViewBtn');
+      if (original) original.classList.toggle('hidden', subscriptionViewMode !== 'original');
       if (table) table.classList.toggle('hidden', subscriptionViewMode !== 'table');
       if (cards) cards.classList.toggle('hidden', subscriptionViewMode !== 'card');
+      if (originalBtn) originalBtn.classList.toggle('active', subscriptionViewMode === 'original');
       if (tableBtn) tableBtn.classList.toggle('active', subscriptionViewMode === 'table');
       if (cardBtn) cardBtn.classList.toggle('active', subscriptionViewMode === 'card');
+    }
+
+    function excelText(value, empty = '') {
+      if (value === null || value === undefined || value === '') return empty;
+      return String(value);
+    }
+
+    function excelDate(value) {
+      if (!value) return '';
+      try {
+        return formatDateInputInTimezone(value, globalTimezone) || String(value).slice(0, 10);
+      } catch (_) {
+        return String(value).slice(0, 10);
+      }
+    }
+
+    function excelPeriodUnit(value) {
+      return ({ single:'单次', day:'天', month:'月', year:'年' })[value] || excelText(value);
+    }
+
+    function excelBool(value, defaultTrue = false) {
+      const normalized = value === undefined || value === null ? defaultTrue : !!value;
+      return normalized ? '是' : '否';
+    }
+
+    function renderSubscriptionExcelTable(items) {
+      const tbody = document.getElementById('subscriptionsExcelBody');
+      if (!tbody) return;
+      if (!Array.isArray(items) || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="23" class="py-10 text-center text-gray-500">没有符合条件的订阅</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = items.map((subscription) => {
+        const id = String(subscription.id);
+        const reminderText = subscription.reminderRulesSummary
+          || formatReminderRulesSummary(subscription.reminderRules)
+          || getReminderSettings(subscription).displayText
+          || '';
+        const amountText = subscription.amount === null || subscription.amount === undefined || subscription.amount === ''
+          ? ''
+          : Number(subscription.amount).toFixed(2);
+        const rowClass = selectedSubscriptionIds.has(id) ? 'excel-row-selected' : '';
+        const modeText = subscription.subscriptionMode === 'reset' ? '到期重置' : '循环订阅';
+        return `<tr class="${rowClass}">
+          <td class="excel-select-col"><input type="checkbox" class="subscription-select form-checkbox h-4 w-4 text-indigo-600" data-id="${escapeHtml(id)}" ${selectedSubscriptionIds.has(id) ? 'checked' : ''}></td>
+          <td class="excel-name-col">${escapeHtml(excelText(subscription.name))}</td>
+          <td class="excel-account-col">${escapeHtml(excelText(subscription.account))}</td>
+          <td class="excel-serial-col">${escapeHtml(excelText(subscription.accountSerial))}</td>
+          <td>${escapeHtml(excelText(subscription.memberLevel))}</td>
+          <td class="excel-number-col">${escapeHtml(excelText(subscription.points))}</td>
+          <td class="excel-users-col">${escapeHtml(excelText(subscription.users))}</td>
+          <td>${escapeHtml(excelText(subscription.customType))}</td>
+          <td class="excel-category-col">${escapeHtml(excelText(subscription.category))}</td>
+          <td class="excel-number-col">${escapeHtml(amountText)}</td>
+          <td class="excel-center-col">${escapeHtml(excelText(subscription.currency || 'CNY'))}</td>
+          <td>${escapeHtml(modeText)}</td>
+          <td class="excel-date-col">${escapeHtml(excelDate(subscription.startDate))}</td>
+          <td class="excel-number-col">${escapeHtml(excelText(subscription.periodValue))}</td>
+          <td class="excel-center-col">${escapeHtml(excelPeriodUnit(subscription.periodUnit))}</td>
+          <td class="excel-date-col">${escapeHtml(excelDate(subscription.expiryDate))}</td>
+          <td class="excel-center-col">${excelBool(subscription.useLunar)}</td>
+          <td class="excel-center-col">${excelBool(subscription.endOfMonth)}</td>
+          <td>${escapeHtml(reminderText)}</td>
+          <td class="excel-center-col">${excelBool(subscription.isActive, true)}</td>
+          <td class="excel-center-col">${excelBool(subscription.autoRenew, true)}</td>
+          <td class="excel-notes-col">${escapeHtml(excelText(subscription.notes))}</td>
+          <td class="excel-actions-col">
+            <div class="flex flex-wrap gap-1">
+              <button class="edit btn-primary text-white px-2 py-1 rounded text-xs" data-id="${escapeHtml(id)}"><i class="fas fa-edit mr-1"></i>编辑</button>
+              <button class="clone btn-clone text-white px-2 py-1 rounded text-xs" data-id="${escapeHtml(id)}"><i class="fas fa-copy mr-1"></i>克隆</button>
+              <button class="view-history btn-history text-white px-2 py-1 rounded text-xs" data-id="${escapeHtml(id)}"><i class="fas fa-history mr-1"></i>历史</button>
+              <button class="delete btn-danger text-white px-2 py-1 rounded text-xs" data-id="${escapeHtml(id)}"><i class="fas fa-trash-alt mr-1"></i>删除</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
     }
 
     function renderSubscriptionCards(items) {
@@ -2013,6 +2177,7 @@ const lunarBiz = {
       if (filtered.length === 0) {
         lastFilteredSubscriptions = [];
         tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500"><div>没有符合条件的订阅</div><button onclick="document.getElementById(\'searchKeyword\').value=\'\';document.getElementById(\'clearSearch\').style.display=\'none\';document.getElementById(\'categoryFilter\').value=\'\';document.getElementById(\'modeFilter\').value=\'\';document.getElementById(\'statusFilter\').value=\'\';renderSubscriptionTable();" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800"><i class="fas fa-undo mr-1"></i>清除筛选条件</button></td></tr>';
+        renderSubscriptionExcelTable([]);
         renderSubscriptionCards([]);
         updateSelectionUI();
         setSubscriptionViewMode(subscriptionViewMode);
@@ -2256,6 +2421,7 @@ const lunarBiz = {
       });
 
       tbody.appendChild(fragment);
+      renderSubscriptionExcelTable(filtered);
       renderSubscriptionCards(filtered);
       document.querySelectorAll('.edit').forEach(button => {
         button.addEventListener('click', editSubscription);
@@ -2328,8 +2494,10 @@ const lunarBiz = {
     }
 
 
+    const originalViewBtn = document.getElementById('originalViewBtn');
     const tableViewBtn = document.getElementById('tableViewBtn');
     const cardViewBtn = document.getElementById('cardViewBtn');
+    if (originalViewBtn) originalViewBtn.addEventListener('click', () => setSubscriptionViewMode('original'));
     if (tableViewBtn) tableViewBtn.addEventListener('click', () => setSubscriptionViewMode('table'));
     if (cardViewBtn) cardViewBtn.addEventListener('click', () => setSubscriptionViewMode('card'));
     const selectAllFiltered = document.getElementById('selectAllFiltered');

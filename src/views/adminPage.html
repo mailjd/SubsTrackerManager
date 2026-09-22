@@ -5318,6 +5318,8 @@ const lunarBiz = {
       function closeImportModal() {
         const modal = document.getElementById('bulkImportModal');
         if (!modal) return;
+        // 关闭批量导入窗口时清理临时 Excel 数据，避免下一次打开残留旧内容
+        clearImportState();
         modal.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
       }
@@ -5809,6 +5811,8 @@ const lunarBiz = {
             resultBox.classList.remove('hidden');
           }
           completed = true;
+          // 导入完成后立即释放粘贴区与解析缓存，避免残留上一批 Excel 数据
+          clearImportState();
           if (imported > 0) {
             showToast(`成功导入 ${imported} 条订阅`, 'success');
             await loadSubscriptions(false);

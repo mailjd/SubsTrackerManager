@@ -26,6 +26,8 @@ const DEFAULT_CONFIG = {
   BARK_IS_ARCHIVE: 'false',
   ENABLED_NOTIFIERS: ['notifyx'],
   THEME_MODE: 'system',
+  CONTENT_LAYOUT_MODE: 'center',
+  CONTENT_MAX_WIDTH: 1760,
   TIMEZONE: 'Asia/Shanghai',
   NOTIFICATION_HOURS: [],
   THIRD_PARTY_API_TOKEN: '',

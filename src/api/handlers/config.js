@@ -84,6 +84,12 @@ async function handleUpdateConfig(request, env) {
       ...config,
       ADMIN_USERNAME: newConfig.ADMIN_USERNAME || config.ADMIN_USERNAME,
       THEME_MODE: newConfig.THEME_MODE || 'system',
+      CONTENT_LAYOUT_MODE: ['center', 'left', 'right', 'full'].includes(newConfig.CONTENT_LAYOUT_MODE)
+        ? newConfig.CONTENT_LAYOUT_MODE
+        : (config.CONTENT_LAYOUT_MODE || 'center'),
+      CONTENT_MAX_WIDTH: Number.isFinite(Number(newConfig.CONTENT_MAX_WIDTH))
+        ? Math.min(2560, Math.max(1200, Math.floor(Number(newConfig.CONTENT_MAX_WIDTH))))
+        : (Number(config.CONTENT_MAX_WIDTH) || 1760),
 
       TG_BOT_TOKEN: mergeSecretField(config, newConfig, 'TG_BOT_TOKEN', clearSecretFields),
       TG_CHAT_ID: newConfig.TG_CHAT_ID || '',

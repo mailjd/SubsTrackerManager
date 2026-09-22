@@ -94,6 +94,15 @@
   .btn-history { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); transition: all 0.2s; box-shadow: 0 6px 14px rgba(168, 85, 247, 0.25); color: #fff; }
   .btn-history:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(168, 85, 247, 0.35); }
 
+  /* === 管理后台主内容区域布局 === */
+  .app-content-shell {
+    width: 100%;
+    max-width: 1760px;
+    margin-left: auto;
+    margin-right: auto;
+    transition: max-width 0.2s ease, margin 0.2s ease;
+  }
+
   @media (max-width: 767px) {   /* === 移动端表格样式(高对比度版) === */
     html.dark .responsive-table td:before {  /* 强制提亮移动端表格的 Label */
       color: #e5e7eb !important;    /* 改为极亮的浅灰色 (接近纯白) */
@@ -130,8 +139,47 @@
       }
     }
 
+    function normalizeLayoutMode(mode) {
+      return ['center', 'left', 'right', 'full'].includes(mode) ? mode : 'center';
+    }
+
+    function normalizeLayoutWidth(width) {
+      const numeric = Number(width);
+      if (!Number.isFinite(numeric)) return 1760;
+      return Math.min(2560, Math.max(1200, Math.floor(numeric)));
+    }
+
+    function applyLayout(mode, width) {
+      const normalizedMode = normalizeLayoutMode(mode);
+      const normalizedWidth = normalizeLayoutWidth(width);
+      document.querySelectorAll('[data-app-content]').forEach((el) => {
+        el.style.width = '100%';
+        if (normalizedMode === 'full') {
+          el.style.maxWidth = 'none';
+          el.style.marginLeft = '0';
+          el.style.marginRight = '0';
+          return;
+        }
+        el.style.maxWidth = normalizedWidth + 'px';
+        if (normalizedMode === 'left') {
+          el.style.marginLeft = '0';
+          el.style.marginRight = 'auto';
+        } else if (normalizedMode === 'right') {
+          el.style.marginLeft = 'auto';
+          el.style.marginRight = '0';
+        } else {
+          el.style.marginLeft = 'auto';
+          el.style.marginRight = 'auto';
+        }
+      });
+    }
+
     const savedTheme = localStorage.getItem('themeMode') || 'system';
     applyTheme(savedTheme);
+    const savedLayoutMode = localStorage.getItem('contentLayoutMode') || 'center';
+    const savedLayoutWidth = localStorage.getItem('contentMaxWidth') || '1760';
+    applyLayout(savedLayoutMode, savedLayoutWidth);
+    document.addEventListener('DOMContentLoaded', () => applyLayout(savedLayoutMode, savedLayoutWidth), { once: true });
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       const currentMode = localStorage.getItem('themeMode') || 'system';
@@ -151,6 +199,11 @@
             const select = document.getElementById('themeModeSelect');
             if (select) select.value = config.THEME_MODE;
           }
+          const layoutMode = normalizeLayoutMode(config.CONTENT_LAYOUT_MODE || 'center');
+          const layoutWidth = normalizeLayoutWidth(config.CONTENT_MAX_WIDTH || 1760);
+          localStorage.setItem('contentLayoutMode', layoutMode);
+          localStorage.setItem('contentMaxWidth', String(layoutWidth));
+          applyLayout(layoutMode, layoutWidth);
         } catch(e) {}
       }
     });
@@ -158,6 +211,14 @@
     window.updateAppTheme = function(mode) {
       localStorage.setItem('themeMode', mode);
       applyTheme(mode);
+    };
+
+    window.updateAppLayout = function(mode, width) {
+      const normalizedMode = normalizeLayoutMode(mode);
+      const normalizedWidth = normalizeLayoutWidth(width);
+      localStorage.setItem('contentLayoutMode', normalizedMode);
+      localStorage.setItem('contentMaxWidth', String(normalizedWidth));
+      applyLayout(normalizedMode, normalizedWidth);
     };
   })();
 </script>

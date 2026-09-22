@@ -179,6 +179,29 @@
             <p class="mt-1 text-sm text-gray-500">选择系统的外观风格</p>
           </div>
           
+          <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="contentLayoutMode" class="block text-sm font-medium text-gray-700 mb-1">页面内容对齐模式</label>
+              <select id="contentLayoutMode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white sm:text-sm">
+                <option value="center">居中</option>
+                <option value="left">左贴边</option>
+                <option value="right">右贴边</option>
+                <option value="full">左右贴边 / 宽屏</option>
+              </select>
+              <p class="mt-1 text-sm text-gray-500">控制“订阅记录”和“Database”主显示区域在页面中的对齐方式。</p>
+            </div>
+            <div>
+              <label for="contentMaxWidth" class="block text-sm font-medium text-gray-700 mb-1">内容最大宽度（px）</label>
+              <input type="number" id="contentMaxWidth" min="1200" max="2560" step="40" value="1760" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white sm:text-sm">
+              <p class="mt-1 text-sm text-gray-500">建议 1600–1920。选择“左右贴边 / 宽屏”时会忽略此值并使用整个可用宽度。</p>
+            </div>
+          </div>
+
+          <div class="mb-6 rounded-md border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
+            <i class="fas fa-expand-arrows-alt mr-1"></i>
+            当前设置会同步应用到订阅记录与 Database 页面，适合大屏显示更多列。
+          </div>
+
           <div class="mb-6">
             <label class="inline-flex items-center">
               <input type="checkbox" id="showLunarGlobal" class="form-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
@@ -843,6 +866,8 @@
           _banner.classList.toggle('hidden', (config.ADMIN_USERNAME || 'admin') !== 'admin');
         }
         document.getElementById('themeModeSelect').value = config.THEME_MODE || 'system';  // 回显主题设置
+        document.getElementById('contentLayoutMode').value = config.CONTENT_LAYOUT_MODE || 'center';
+        document.getElementById('contentMaxWidth').value = Number(config.CONTENT_MAX_WIDTH) || 1760;
 
         // 非敏感字段正常回显
         document.getElementById('tgChatId').value = config.TG_CHAT_ID || '';
@@ -1067,6 +1092,8 @@
       const config = {
         ADMIN_USERNAME: document.getElementById('adminUsername').value.trim(),
         THEME_MODE: document.getElementById('themeModeSelect').value,      // 保存主题设置
+        CONTENT_LAYOUT_MODE: document.getElementById('contentLayoutMode').value,
+        CONTENT_MAX_WIDTH: Number(document.getElementById('contentMaxWidth').value) || 1760,
 
         // token/密钥类字段：默认留空=不修改；要清空则走 CLEAR_SECRET_FIELDS
         TG_BOT_TOKEN: document.getElementById('tgBotToken').value.trim(),
@@ -1149,6 +1176,9 @@
           showToast('配置保存成功', 'success');
           if (window.updateAppTheme) {    // 保存成功后立即应用主题，无需刷新
             window.updateAppTheme(config.THEME_MODE);
+          }
+          if (window.updateAppLayout) {
+            window.updateAppLayout(config.CONTENT_LAYOUT_MODE, config.CONTENT_MAX_WIDTH);
           }
           passwordField.value = '';
           

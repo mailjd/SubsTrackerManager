@@ -491,7 +491,7 @@
     </div>
   </nav>
   
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div data-app-content class="app-content-shell px-4 sm:px-6 lg:px-8 py-8">
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 sm:p-6 mb-6">
       <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
@@ -511,7 +511,7 @@
             <i class="fas fa-search"></i>
           </span>
           <button id="clearSearch" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-            style="display:none;" onclick="document.getElementById('searchKeyword').value='';this.style.display='none';renderSubscriptionTable();">
+            style="display:none;" onclick="document.getElementById('searchKeyword').value='';this.style.display='none';subscriptionCurrentPage=1;renderSubscriptionTable();">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -654,6 +654,21 @@
     </div>
 
     <div id="subscriptionsCardView" class="subscription-card-grid hidden"></div>
+
+    <div id="subscriptionPagination" class="subscription-pagination mt-5 bg-white border border-gray-200 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
+      <div id="subscriptionPageSummary" class="text-sm text-gray-500">第 1 / 1 页，共 0 条</div>
+      <div class="flex flex-wrap items-center gap-2">
+        <select id="subscriptionPageSize" class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+          <option value="10">10 / 页</option>
+          <option value="20" selected>20 / 页</option>
+          <option value="50">50 / 页</option>
+          <option value="100">100 / 页</option>
+          <option value="all">全部</option>
+        </select>
+        <button id="subscriptionPrevPage" type="button" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">上一页</button>
+        <button id="subscriptionNextPage" type="button" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">下一页</button>
+      </div>
+    </div>
   </div>
 
   <div id="subscriptionModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-600 bg-opacity-50">
@@ -1724,6 +1739,40 @@ const lunarBiz = {
     let subscriptionViewMode = ['original', 'table', 'card'].includes(storedSubscriptionViewMode)
       ? storedSubscriptionViewMode
       : (localStorage.getItem('subscriptionViewMode') === 'card' ? 'card' : 'original');
+    const storedSubscriptionPageSize = localStorage.getItem('subscriptionPageSize') || '20';
+    let subscriptionPageSize = ['10', '20', '50', '100', 'all'].includes(storedSubscriptionPageSize) ? storedSubscriptionPageSize : '20';
+    let subscriptionCurrentPage = 1;
+
+    function updateSubscriptionPagination(totalItems) {
+      const sizeSelect = document.getElementById('subscriptionPageSize');
+      const summary = document.getElementById('subscriptionPageSummary');
+      const prev = document.getElementById('subscriptionPrevPage');
+      const next = document.getElementById('subscriptionNextPage');
+      if (sizeSelect) sizeSelect.value = subscriptionPageSize;
+
+      const isAll = subscriptionPageSize === 'all';
+      const pageSize = isAll ? Math.max(1, totalItems) : Math.max(1, Number(subscriptionPageSize) || 20);
+      const totalPages = totalItems === 0 ? 0 : (isAll ? 1 : Math.ceil(totalItems / pageSize));
+      if (totalPages === 0) subscriptionCurrentPage = 1;
+      else subscriptionCurrentPage = Math.min(Math.max(1, subscriptionCurrentPage), totalPages);
+
+      if (summary) {
+        summary.textContent = totalItems === 0
+          ? '第 0 / 0 页，共 0 条'
+          : '第 ' + subscriptionCurrentPage + ' / ' + totalPages + ' 页，共 ' + totalItems + ' 条';
+      }
+      if (prev) prev.disabled = totalPages <= 1 || subscriptionCurrentPage <= 1;
+      if (next) next.disabled = totalPages <= 1 || subscriptionCurrentPage >= totalPages;
+
+      const start = totalItems === 0 ? 0 : (subscriptionCurrentPage - 1) * pageSize;
+      const end = isAll ? totalItems : Math.min(totalItems, start + pageSize);
+      return { start, end, pageSize, totalPages };
+    }
+
+    function resetSubscriptionPageAndRender() {
+      subscriptionCurrentPage = 1;
+      renderSubscriptionTable();
+    }
 
     function normalizeCategoryTokens(category = '') {
       return category
@@ -2176,7 +2225,8 @@ const lunarBiz = {
 
       if (filtered.length === 0) {
         lastFilteredSubscriptions = [];
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500"><div>没有符合条件的订阅</div><button onclick="document.getElementById(\'searchKeyword\').value=\'\';document.getElementById(\'clearSearch\').style.display=\'none\';document.getElementById(\'categoryFilter\').value=\'\';document.getElementById(\'modeFilter\').value=\'\';document.getElementById(\'statusFilter\').value=\'\';renderSubscriptionTable();" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800"><i class="fas fa-undo mr-1"></i>清除筛选条件</button></td></tr>';
+        updateSubscriptionPagination(0);
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500"><div>没有符合条件的订阅</div><button onclick="document.getElementById(\'searchKeyword\').value=\'\';document.getElementById(\'clearSearch\').style.display=\'none\';document.getElementById(\'categoryFilter\').value=\'\';document.getElementById(\'modeFilter\').value=\'\';document.getElementById(\'statusFilter\').value=\'\';subscriptionCurrentPage=1;renderSubscriptionTable();" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800"><i class="fas fa-undo mr-1"></i>清除筛选条件</button></td></tr>';
         renderSubscriptionExcelTable([]);
         renderSubscriptionCards([]);
         updateSelectionUI();
@@ -2186,11 +2236,13 @@ const lunarBiz = {
 
       filtered.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
       lastFilteredSubscriptions = filtered;
+      const pageRange = updateSubscriptionPagination(filtered.length);
+      const pageItems = filtered.slice(pageRange.start, pageRange.end);
 
       // 使用 DocumentFragment 进行批量插入，减少页面重绘（移动端性能关键）
       const fragment = document.createDocumentFragment();
 
-      filtered.forEach(subscription => {
+      pageItems.forEach(subscription => {
         const row = document.createElement('tr');
         row.className = (subscription.isActive === false ? 'hover:bg-gray-50 bg-gray-100' : 'hover:bg-gray-50') + (selectedSubscriptionIds.has(String(subscription.id)) ? ' bg-indigo-50' : '');
 
@@ -2421,8 +2473,8 @@ const lunarBiz = {
       });
 
       tbody.appendChild(fragment);
-      renderSubscriptionExcelTable(filtered);
-      renderSubscriptionCards(filtered);
+      renderSubscriptionExcelTable(pageItems);
+      renderSubscriptionCards(pageItems);
       document.querySelectorAll('.edit').forEach(button => {
         button.addEventListener('click', editSubscription);
       });
@@ -2474,23 +2526,23 @@ const lunarBiz = {
       searchInput.addEventListener('input', () => {
         clearBtn.style.display = searchInput.value ? '' : 'none';
         clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = setTimeout(() => renderSubscriptionTable(), 200);
+        searchDebounceTimer = setTimeout(() => resetSubscriptionPageAndRender(), 200);
       });
     }
 
     const categorySelect = document.getElementById('categoryFilter');
     if (categorySelect) {
-      categorySelect.addEventListener('change', () => renderSubscriptionTable());
+      categorySelect.addEventListener('change', () => resetSubscriptionPageAndRender());
     }
 
     const modeSelect = document.getElementById('modeFilter');
     if (modeSelect) {
-      modeSelect.addEventListener('change', () => renderSubscriptionTable());
+      modeSelect.addEventListener('change', () => resetSubscriptionPageAndRender());
     }
 
     const statusSelect = document.getElementById('statusFilter');
     if (statusSelect) {
-      statusSelect.addEventListener('change', () => renderSubscriptionTable());
+      statusSelect.addEventListener('change', () => resetSubscriptionPageAndRender());
     }
 
 
@@ -2500,6 +2552,36 @@ const lunarBiz = {
     if (originalViewBtn) originalViewBtn.addEventListener('click', () => setSubscriptionViewMode('original'));
     if (tableViewBtn) tableViewBtn.addEventListener('click', () => setSubscriptionViewMode('table'));
     if (cardViewBtn) cardViewBtn.addEventListener('click', () => setSubscriptionViewMode('card'));
+
+    const subscriptionPageSizeEl = document.getElementById('subscriptionPageSize');
+    if (subscriptionPageSizeEl) {
+      subscriptionPageSizeEl.value = subscriptionPageSize;
+      subscriptionPageSizeEl.addEventListener('change', () => {
+        subscriptionPageSize = subscriptionPageSizeEl.value || '20';
+        localStorage.setItem('subscriptionPageSize', subscriptionPageSize);
+        subscriptionCurrentPage = 1;
+        renderSubscriptionTable();
+      });
+    }
+    const subscriptionPrevPage = document.getElementById('subscriptionPrevPage');
+    if (subscriptionPrevPage) {
+      subscriptionPrevPage.addEventListener('click', () => {
+        if (subscriptionCurrentPage > 1) {
+          subscriptionCurrentPage -= 1;
+          renderSubscriptionTable();
+          window.scrollTo({ top: document.querySelector('[data-app-content]')?.offsetTop || 0, behavior: 'smooth' });
+        }
+      });
+    }
+    const subscriptionNextPage = document.getElementById('subscriptionNextPage');
+    if (subscriptionNextPage) {
+      subscriptionNextPage.addEventListener('click', () => {
+        subscriptionCurrentPage += 1;
+        renderSubscriptionTable();
+        window.scrollTo({ top: document.querySelector('[data-app-content]')?.offsetTop || 0, behavior: 'smooth' });
+      });
+    }
+
     const selectAllFiltered = document.getElementById('selectAllFiltered');
     if (selectAllFiltered) {
       selectAllFiltered.addEventListener('change', () => {

@@ -2,7 +2,7 @@
 /**
  * Worker 入口
  *
- * fetch handler 委托给 Hono 应用（src/app.js）。
+ * fetch handler 委托给原生 Cloudflare 路由应用（src/app.js）。
  * scheduled handler 触发定时任务执行。
  *
  */

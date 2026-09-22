@@ -1,7 +1,7 @@
 {
   "name": "subscription-manager",
-  "version": "3.2.1",
-  "description": "订阅管理系统 - 支持 Cloudflare Pages Functions / Workers + Hono + KV + D1",
+  "version": "3.2.2",
+  "description": "订阅管理系统 - 支持 Cloudflare Pages Functions / Workers + KV + D1（零第三方运行时路由依赖）",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -23,9 +23,6 @@
     "test:watch": "vitest",
     "setup:local-d1": "npx wrangler d1 migrations apply subscription-manager-dev --local --config wrangler.worker.dev.toml"
   },
-  "dependencies": {
-    "hono": "^4.6.14"
-  },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.5.40",
     "@cloudflare/workers-types": "^4.20241218.0",
@@ -37,8 +34,7 @@
     "cloudflare-workers",
     "subscription-management",
     "notification",
-    "lunar-calendar",
-    "hono"
+    "lunar-calendar"
   ],
   "license": "MIT"
 }

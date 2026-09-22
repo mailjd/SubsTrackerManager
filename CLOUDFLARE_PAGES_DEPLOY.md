@@ -1,6 +1,6 @@
 # SubsTracker Cloudflare Pages 部署指南
 
-SubsTracker v3.2.1 默认支持部署到 **Cloudflare Pages + Pages Functions + KV + D1**。
+SubsTracker v3.2.2 默认支持部署到 **Cloudflare Pages + Pages Functions + KV + D1**。
 
 网站、登录页、管理后台和 API 都运行在 Pages Functions；静态资源由 Pages 提供。由于 Pages Functions 本身没有 Cron Trigger，完整提醒功能会额外部署一个极小的 `substracker-pages-cron` Worker，只负责每小时调用 Pages 的内部调度端点，不承载网页或业务 API。
 
@@ -120,7 +120,7 @@ npm run deploy:pages
 
 ## 保留 Workers 部署方式
 
-v3.2.1 仍保留原 Workers 方式：
+v3.2.2 仍保留原 Workers 方式：
 
 ```bash
 npm run setup:worker
@@ -135,3 +135,29 @@ wrangler.worker.dev.toml
 ```
 
 因此同一份代码可以二选一：Pages 为默认部署目标，Workers 作为兼容部署目标。
+
+## Cloudflare Dashboard 构建设置（必须核对）
+
+如果通过 Cloudflare Pages 直接连接 GitHub 仓库，请在项目的 **Settings → Builds & deployments** 确认：
+
+```text
+Framework preset: None
+Production branch: main
+Root directory: /
+Build command: npm run build:pages
+Build output directory: public
+```
+
+如果旧 Pages 项目曾设置 `SKIP_DEPENDENCY_INSTALL=1`，建议删除该变量。v3.2.2 已移除 Hono 等第三方**运行时**路由依赖，因此 Pages Functions 不再依赖 `node_modules/hono` 才能完成 bundling；但 GitHub Actions 的 lint/test 仍会正常执行 `npm ci` 安装开发依赖。
+
+### v3.2.1 → v3.2.2 Build failed 修复
+
+旧版若看到：
+
+```text
+ERROR Could not resolve "hono"
+../src/app.js
+Failed building Pages Functions.
+```
+
+原因是 Pages Functions bundler 在构建运行时代码时找不到 `hono`。v3.2.2 已把 `src/app.js` 改为原生 Cloudflare `fetch` 路由，并从运行时依赖中移除 `hono`，因此不需要在 Cloudflare Dashboard 手动把 `hono` 标记为 external，也不需要把 `node_modules` 提交到 GitHub。

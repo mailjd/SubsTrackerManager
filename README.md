@@ -1,6 +1,6 @@
 # SubsTracker — 订阅管理与提醒系统
 
-基于 **Cloudflare Pages Functions + KV + D1** 的轻量级订阅管理与到期提醒系统。v3.2.1 默认部署目标为 Cloudflare Pages，同时保留原 Cloudflare Workers 部署方式。
+基于 **Cloudflare Pages Functions + KV + D1** 的轻量级订阅管理与到期提醒系统。v3.2.2 默认部署目标为 Cloudflare Pages，同时保留原 Cloudflare Workers 部署方式。
 
 网站、登录、Admin、Database 和 API 都运行在 Pages Functions；静态资源由 Pages 提供。由于 Pages Functions 本身没有 Cron Trigger，完整提醒模式会额外部署一个极小的 `substracker-pages-cron` Worker，只负责每小时触发调度，不承载网页或业务 API。
 
@@ -477,7 +477,7 @@ src/
 ├── index.js           # Workers 兼容入口
 ├── pages-handler.js   # Pages Functions 适配层
 ├── pages-cron-worker.js # Pages 定时桥接 Worker
-├── app.js             # Hono
+├── app.js             # 原生 Cloudflare 路由（零第三方运行时依赖）
 ├── core/              # 时间、农历、货币、JWT
 ├── data/              # KV、D1 订阅镜像/历史、账号 Database 与迁移
 ├── services/          # 调度器 + 通知渠道

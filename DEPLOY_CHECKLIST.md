@@ -57,3 +57,11 @@ Pages 项目：`substracker-manager-pages`
 - `.dev.vars`
 - `.wrangler/`
 - `node_modules/`
+
+## Pages Build failed 专项检查（v3.2.2）
+
+- [ ] Cloudflare Pages Root directory 为仓库根目录 `/`
+- [ ] Build command 为 `npm run build:pages`
+- [ ] Build output directory 为 `public`
+- [ ] 没有把 `src/app.js` 恢复成 `import { Hono } from 'hono'`
+- [ ] GitHub 仓库未提交 `node_modules/`

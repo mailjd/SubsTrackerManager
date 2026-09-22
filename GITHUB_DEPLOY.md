@@ -105,7 +105,7 @@ npx wrangler secret put SUBSTRACKER_SUPERADMIN_PASSWORD
 登录页使用管理员用户名配合此密码即可直接以 SuperAdmin 登录。
 
 
-### v3.3.1 批量导入说明
+### v3.3.2 批量导入说明
 
 订阅 Excel 导入已自动按 4 条/请求分批，服务端单次最多接收 6 条，并通过 D1 当前镜像做轻量重复检测。
 无需修改 Cloudflare Worker `limits.subrequests`。如果之前有部分数据已成功写入，重新导入同一份表格时已存在记录会按“只新增、不覆盖”自动跳过。

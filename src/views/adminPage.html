@@ -574,7 +574,7 @@
           <button type="button" id="clearSubscriptionSelection" class="text-indigo-600 hover:text-indigo-800 text-sm">清除选择</button>
         </div>
         <button type="button" id="openBulkUpdateBtn" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
-          <i class="fas fa-edit mr-2"></i>批量修改
+          <i class="fas fa-edit mr-2"></i>批量修改 / 删除
         </button>
       </div>
     </div>
@@ -1043,11 +1043,11 @@
   <div id="bulkUpdateModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-600 bg-opacity-50">
     <div class="relative w-auto max-w-3xl mx-4 md:mx-auto my-10 bg-white rounded-xl shadow-xl">
       <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-        <div><h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-edit text-violet-600 mr-2"></i>批量修改订阅</h3><p id="bulkUpdateSelectionHint" class="text-xs text-gray-500 mt-1">已选择 0 条。只有勾选的字段才会修改。</p></div>
+        <div><h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-edit text-violet-600 mr-2"></i>批量修改 / 删除订阅</h3><p id="bulkUpdateSelectionHint" class="text-xs text-gray-500 mt-1">已选择 0 条。可批量修改字段，或使用双确认批量删除。</p></div>
         <button type="button" id="closeBulkUpdateModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
       </div>
       <div class="p-6 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div id="bulkUpdateFields" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="customType"><strong class="text-sm">订阅类型</strong></span><input id="bulkCustomType" type="text" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="留空可清除"></label>
           <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="category"><strong class="text-sm">分类标签</strong></span><input id="bulkCategory" type="text" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="例如：已完成"></label>
           <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="memberLevel"><strong class="text-sm">会员级别</strong></span><input id="bulkMemberLevel" type="text" class="w-full border rounded-md px-3 py-2 text-sm"></label>
@@ -1059,7 +1059,16 @@
           <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="isActive"><strong class="text-sm">启用状态</strong></span><select id="bulkIsActive" class="w-full border rounded-md px-3 py-2 text-sm"><option value="true">启用</option><option value="false">停用</option></select></label>
           <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="autoRenew"><strong class="text-sm">自动续订</strong></span><select id="bulkAutoRenew" class="w-full border rounded-md px-3 py-2 text-sm"><option value="true">开启</option><option value="false">关闭</option></select></label>
         </div>
-        <label class="block border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="notes"><strong class="text-sm">备注</strong></span><textarea id="bulkNotes" rows="3" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="批量替换或追加备注"></textarea><span class="mt-2 inline-flex items-center text-xs text-gray-600"><input id="bulkAppendNotes" type="checkbox" class="mr-2">追加到原备注（不勾选则替换）</span></label>
+        <label id="bulkNotesArea" class="block border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="notes"><strong class="text-sm">备注</strong></span><textarea id="bulkNotes" rows="3" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="批量替换或追加备注"></textarea><span class="mt-2 inline-flex items-center text-xs text-gray-600"><input id="bulkAppendNotes" type="checkbox" class="mr-2">追加到原备注（不勾选则替换）</span></label>
+        <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input id="bulkDeleteMode" type="checkbox" class="mt-1 h-4 w-4 text-red-600 border-red-300 rounded">
+            <span>
+              <strong class="text-sm text-red-800">批量删除已选订阅</strong>
+              <span class="block text-xs text-red-700 mt-1">危险操作：勾选时会先确认一次；真正执行删除时会再次确认。删除后当前订阅记录将移除。</span>
+            </span>
+          </label>
+        </div>
         <div id="bulkUpdateResult" class="hidden rounded-lg border p-3 text-sm"></div>
         <div class="flex justify-end gap-3 pt-3 border-t"><button type="button" id="cancelBulkUpdateBtn" class="px-4 py-2 border rounded-lg text-sm">取消</button><button type="button" id="executeBulkUpdateBtn" class="px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium"><i class="fas fa-save mr-2"></i>确认批量修改</button></div>
       </div>
@@ -5968,11 +5977,36 @@ const lunarBiz = {
         }
       }
 
+      function setBulkDeleteMode(enabled) {
+        const deleteBox = document.getElementById('bulkDeleteMode');
+        const executeBtn = document.getElementById('executeBulkUpdateBtn');
+        const fieldBoxes = Array.from(document.querySelectorAll('.bulk-field-enable'));
+        const fieldContainers = [document.getElementById('bulkUpdateFields'), document.getElementById('bulkNotesArea')].filter(Boolean);
+        if (deleteBox) deleteBox.checked = !!enabled;
+        fieldBoxes.forEach((box) => {
+          if (enabled) box.checked = false;
+          box.disabled = !!enabled;
+        });
+        fieldContainers.forEach((container) => {
+          container.classList.toggle('opacity-50', !!enabled);
+          container.classList.toggle('pointer-events-none', !!enabled);
+        });
+        if (executeBtn) {
+          executeBtn.className = enabled
+            ? 'px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium'
+            : 'px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium';
+          executeBtn.innerHTML = enabled
+            ? '<i class="fas fa-trash-alt mr-2"></i>确认批量删除'
+            : '<i class="fas fa-save mr-2"></i>确认批量修改';
+        }
+      }
+
       function openBulkUpdateModal() {
-        if (!selectedSubscriptionIds.size) { showToast('请先选择要批量修改的订阅', 'warning'); return; }
-        document.querySelectorAll('.bulk-field-enable').forEach((box) => { box.checked = false; });
+        if (!selectedSubscriptionIds.size) { showToast('请先选择要批量修改或删除的订阅', 'warning'); return; }
+        document.querySelectorAll('.bulk-field-enable').forEach((box) => { box.checked = false; box.disabled = false; });
+        setBulkDeleteMode(false);
         const hint = document.getElementById('bulkUpdateSelectionHint');
-        if (hint) hint.textContent = `已选择 ${selectedSubscriptionIds.size} 条。只有勾选的字段才会修改，未勾选字段保持原值。`;
+        if (hint) hint.textContent = `已选择 ${selectedSubscriptionIds.size} 条。可批量修改指定字段，或启用危险的批量删除模式。`;
         const result = document.getElementById('bulkUpdateResult');
         if (result) { result.classList.add('hidden'); result.innerHTML = ''; }
         modalOpen('bulkUpdateModal');
@@ -5992,16 +6026,70 @@ const lunarBiz = {
       }
 
       async function executeBulkUpdate() {
+        const ids = Array.from(selectedSubscriptionIds);
+        if (!ids.length) { showToast('请先选择订阅记录', 'warning'); return; }
+        const deleteMode = !!document.getElementById('bulkDeleteMode')?.checked;
+        const btn = document.getElementById('executeBulkUpdateBtn');
+        const resultBox = document.getElementById('bulkUpdateResult');
+
+        if (deleteMode) {
+          if (!confirm(`第二次确认：即将永久删除已选择的 ${ids.length} 条订阅记录。\n\n此操作不可在当前页面撤销。是否确认执行批量删除？`)) return;
+          const old = btn ? btn.innerHTML : '';
+          if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>删除中...'; }
+          let deleted = 0;
+          let failed = 0;
+          const failedResults = [];
+          try {
+            const chunkSize = 4;
+            for (let i = 0; i < ids.length; i += chunkSize) {
+              const chunk = ids.slice(i, i + chunkSize);
+              const response = await apiFetch('/api/subscriptions/bulk-delete', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ ids: chunk })
+              });
+              const payload = await response.json();
+              deleted += Number(payload.deleted || 0);
+              failed += Number(payload.failed || 0);
+              if (Array.isArray(payload.results)) failedResults.push(...payload.results.filter((r) => !r.success));
+              if (!response.ok && !Number(payload.deleted || 0)) {
+                failed += Math.max(0, chunk.length - Number(payload.failed || 0));
+                if (!Array.isArray(payload.results) || payload.results.length === 0) {
+                  chunk.forEach((id) => failedResults.push({ id, success:false, message: payload.message || '删除失败' }));
+                }
+              }
+            }
+            if (resultBox) {
+              resultBox.className = 'rounded-lg border p-3 text-sm ' + (failed ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900');
+              resultBox.innerHTML = `批量删除完成：成功 <strong>${deleted}</strong> 条，失败 <strong>${failed}</strong> 条。`;
+              if (failedResults.length) {
+                resultBox.innerHTML += '<ul class="list-disc pl-5 mt-2 max-h-32 overflow-y-auto">' + failedResults.map((r) => `<li>${escapeHtml(r.id)}：${escapeHtml(r.message || '删除失败')}</li>`).join('') + '</ul>';
+              }
+              resultBox.classList.remove('hidden');
+            }
+            if (deleted > 0) {
+              showToast(`成功批量删除 ${deleted} 条订阅`, 'success');
+              selectedSubscriptionIds.clear();
+              await loadSubscriptions(false);
+            } else {
+              showToast('没有订阅记录被删除', 'warning');
+            }
+          } catch (error) {
+            console.error('[批量删除] 失败:', error);
+            showToast('批量删除失败：' + (error.message || '未知错误'), 'error');
+          } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = old; }
+            setBulkDeleteMode(false);
+          }
+          return;
+        }
+
         const changes = {};
         document.querySelectorAll('.bulk-field-enable:checked').forEach((box) => {
           changes[box.dataset.field] = getBulkFieldValue(box.dataset.field);
         });
         const fields = Object.keys(changes);
         if (!fields.length) { showToast('请至少勾选一个要修改的字段', 'warning'); return; }
-        const ids = Array.from(selectedSubscriptionIds);
-        if (!confirm(`即将批量修改 ${ids.length} 条订阅，共修改 ${fields.length} 个字段。\n\n未勾选的字段不会改变。是否继续？`)) return;
-        const btn = document.getElementById('executeBulkUpdateBtn');
-        const resultBox = document.getElementById('bulkUpdateResult');
+        if (!confirm(`即将批量修改 ${ids.length} 条订阅，共修改 ${fields.length} 个字段。\n\n未勾选的字段不会改变。是否确认执行？`)) return;
         const old = btn ? btn.innerHTML : '';
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>修改中...'; }
         try {
@@ -6063,6 +6151,13 @@ const lunarBiz = {
         document.getElementById('closeBulkUpdateModal')?.addEventListener('click', () => modalClose('bulkUpdateModal'));
         document.getElementById('cancelBulkUpdateBtn')?.addEventListener('click', () => modalClose('bulkUpdateModal'));
         document.getElementById('executeBulkUpdateBtn')?.addEventListener('click', executeBulkUpdate);
+        document.getElementById('bulkDeleteMode')?.addEventListener('change', (event) => {
+          if (!event.target.checked) { setBulkDeleteMode(false); return; }
+          const count = selectedSubscriptionIds.size;
+          const ok = confirm(`第一次确认：你正在启用“批量删除”模式，将针对当前已选择的 ${count} 条订阅。\n\n删除是危险操作，是否确认勾选批量删除？`);
+          setBulkDeleteMode(ok);
+          if (ok) showToast('已启用批量删除模式；点击执行时还会再次确认', 'warning');
+        });
         document.getElementById('bulkImportFile')?.addEventListener('change', (event) => loadSubscriptionExcelFile(event.target.files && event.target.files[0]));
         document.getElementById('clearBulkImportBtn')?.addEventListener('click', () => { const file = document.getElementById('bulkImportFile'); if (file) file.value=''; });
         ['bulkExportModal','bulkUpdateModal'].forEach((id) => {

@@ -384,6 +384,60 @@ async function handleSubscriptions(request, env, path) {
     });
   }
 
+  if (path === '/subscriptions/bulk-delete' && method === 'POST') {
+    let payload;
+    try {
+      payload = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ success: false, message: '请求体不是合法 JSON' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const ids = Array.isArray(payload && payload.ids) ? [...new Set(payload.ids.map(String).filter(Boolean))] : [];
+    if (ids.length === 0) {
+      return new Response(JSON.stringify({ success: false, message: '请选择要删除的订阅' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    // 每个删除动作会同时更新 KV、D1 历史和提醒规则。
+    // 限制单次小批量，避免触发 Cloudflare Worker 子请求上限；前端会自动分批。
+    if (ids.length > 6) {
+      return new Response(JSON.stringify({ success: false, message: '单次最多批量删除 6 条订阅，请使用前端自动分批删除' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const results = [];
+    let deleted = 0;
+    let failed = 0;
+    for (const id of ids) {
+      const result = await deleteSubscription(id, env);
+      if (result.success) {
+        deleted += 1;
+        results.push({ id, success: true });
+      } else {
+        failed += 1;
+        results.push({ id, success: false, message: result.message || '删除失败' });
+      }
+    }
+
+    return new Response(JSON.stringify({
+      success: failed === 0,
+      partial: deleted > 0 && failed > 0,
+      deleted,
+      failed,
+      total: ids.length,
+      results
+    }), {
+      status: deleted > 0 ? 200 : 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   if (path === '/subscriptions/bulk-update' && method === 'POST') {
     let payload;
     try {

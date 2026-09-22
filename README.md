@@ -1,15 +1,16 @@
 # SubsTracker — 订阅管理与提醒系统
 
-基于 **Cloudflare Pages Functions + KV + D1** 的轻量级订阅管理与到期提醒系统。v3.2.2 默认部署目标为 Cloudflare Pages，同时保留原 Cloudflare Workers 部署方式。
+基于 **Cloudflare Workers + KV + D1** 的轻量级订阅到期提醒。在网页里管理订阅，到点通过 Telegram / Bark / 企业微信 / ntfy 等 **10 种渠道** 推送，并自带发送与调度日志方便排查。
 
-网站、登录、Admin、Database 和 API 都运行在 Pages Functions；静态资源由 Pages 提供。由于 Pages Functions 本身没有 Cron Trigger，完整提醒模式会额外部署一个极小的 `substracker-pages-cron` Worker，只负责每小时触发调度，不承载网页或业务 API。
+**适合**：个人自托管、域名/会员/账单到期提醒。  
+**不适合**：多用户协作、复杂企业审批流。
 
 ---
 
 ## 目录
 
 1. [5 分钟上手](#-5-分钟上手)
-2. [Cloudflare Pages 部署](#-cloudflare-pages-部署)
+2. [部署](#-部署)
 3. [第一次必做配置](#-第一次必做配置)
 4. [日常怎么用](#-日常怎么用)
 5. [通知到底怎么工作](#-通知到底怎么工作重点必读)
@@ -23,138 +24,125 @@
 ## 🚀 5 分钟上手
 
 ```text
-Push 到 GitHub
-  → GitHub Actions 自动建立/更新 Cloudflare Pages + KV + D1
-  → 首次部署可设置 SUBSTRACKER_ADMIN_PASSWORD 作为回退登录密码
-  → 登录后在「系统配置」设置正式 Admin 用户名 / 密码
-  → 在 Cloudflare Variables and Secrets 设置 SuperAdmin 用户名 / 二级密码
-  → 登录 Pages 地址
-  → 系统配置：时区 / 通知小时 / 通知渠道
-  → 订阅记录：添加或 Excel 批量导入
-  → Database：管理账号序号 / 账号 / SuperAdmin 密码查看
-  → 每小时 Cron Bridge 自动触发到期检查
+部署 Worker
+  → 用首次部署时设置的管理员账号/密码登录
+  → 系统配置：选时区（中国选 Asia/Shanghai）
+  → 系统配置：允许发送的小时（例如只想早上 8 点发就填 08）
+  → 勾选至少一种通知渠道并填好 Token，点「测试」直到成功
+  → 订阅记录：添加订阅（可用默认提醒预设 7/3/1 天 + 当天）
+  → 到点后去「通知历史」看是否发送 / 为何跳过
 ```
 
-完整 Pages 部署说明：[`CLOUDFLARE_PAGES_DEPLOY.md`](CLOUDFLARE_PAGES_DEPLOY.md)。
+若中途卡住，先看下方 [常见问题 FAQ](#-常见问题-faq)。
 
 ---
 
-## 📦 Cloudflare Pages 部署
+## 📦 部署
 
-### 默认架构
+> **GitHub 直接部署版**：如果你使用本发布包，推荐先阅读根目录 [`GITHUB_DEPLOY.md`](GITHUB_DEPLOY.md)。仓库根目录应直接看到 `package.json`、`wrangler.toml`、`src/`、`migrations/` 和 `.github/`。
 
-```text
-GitHub
-  ↓ GitHub Actions
-Cloudflare Pages: substracker-manager-pages
-  ├─ Pages Functions：登录 / Admin / API
-  ├─ public/：静态资源
-  ├─ KV：SUBSCRIPTIONS_KV
-  └─ D1：subscription-manager-db
+### 方式一：命令行（推荐）
 
-Cloudflare Worker: substracker-pages-cron
-  └─ 每小时调用 Pages 的受保护调度端点
+```bash
+git clone https://github.com/mailjd/SubsTrackerManager.git
+cd SubsTrackerManager
+npm install
+
+# Linux / macOS
+export CLOUDFLARE_API_TOKEN=你的token
+export CLOUDFLARE_ACCOUNT_ID=你的AccountID
+export SUBSTRACKER_ADMIN_PASSWORD=你的首次管理员密码
+# Windows PowerShell
+# $env:CLOUDFLARE_API_TOKEN="你的token"
+# $env:CLOUDFLARE_ACCOUNT_ID="你的AccountID"
+# $env:SUBSTRACKER_ADMIN_PASSWORD="你的首次管理员密码"
+
+npm run deploy:safe
 ```
 
-### GitHub Actions Secrets
+`deploy:safe` 会：
 
-仓库 `Settings → Secrets and variables → Actions` 创建：
+1. `npm run setup` — 自动创建 / 绑定 KV（`SUBSCRIPTIONS_KV`）与 D1（`SUBSCRIPTIONS_DB`），并初始化 D1 数据表
+2. `npm run deploy` — 部署 Worker
+
+部署成功后，终端会打印类似：
+
+`https://subscription-manager.<你的子域>.workers.dev`
+
+### D1 数据库：订阅记录与账号 Database
+
+`npm run setup` 会自动创建 D1 数据库 `subscription-manager-db`，绑定为 `SUBSCRIPTIONS_DB`，并通过 `wrangler d1 migrations apply` 按顺序执行：
+
+- `migrations/0001_subscription_history.sql`：订阅当前镜像与历史。
+- `migrations/0002_accounts_database.sql`：独立账号 Database。
+- `migrations/0003_menu_options_database.sql`：订阅名称、类型、分类、会员级别、使用人等可配置菜单。
+
+D1 现在分成三个业务区域：
+
+- **订阅记录**：`subscriptions_current` 保存当前订阅结构化镜像，`subscription_history` 保存创建、编辑、续订、支付、启停、删除、备份恢复等不可变历史。
+- **Database / 账号数据库**：`accounts` 独立保存 `账号序号 / 账号 / 密码密文`，`account_history` 保存账号变更审计（只记录是否有密码，不保存密码内容）。
+- **订阅菜单数据库**：`menu_option_groups / menu_options` 保存订阅名称、订阅类型、分类标签、会员级别、使用人五组菜单；D1 是主存储，旧 KV 菜单只在升级时迁移或在没有 D1 时兼容回退。
+
+`accounts.account_serial` 与 `accounts.account` 都具有唯一约束，一个账号可被多条订阅引用。Database 页面位于 `/admin/database`，可分页搜索、新增、编辑、批量导入和删除账号；普通 Admin 只能看到密码“已设置/未设置”，不会收到或显示已保存密码。输入独立的 SuperAdmin 二级密码解锁后，当前分页会自动显示账号明文密码，并可单独隐藏/再次查看；30 分钟后自动锁定。仍被订阅引用的账号禁止删除。
+
+正常部署仍会执行 D1 migrations；同时 Worker 运行时增加了幂等的 `CREATE TABLE IF NOT EXISTS` 兜底初始化。如果使用 Cloudflare Git 直连部署、手动 `wrangler deploy` 或曾遗漏 migration，首次访问也会自动补齐 `subscriptions_current / subscription_history / accounts / account_history / menu_option_groups / menu_options` 等基础表，避免出现 `no such table: accounts`。
+
+账号密码使用部署环境的 `CREDENTIALS_ENCRYPTION_KEY` 通过 AES-GCM 加密后保存到 D1。普通 Admin 不下发明文密码；只有 SuperAdmin 二级认证通过后，单条查看接口才会解密返回。已有部署升级后，首次访问会自动从现有 KV 订阅抽取账号序号、账号与已有密码密文到 `accounts`，最新有效映射优先。
+
+单条订阅历史可通过 `GET /api/subscriptions/{id}/history?limit=100` 查询。账号 API 为 `/api/accounts`，订阅编辑页的账号/序号联动优先使用该账号库。
+
+本地开发首次使用 D1 时，可执行：
+
+```bash
+npm run setup:local-d1
+```
+
+### 方式二：GitHub Actions
+
+1. Fork 本仓库  
+2. 仓库 **Settings → Secrets and variables → Actions** 增加：
 
 | Secret | 说明 |
-|---|---|
-| `CLOUDFLARE_API_TOKEN` | Pages / Workers / KV / D1 部署与资源管理 |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID |
+|--------|------|
+| `CLOUDFLARE_API_TOKEN` | **必填**。建议至少具备 Workers 部署权限、Workers KV Storage Write、D1 Edit；首次创建 Worker 时需要可创建 Worker 的权限 |
+| `CLOUDFLARE_ACCOUNT_ID` | **必填**，Cloudflare Account ID |
+| `SUBSTRACKER_ADMIN_PASSWORD` | **必填**，首次部署写入 KV 的管理员密码；不会写入仓库 |
 
-运行时账号凭据**不写入 GitHub**。Pages 首次部署后，到：
+### SuperAdmin Worker Secret
 
-`Workers & Pages → substracker-manager-pages → Settings → Variables and Secrets`
-
-配置：
-
-- `SUBSTRACKER_ADMIN_PASSWORD`：可选，首次部署/应急登录回退密码，推荐 `Secret`
-- `SUBSTRACKER_SUPERADMIN_USERNAME`：Database SuperAdmin 用户名
-- `SUBSTRACKER_SUPERADMIN_PASSWORD`：Database SuperAdmin 二级密码，推荐 `Secret`
-
-登录后台后，可在「系统配置」直接修改正式 Admin 用户名和密码；系统配置密码优先于 `SUBSTRACKER_ADMIN_PASSWORD`。
-
-### Push 后自动执行
-
-`.github/workflows/deploy.yml` 会依次执行：
-
-1. `npm ci`
-2. `npm run lint`
-3. `npm test`
-4. `npm run build:pages`
-5. `npm run setup:pages`
-6. `npm run deploy:pages`
-7. `npm run deploy:pages:cron`
-
-默认 Pages 地址：
+部署完成后，在 Cloudflare Dashboard → **Workers & Pages → subscription-manager → Settings → Variables and Secrets** 新增：
 
 ```text
-https://substracker-manager-pages.pages.dev
+Name: SUBSTRACKER_SUPERADMIN_PASSWORD
+Type: Secret（推荐）
+Value: 你的 SuperAdmin 密码
 ```
 
-### Pages 数据资源
-
-生产环境：
-
-- Pages Project：`substracker-manager-pages`
-- KV：`SUBSCRIPTIONS_KV`
-- D1：`subscription-manager-db`
-- D1 Binding：`SUBSCRIPTIONS_DB`
-
-Preview 环境使用独立：
-
-- KV：`SUBSCRIPTIONS_KV_PREVIEW`
-- D1：`subscription-manager-preview-db`
-
-D1 migrations：
-
-- `0001_subscription_history.sql`
-- `0002_accounts_database.sql`
-- `0003_menu_options_database.sql`
-
-### 本地 CMD / PowerShell 部署 Pages
+也可以使用 Wrangler：
 
 ```bash
-npm ci
-npm run setup:pages
-npm run build:pages
-npm run deploy:pages
-npm run deploy:pages:cron
+npx wrangler secret put SUBSTRACKER_SUPERADMIN_PASSWORD
 ```
 
-本地开发：
+登录页可使用**管理员用户名 + 该 SuperAdmin 密码**直接登录；登录成功后会直接进入 Database 并处于 SuperAdmin mode。
 
-```bash
-npm run dev:pages
-```
 
-### 保留 Workers 兼容部署
-
-如果不使用 Pages，仍然可以部署旧 Worker 形态：
-
-```bash
-npm run setup:worker
-npm run deploy:worker
-```
-
-Worker 配置移动到：
-
-```text
-wrangler.worker.toml
-wrangler.worker.dev.toml
-```
+3. 推送到 `master` / `main` 或手动运行 **Deploy** workflow  
 
 ### 默认登录
 
 | 项 | 值 |
+|----|-----|
+| 项 | 值 |
 |---|---|
-| 用户名 | `admin` |
-| 密码 | 系统配置页管理；首次部署可用 `SUBSTRACKER_ADMIN_PASSWORD` 作为回退 |
+| 用户名 | `admin`（可通过本地部署环境变量 `SUBSTRACKER_ADMIN_USERNAME` 调整） |
+| 密码 | GitHub Actions 使用 `SUBSTRACKER_ADMIN_PASSWORD` Secret；命令行部署使用同名环境变量 |
 
-> 升级自旧 Worker 版本时，原 KV / D1 会继续复用。SuperAdmin 的 `SUBSTRACKER_SUPERADMIN_USERNAME` / `SUBSTRACKER_SUPERADMIN_PASSWORD` 需要在当前 Pages 或 Worker Runtime 中配置。
+首次初始化后，后续部署会保留 KV 中现有管理员密码，不会被 GitHub Secret 反复覆盖。首次创建新环境时必须设置 `SUBSTRACKER_ADMIN_PASSWORD`；脚本不会自动创建默认弱密码。
+
+### 忘记密码
+
+Cloudflare Dashboard → **Workers & Pages → KV** → 打开 `SUBSCRIPTIONS_KV` → 编辑 key `config` 的 JSON，修改 `ADMIN_PASSWORD` 后保存。
 
 ---
 
@@ -162,9 +150,9 @@ wrangler.worker.dev.toml
 
 打开 **系统配置**，建议按顺序做完：
 
-### 1. 配置管理员账号
+### 1. 改密码
 
-首次部署可在 Cloudflare Pages / Worker 的 **Settings → Variables and Secrets** 中设置 `SUBSTRACKER_ADMIN_PASSWORD` 作为回退登录密码。登录后请到「系统配置」直接修改正式管理员用户名和密码；新密码保存到 KV，且不会在浏览器回显。
+管理员用户名 / 密码改成自己的。页面若提示仍是默认 `admin`，请务必处理。
 
 ### 2. 时区
 
@@ -242,7 +230,7 @@ wrangler.worker.dev.toml
 
 - 账号序号：唯一，例如 `001`、`A-001`。
 - 账号：唯一，例如邮箱、用户名或手机号。
-- 密码：AES-GCM 加密保存。Admin mode 不显示已保存密码；进入 SuperAdmin mode 时必须输入 Cloudflare Runtime 中配置的 SuperAdmin 用户名和二级密码，解锁后当前分页自动显示明文密码，30 分钟后自动锁定。
+- 密码：AES-GCM 加密保存。Admin mode 不显示已保存密码；进入 SuperAdmin mode 并输入二级密码后，当前分页会自动显示明文密码，30 分钟后自动锁定。
 - 修改账号序号或账号后，会同步所有引用该账号的订阅记录；账号密码只保存在 Database，不再复制到订阅记录。
 - 如果账号仍被订阅引用，系统会阻止删除。
 - 订阅编辑页选择已有账号或账号序号时会自动双向切换；订阅新增/编辑表单不再挂载密码字段。
@@ -439,7 +427,7 @@ Token 权限不足或 Wrangler 缓存问题：检查 API Token 权限，必要�
 在系统配置生成 **第三方 API 令牌** 后：
 
 ```bash
-curl -X POST "https://你的Pages域名/api/notify/你的令牌" \
+curl -X POST "https://你的域名.workers.dev/api/notify/你的令牌" \
   -H "Content-Type: application/json" \
   -d '{"title":"标题","content":"正文"}'
 ```
@@ -453,7 +441,7 @@ curl -X POST "https://你的Pages域名/api/notify/你的令牌" \
 ```bash
 git pull
 npm install
-npm run deploy:pages:safe
+npm run deploy:safe
 ```
 
 首次访问会自动做 KV 结构迁移、同步订阅到 D1，并把已有账号序号/账号/密码密文抽取到独立账号 Database。升级前建议 **导出备份**。
@@ -468,23 +456,20 @@ npm run deploy:pages:safe
 npm install
 npm test           # 单元 / 集成测试
 npm run lint
-npm run dev:pages
-# 默认由 Wrangler Pages Dev 启动本地站点
+npx wrangler dev --config wrangler.dev.toml --local
+# http://127.0.0.1:8787  使用当前本地配置中的管理员账号/密码登录
 ```
 
 ```text
 src/
-├── index.js           # Workers 兼容入口
-├── pages-handler.js   # Pages Functions 适配层
-├── pages-cron-worker.js # Pages 定时桥接 Worker
-├── app.js             # 原生 Cloudflare 路由（零第三方运行时依赖）
+├── index.js           # fetch + scheduled 入口
+├── app.js             # Hono
 ├── core/              # 时间、农历、货币、JWT
 ├── data/              # KV、D1 订阅镜像/历史、账号 Database 与迁移
 ├── services/          # 调度器 + 通知渠道
 ├── api/               # 路由与 handler
 └── views/             # 管理端 HTML
-functions/             # Cloudflare Pages Functions 路由入口
-public/                # Pages 静态资源 + _routes.json
+public/                # 静态资源（如 api-client.js）
 tests/                 # Vitest + workerd
 ```
 
@@ -492,11 +477,10 @@ tests/                 # Vitest + workerd
 
 ## 🔐 安全提醒
 
-1. Admin 正式密码由「系统配置」管理；`SUBSTRACKER_ADMIN_PASSWORD` 仅建议作为首次部署/应急回退  
-2. `SUBSTRACKER_SUPERADMIN_USERNAME` / `SUBSTRACKER_SUPERADMIN_PASSWORD` 请放在 Cloudflare Pages / Worker Variables and Secrets  
-3. 不要把 API Token、Bot Token、管理员密码提交进 Git  
-4. 备份 JSON 若勾选「包含敏感配置」，请当密码一样保管  
-5. 对话、截图里不要长期暴露 Cloudflare API Token；泄露请到 Dashboard **轮换 Token**
+1. **立刻修改** 默认 `admin` / `password`  
+2. 不要把 API Token、Bot Token 提交进 Git  
+3. 备份 JSON 若勾选「包含敏感配置」，请当密码一样保管  
+4. 对话、截图里不要长期暴露 Cloudflare API Token；泄露请到 Dashboard **轮换 Token**
 
 ---
 
@@ -506,3 +490,4 @@ tests/                 # Vitest + workerd
 MIT License。
 
 ---
+

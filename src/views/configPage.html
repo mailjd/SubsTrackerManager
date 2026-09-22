@@ -145,6 +145,10 @@
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="bg-white rounded-lg shadow-md p-6">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">系统配置</h2>
+      <div id="defaultPasswordBanner" class="hidden mb-4 p-3 rounded-md border border-amber-300 bg-amber-50 text-amber-900 text-sm">
+        <i class="fas fa-exclamation-triangle mr-1"></i>
+        检测到仍可能使用默认管理员密码。请立即修改下方「管理员密码」并保存，避免公网被接管。
+      </div>
       
       <form id="configForm" class="space-y-8">
         <div class="border-b border-gray-200 pb-6">
@@ -155,10 +159,9 @@
               <input type="text" id="adminUsername" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
             </div>
             <div>
-              <label for="adminPassword" class="block text-sm font-medium text-gray-700">管理员密码</label>
-              <input type="password" id="adminPassword" autocomplete="new-password" placeholder="如不修改密码，请留空" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-              <div id="adminPasswordStatus" class="mt-2 text-xs text-gray-500"></div>
-              <p class="mt-1 text-sm text-gray-500">留空表示不修改。保存后以系统配置中的密码为准；<code class="px-1 py-0.5 bg-gray-100 rounded">SUBSTRACKER_ADMIN_PASSWORD</code> 仅用于首次部署或应急回退登录。</p>
+              <label for="adminPassword" class="block text-sm font-medium text-gray-700">密码</label>
+              <input type="password" id="adminPassword" placeholder="如不修改密码，请留空" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              <p class="mt-1 text-sm text-gray-500">留空表示不修改当前密码</p>
             </div>
           </div>
         </div>
@@ -834,20 +837,10 @@
         // 3) 如需清空，请点对应的“清空”按钮（会在保存时生效）。
 
         document.getElementById('adminUsername').value = config.ADMIN_USERNAME || '';
-        const passwordField = document.getElementById('adminPassword');
-        if (passwordField) passwordField.value = '';
-        const passwordStatus = document.getElementById('adminPasswordStatus');
-        if (passwordStatus) {
-          if (config.ADMIN_PASSWORD_SOURCE === 'system_config') {
-            passwordStatus.className = 'mt-2 text-xs text-emerald-700';
-            passwordStatus.innerHTML = '<i class="fas fa-check-circle mr-1"></i>当前登录密码由系统配置管理';
-          } else if (config.ADMIN_PASSWORD_SOURCE === 'cloudflare_fallback') {
-            passwordStatus.className = 'mt-2 text-xs text-amber-700';
-            passwordStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>当前使用 Cloudflare SUBSTRACKER_ADMIN_PASSWORD 回退登录；建议在此设置正式管理员密码';
-          } else {
-            passwordStatus.className = 'mt-2 text-xs text-red-700';
-            passwordStatus.innerHTML = '<i class="fas fa-times-circle mr-1"></i>尚未配置管理员密码';
-          }
+        const _banner = document.getElementById('defaultPasswordBanner');
+        if (_banner) {
+          // 无法读取密码；用户名仍为 admin 时提示改密（默认部署风险）
+          _banner.classList.toggle('hidden', (config.ADMIN_USERNAME || 'admin') !== 'admin');
         }
         document.getElementById('themeModeSelect').value = config.THEME_MODE || 'system';  // 回显主题设置
 
@@ -1071,7 +1064,6 @@
         return;
       }
 
-      const passwordField = document.getElementById('adminPassword');
       const config = {
         ADMIN_USERNAME: document.getElementById('adminUsername').value.trim(),
         THEME_MODE: document.getElementById('themeModeSelect').value,      // 保存主题设置
@@ -1134,7 +1126,8 @@
         })()
       };
 
-      if (passwordField && passwordField.value.trim()) {
+      const passwordField = document.getElementById('adminPassword');
+      if (passwordField.value.trim()) {
         config.ADMIN_PASSWORD = passwordField.value.trim();
       }
 

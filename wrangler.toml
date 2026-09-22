@@ -1,17 +1,29 @@
-# Cloudflare Pages（默认部署目标）
-# 运行 `npm run setup:pages` 后会自动写入 KV / D1 的真实绑定 ID。
-name = "substracker-manager-pages"
-pages_build_output_dir = "./public"
-compatibility_date = "2026-09-22"
+name = "subscription-manager"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
+# 保留在 Cloudflare Dashboard 设置的 Worker Variables；Secret 本身也不会被 deploy 删除
+keep_vars = true
 
+[env.production]
+name = "subscription-manager"
+
+[env.staging]
+name = "subscription-manager-staging"
+
+# KV 与 D1 默认模板不预设固定 ID，运行 npm run setup 自动创建并写入绑定
+
+# 静态资源：托管 public/ 目录下的 JS/CSS/HTML 给浏览器
+# 使用方式：浏览器访问 /js/lib/api-client.js 等同于 public/js/lib/api-client.js
+# 不命中静态资源的请求由 Worker fetch handler 处理（默认行为）
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# 定时任务配置 - 每小时检查一次（UTC）
+[triggers]
+crons = ["0 * * * *"]
+
+# 非敏感环境变量；SuperAdmin 密码请在 Cloudflare Dashboard 的 Variables and Secrets 中以 Secret 设置
 [vars]
 ENVIRONMENT = "production"
-
-# 运行时凭据不要写在本文件。请在 Cloudflare Pages → Settings → Variables and Secrets 中配置：
-# - SUBSTRACKER_ADMIN_PASSWORD：可选，首次部署/应急 Admin 回退密码
-# - SUBSTRACKER_SUPERADMIN_USERNAME：SuperAdmin 用户名
-# - SUBSTRACKER_SUPERADMIN_PASSWORD：SuperAdmin 二级密码（建议 Secret）
-# 正式 Admin 用户名/密码可登录后在「系统配置」中修改。
-#
-# 以下 KV / D1 绑定由 scripts/setup-pages.cjs 自动生成。

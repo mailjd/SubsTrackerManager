@@ -1,4 +1,4 @@
-name: Deploy Cloudflare Pages
+name: Deploy
 
 on:
   push:
@@ -9,12 +9,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: substracker-pages-production
+  group: substracker-production
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Deploy to Cloudflare Pages
+    name: Deploy to Cloudflare Workers
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -30,36 +30,30 @@ jobs:
         env:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ADMIN_PASSWORD: ${{ secrets.SUBSTRACKER_ADMIN_PASSWORD }}
         run: |
           test -n "$CF_API_TOKEN" || (echo "缺少 CLOUDFLARE_API_TOKEN" && exit 1)
           test -n "$CF_ACCOUNT_ID" || (echo "缺少 CLOUDFLARE_ACCOUNT_ID" && exit 1)
+          test -n "$ADMIN_PASSWORD" || (echo "缺少 SUBSTRACKER_ADMIN_PASSWORD" && exit 1)
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint + Test + Pages build check
+      - name: Lint + Test
         run: |
           npm run lint
           npm test
-          npm run build:pages
 
-      - name: Create/upgrade Pages storage and project
-        run: npm run setup:pages
+      - name: Create/upgrade Cloudflare storage
+        run: npm run setup
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CF_PAGES_PRODUCTION_BRANCH: ${{ github.ref_name }}
-          SUBSTRACKER_PAGES_PROJECT_NAME: ${{ vars.SUBSTRACKER_PAGES_PROJECT_NAME }}
+          SUBSTRACKER_ADMIN_PASSWORD: ${{ secrets.SUBSTRACKER_ADMIN_PASSWORD }}
 
-      - name: Deploy Pages
-        run: npm run deploy:pages
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CF_PAGES_BRANCH: ${{ github.ref_name }}
-
-      - name: Deploy hourly scheduler bridge
-        run: npm run deploy:pages:cron
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy

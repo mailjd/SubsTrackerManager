@@ -75,7 +75,7 @@
               <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Database · 账号数据库</h1>
               <span class="inline-flex items-center rounded-full bg-indigo-50 text-indigo-700 px-2.5 py-1 text-xs font-semibold">D1 Accounts</span>
             </div>
-            <p class="db-help text-sm text-gray-500 mt-2 max-w-3xl">独立管理账号序号、账号和加密密码。普通 Admin 不下发或显示已保存密码；输入 SuperAdmin 用户名和二级密码解锁后，当前页会显示明文密码。</p>
+            <p class="db-help text-sm text-gray-500 mt-2 max-w-3xl">独立管理账号序号、账号和加密密码。普通 Admin 不下发或显示已保存密码；输入 SuperAdmin 二级密码解锁后，当前页会显示明文密码。</p>
           </div>
         </div>
         <div class="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center lg:items-stretch xl:items-center gap-2 lg:flex-shrink-0">
@@ -253,15 +253,11 @@
       <div class="px-6 py-5 border-b border-gray-200 flex items-start justify-between gap-4">
         <div>
           <h2 class="text-xl font-semibold text-gray-900"><i class="fas fa-user-shield text-amber-600 mr-2"></i>SuperAdmin mode</h2>
-          <p class="text-sm text-gray-500 mt-1">输入 SuperAdmin 用户名和二级密码后，30 分钟内允许查看 Database 中已保存的账号密码。</p>
+          <p class="text-sm text-gray-500 mt-1">输入二级密码后，30 分钟内允许查看 Database 中已保存的账号密码。</p>
         </div>
         <button id="closeSuperAdminModal" type="button" class="text-gray-400 hover:text-gray-600 p-1" aria-label="关闭"><i class="fas fa-times text-xl"></i></button>
       </div>
       <form id="superAdminForm" class="p-6 space-y-4">
-        <div>
-          <label for="superAdminUsername" class="block text-sm font-medium text-gray-700 mb-1">SuperAdmin 用户名</label>
-          <input id="superAdminUsername" type="text" required autocomplete="username" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-500 bg-white" placeholder="请输入 SuperAdmin 用户名">
-        </div>
         <div>
           <label for="superAdminPassword" class="block text-sm font-medium text-gray-700 mb-1">二级密码</label>
           <input id="superAdminPassword" type="password" required autocomplete="current-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-500 bg-white" placeholder="请输入 SuperAdmin 二级密码">
@@ -326,7 +322,7 @@
         button.innerHTML = '<i class="fas fa-user-shield mr-2"></i>进入 SuperAdmin';
       }
       if (!superAdminState.configured && !superAdminState.unlocked) {
-        button.title = '尚未配置 SUBSTRACKER_SUPERADMIN_USERNAME / SUBSTRACKER_SUPERADMIN_PASSWORD';
+        button.title = '尚未配置 SUBSTRACKER_SUPERADMIN_PASSWORD';
       } else {
         button.removeAttribute('title');
       }
@@ -345,12 +341,11 @@
     }
 
     function openSuperAdminModal() {
-      document.getElementById('superAdminUsername').value = '';
       document.getElementById('superAdminPassword').value = '';
       document.getElementById('superAdminError').classList.add('hidden');
       document.getElementById('superAdminModal').classList.remove('hidden');
       document.body.classList.add('overflow-hidden');
-      setTimeout(() => document.getElementById('superAdminUsername').focus(), 30);
+      setTimeout(() => document.getElementById('superAdminPassword').focus(), 30);
     }
 
     function closeSuperAdminModal() {
@@ -360,7 +355,6 @@
 
     async function unlockSuperAdmin(event) {
       event.preventDefault();
-      const username = document.getElementById('superAdminUsername').value.trim();
       const password = document.getElementById('superAdminPassword').value;
       const errorEl = document.getElementById('superAdminError');
       const button = document.getElementById('unlockSuperAdminBtn');
@@ -370,7 +364,7 @@
         await api('/api/accounts/superadmin/unlock', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ password })
         });
         superAdminState = { configured: true, unlocked: true };
         updateSuperAdminUi();
@@ -397,7 +391,7 @@
         return;
       }
       if (!superAdminState.configured) {
-        showToast('尚未配置 SuperAdmin，请在 Cloudflare Pages / Worker Variables and Secrets 设置 SUBSTRACKER_SUPERADMIN_USERNAME 和 SUBSTRACKER_SUPERADMIN_PASSWORD', 'error');
+        showToast('尚未配置 SuperAdmin 二级密码，请在 Cloudflare Worker → Settings → Variables and Secrets 设置 SUBSTRACKER_SUPERADMIN_PASSWORD', 'error');
         return;
       }
       openSuperAdminModal();
@@ -489,7 +483,7 @@
       if (sessionExpired) {
         superAdminState.unlocked = false;
         updateSuperAdminUi();
-        showToast('SuperAdmin 会话已过期，请重新输入用户名和二级密码', 'warning');
+        showToast('SuperAdmin 会话已过期，请重新输入二级密码', 'warning');
         renderRows(items);
       }
     }
@@ -596,7 +590,7 @@
           superAdminState.unlocked = false;
           updateSuperAdminUi();
           await loadAccounts();
-          throw new Error('SuperAdmin 会话已过期，请重新输入用户名和二级密码');
+          throw new Error('SuperAdmin 会话已过期，请重新输入二级密码');
         }
         if (valueEl) valueEl.textContent = data.account.password || '(空密码)';
         button.dataset.visible = '1';

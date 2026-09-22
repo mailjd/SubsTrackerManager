@@ -1,153 +1,109 @@
 // @ts-check
 /**
- * SubsTracker 原生 Cloudflare 路由装配。
+ * Hono 应用装配
  *
- * v3.2.2 起不再依赖 Hono 等第三方运行时路由包，避免 Cloudflare Pages
- * 在 Functions bundling 阶段因 node_modules 未准备完成而出现
- * `Could not resolve "hono"` 并导致整次部署失败。
+ * 设计目标：
+ * - 用 Hono 实现路由分发与中间件管线
+ * - 引入中间件：迁移检查 / 日志 / 认证 / 错误处理
+ * - 路由路径、方法、响应结构与既有客户端严格兼容
+ *   现有前端代码无需改动即可继续工作
  *
- * Pages Functions 与 Workers 共用同一个 fetch 入口，业务 handler 保持不变。
+ * 落地策略：
+ * - 现阶段（Task 7）：Hono 充当"外壳路由器"，把请求转发给现有 handler
+ *   后续 Task 可逐个把 handler 改成 Hono 原生写法，但当前优先保证不破坏。
+ *
  */
+
+import { Hono } from 'hono';
 
 import { handleApiRequest } from './api/router.js';
 import { handleAdminRequest, handleLoginPage } from './api/admin.js';
 import { handleDebug } from './api/debug.js';
 import { getUserFromRequest } from './api/handlers/auth.js';
 import { ensureMigrations } from './data/migrate.js';
-import { checkExpiringSubscriptions } from './services/scheduler.js';
 
 /**
- * @typedef {{
- *   SUBSCRIPTIONS_KV: KVNamespace,
- *   SUBSCRIPTIONS_DB?: D1Database,
- *   SUBSTRACKER_ADMIN_PASSWORD?: string,
- *   SUBSTRACKER_SUPERADMIN_USERNAME?: string,
- *   SUBSTRACKER_SUPERADMIN_PASSWORD?: string,
- *   SUBSTRACKER_CRON_SECRET?: string
- * }} Bindings
+ * @typedef {{ SUBSCRIPTIONS_KV: KVNamespace, SUBSCRIPTIONS_DB?: D1Database }} Bindings
  */
 
-/** @param {string} a @param {string} b */
-function safeEqual(a, b) {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i += 1) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return diff === 0;
-}
+/** @type {Hono<{ Bindings: Bindings }>} */
+const app = new Hono();
 
-/** @param {unknown} err */
-function errorResponse(err) {
-  console.error('[app] 未捕获异常:', err && typeof err === 'object' && 'stack' in err ? err.stack : err);
-  const message = err && typeof err === 'object' && 'message' in err
-    ? String(err.message)
-    : '服务异常';
-  return Response.json(
-    { success: false, message, code: 'internal_error' },
-    { status: 500 }
-  );
-}
-
-/**
- * @param {Request} request
- * @param {Bindings} env
- * @param {ExecutionContext | any} [ctx]
- */
-async function routeRequest(request, env, ctx) {
-  void ctx;
-
+// ─────────────────────────────────────────────────────────────
+// 全局中间件：迁移检查（首次访问透明触发）
+// ─────────────────────────────────────────────────────────────
+app.use('*', async (c, next) => {
   try {
-    // 与旧 Hono 全局 middleware 行为一致：每次请求先透明检查迁移。
-    try {
-      await ensureMigrations(env);
-    } catch (err) {
-      console.error('[app] 迁移失败，回退继续处理请求:', err);
-    }
-
-    const url = new URL(request.url);
-    const path = url.pathname;
-    const method = request.method.toUpperCase();
-
-    // 根路径：已登录进入后台，否则显示登录页。
-    if (path === '/' && method === 'GET') {
-      const { user } = await getUserFromRequest(request, env);
-      if (user) {
-        return new Response(null, {
-          status: 302,
-          headers: { Location: '/admin' }
-        });
-      }
-      return handleLoginPage();
-    }
-
-    // Debug：保持原来的登录保护。
-    if (path === '/debug') {
-      const { user } = await getUserFromRequest(request, env);
-      if (!user) {
-        return new Response('未授权访问', {
-          status: 401,
-          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-        });
-      }
-      return handleDebug(request, env);
-    }
-
-    // Pages Cron Bridge 内部调度接口。
-    if (path === '/api/internal/scheduler' && method === 'POST') {
-      const expected = String(env.SUBSTRACKER_CRON_SECRET || '');
-      if (!expected) {
-        return Response.json({ success: false, message: '调度密钥尚未配置' }, { status: 503 });
-      }
-
-      const auth = request.headers.get('Authorization') || '';
-      const supplied = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-      if (!supplied || !safeEqual(supplied, expected)) {
-        return Response.json({ success: false, message: '未授权的调度请求' }, { status: 401 });
-      }
-
-      const result = await checkExpiringSubscriptions(env);
-      return Response.json({ success: true, result });
-    }
-
-    // API：认证逻辑仍由现有 API handler 负责。
-    if (path === '/api' || path.startsWith('/api/')) {
-      return handleApiRequest(request, env);
-    }
-
-    // Admin 页面。
-    if (path === '/admin' || path.startsWith('/admin/')) {
-      return handleAdminRequest(request, env);
-    }
-
-    // 保持旧行为：未知页面回到登录页。
-    return handleLoginPage();
+    await ensureMigrations(c.env);
   } catch (err) {
-    return errorResponse(err);
+    console.error('[app] 迁移失败，回退继续处理请求:', err);
   }
-}
+  await next();
+});
 
-const app = {
-  fetch: routeRequest,
+// ─────────────────────────────────────────────────────────────
+// 全局错误兜底
+// ─────────────────────────────────────────────────────────────
+app.onError((err, c) => {
+  console.error('[app] 未捕获异常:', err && err.stack ? err.stack : err);
+  // 统一的错误格式
+  return c.json(
+    {
+      success: false,
+      message: err && err.message ? err.message : '服务异常',
+      code: 'internal_error'
+    },
+    500
+  );
+});
 
-  /**
-   * 测试辅助接口，兼容旧测试中 app.request(...) 的调用方式。
-   * @param {string | Request} input
-   * @param {RequestInit} [init]
-   * @param {Bindings} [env]
-   */
-  async request(input, init = {}, env = /** @type {Bindings} */ ({})) {
-    const request = input instanceof Request
-      ? input
-      : new Request(
-          /^https?:\/\//i.test(String(input)) ? String(input) : `http://localhost${String(input)}`,
-          init
-        );
-    return routeRequest(request, env, {
-      waitUntil() {},
-      passThroughOnException() {}
+// ─────────────────────────────────────────────────────────────
+// 路由：根路径
+// 已登录跳 /admin；未登录返回登录页
+// ─────────────────────────────────────────────────────────────
+app.get('/', async (c) => {
+  const { user } = await getUserFromRequest(c.req.raw, c.env);
+  if (user) return c.redirect('/admin');
+  return handleLoginPage();
+});
+
+// ─────────────────────────────────────────────────────────────
+// 路由：/debug（必须登录）
+// ─────────────────────────────────────────────────────────────
+app.all('/debug', async (c) => {
+  const { user } = await getUserFromRequest(c.req.raw, c.env);
+  if (!user) {
+    return new Response('未授权访问', {
+      status: 401,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
     });
   }
-};
+  return handleDebug(c.req.raw, c.env);
+});
+
+// ─────────────────────────────────────────────────────────────
+// 路由：/api/*（认证由 handler 内部处理，与既有客户端约定一致）
+// ─────────────────────────────────────────────────────────────
+app.all('/api/*', async (c) => {
+  return handleApiRequest(c.req.raw, c.env);
+});
+
+// ─────────────────────────────────────────────────────────────
+// 路由：/admin/*
+// ─────────────────────────────────────────────────────────────
+app.all('/admin/*', async (c) => {
+  return handleAdminRequest(c.req.raw, c.env);
+});
+
+app.get('/admin', async (c) => {
+  return handleAdminRequest(c.req.raw, c.env);
+});
+
+// ─────────────────────────────────────────────────────────────
+// 兜底：其他路径返回登录页（（兜底行为））
+// ─────────────────────────────────────────────────────────────
+app.all('*', async () => {
+  return handleLoginPage();
+});
 
 export default app;

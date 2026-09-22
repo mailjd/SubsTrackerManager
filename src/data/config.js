@@ -2,9 +2,8 @@ import { getKVJson, putKVJson } from './kv.js';
 
 const DEFAULT_CONFIG = {
   ADMIN_USERNAME: 'admin',
-  ADMIN_PASSWORD: '',
+  ADMIN_PASSWORD: 'password',
   CREDENTIALS_ENCRYPTION_KEY: '',
-  SUPERADMIN_PASSWORD_HASH: '',
   TG_BOT_TOKEN: '',
   TG_CHAT_ID: '',
   TG_TOPIC_ID: '',
@@ -42,30 +41,6 @@ const DEFAULT_CONFIG = {
   NTFY_TOPIC: '',
   NTFY_TOKEN: ''
 };
-
-
-function getRuntimeAdminPassword(env, config = {}) {
-  // v3.2.1 起，系统配置页保存的 ADMIN_PASSWORD 为正式登录密码。
-  // Cloudflare 的 SUBSTRACKER_ADMIN_PASSWORD 仅作为首次部署/应急登录的兼容回退。
-  const configuredPassword = typeof config?.ADMIN_PASSWORD === 'string'
-    ? config.ADMIN_PASSWORD
-    : '';
-  if (configuredPassword) return configuredPassword;
-
-  const workerPassword = typeof env?.SUBSTRACKER_ADMIN_PASSWORD === 'string'
-    ? env.SUBSTRACKER_ADMIN_PASSWORD.trim()
-    : '';
-  return workerPassword;
-}
-
-function getAdminPasswordSource(env, config = {}) {
-  if (typeof config?.ADMIN_PASSWORD === 'string' && config.ADMIN_PASSWORD.length > 0) return 'system_config';
-  const workerPassword = typeof env?.SUBSTRACKER_ADMIN_PASSWORD === 'string'
-    ? env.SUBSTRACKER_ADMIN_PASSWORD.trim()
-    : '';
-  if (workerPassword) return 'cloudflare_fallback';
-  return 'not_configured';
-}
 
 async function getConfig(env) {
   if (!env.SUBSCRIPTIONS_KV) {
@@ -113,7 +88,5 @@ async function setConfig(env, config) {
 export {
   DEFAULT_CONFIG,
   getConfig,
-  setConfig,
-  getRuntimeAdminPassword,
-  getAdminPasswordSource
+  setConfig
 };

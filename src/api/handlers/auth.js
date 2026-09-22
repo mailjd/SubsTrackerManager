@@ -1,9 +1,11 @@
 import { generateJWT, verifyJWT } from '../../core/auth.js';
-import { getConfig, getRuntimeAdminPassword } from '../../data/config.js';
+import { hasSuperAdminPassword, verifySuperAdminPassword } from '../../core/superadmin.js';
+import { getConfig } from '../../data/config.js';
 import { getCookieValue } from '../utils.js';
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 300; // 5 分钟
+const SUPERADMIN_TTL_SECONDS = 30 * 60;
 
 async function checkRateLimit(env, ip) {
   const key = `login_attempts:${ip}`;
@@ -45,28 +47,43 @@ async function handleLogin(request, env) {
   }
 
   const config = await getConfig(env);
+  const username = typeof body?.username === 'string' ? body.username : '';
+  const password = typeof body?.password === 'string' ? body.password : '';
+  const usernameMatches = username === config.ADMIN_USERNAME;
+  const normalAdminLogin = usernameMatches && password === config.ADMIN_PASSWORD;
+  const superAdminLogin = usernameMatches
+    && hasSuperAdminPassword(env)
+    && await verifySuperAdminPassword(password, env);
 
-  const adminPassword = getRuntimeAdminPassword(env, config);
-
-  if (!adminPassword) {
-    return new Response(
-      JSON.stringify({ success: false, message: '管理员密码尚未配置。首次部署可设置 Cloudflare SUBSTRACKER_ADMIN_PASSWORD，登录后请在系统配置中设置正式管理员密码' }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
-  if (body.username === config.ADMIN_USERNAME && body.password === adminPassword) {
+  if (normalAdminLogin || superAdminLogin) {
     await clearAttempts(env, ip);
-    const token = await generateJWT(body.username, config.JWT_SECRET);
+    const token = await generateJWT(username, config.JWT_SECRET, {
+      extra: { role: superAdminLogin ? 'superadmin' : 'admin' }
+    });
+
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store'
+    });
+    headers.append('Set-Cookie', 'token=' + token + '; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=86400');
+
+    if (superAdminLogin) {
+      const superAdminToken = await generateJWT(username, `${config.JWT_SECRET}:superadmin`, {
+        ttlSeconds: SUPERADMIN_TTL_SECONDS,
+        extra: { role: 'superadmin' }
+      });
+      headers.append(
+        'Set-Cookie',
+        'superadmin_token=' + superAdminToken + '; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=' + SUPERADMIN_TTL_SECONDS
+      );
+    } else {
+      // 普通 Admin 登录必须清理旧的 SuperAdmin 会话，避免权限残留。
+      headers.append('Set-Cookie', 'superadmin_token=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0');
+    }
 
     return new Response(
-      JSON.stringify({ success: true }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Set-Cookie': 'token=' + token + '; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=86400'
-        }
-      }
+      JSON.stringify({ success: true, superAdmin: superAdminLogin }),
+      { headers }
     );
   }
 
@@ -83,13 +100,10 @@ async function handleLogin(request, env) {
 }
 
 function handleLogout() {
-  return new Response('', {
-    status: 302,
-    headers: {
-      'Location': '/',
-      'Set-Cookie': 'token=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0'
-    }
-  });
+  const headers = new Headers({ 'Location': '/' });
+  headers.append('Set-Cookie', 'token=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0');
+  headers.append('Set-Cookie', 'superadmin_token=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0');
+  return new Response('', { status: 302, headers });
 }
 
 async function getUserFromRequest(request, env) {

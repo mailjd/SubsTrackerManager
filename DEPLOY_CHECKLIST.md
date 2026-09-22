@@ -1,67 +1,52 @@
-# GitHub → Cloudflare Pages 部署检查清单
+# GitHub → Cloudflare 部署检查清单
 
-## GitHub
+这个发布包同时面向 GitHub 仓库和 Cloudflare Workers 部署。
 
-- [ ] ZIP 全部内容已提交到仓库根目录
-- [ ] `.github/` 已提交
-- [ ] `functions/` 已提交
-- [ ] `public/_routes.json` 已提交
-- [ ] `wrangler.toml` 已提交
+## GitHub 仓库
+
+将 ZIP 解压后的**全部内容**提交到仓库根目录，包括隐藏目录 `.github/`。不要只上传 `src/`。
 
 ## GitHub Secrets
 
-- [ ] `CLOUDFLARE_API_TOKEN`
-- [ ] `CLOUDFLARE_ACCOUNT_ID`
+在 `Settings → Secrets and variables → Actions` 创建：
 
-Cloudflare API Token 需要能管理本项目使用的 Pages、Workers、KV 和 D1。
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+- `SUBSTRACKER_ADMIN_PASSWORD`
+
+API Token 需要允许自动创建/复用并访问本项目使用的 Worker、KV 和 D1。建议包含 Workers 部署权限、Workers KV Storage Write、D1 Edit；若 Worker 尚不存在，Token 还需要允许创建 Worker。
 
 ## 自动部署
 
-Push 后确认 GitHub Actions 依次完成：
+推送到 `main` 或 `master` 后，Deploy workflow 会执行：
 
-- [ ] `npm ci`
-- [ ] `npm run lint`
-- [ ] `npm test`
-- [ ] `npm run build:pages`
-- [ ] `npm run setup:pages`
-- [ ] `npm run deploy:pages`
-- [ ] `npm run deploy:pages:cron`
+1. `npm ci`
+2. `npm run lint`
+3. `npm test`
+4. `npm run setup`：创建/复用 KV、D1，写入绑定并应用 D1 migrations
+5. `cloudflare/wrangler-action@v4`：发布 Worker
 
-## Cloudflare Pages
+首次初始化时必须提供 `SUBSTRACKER_ADMIN_PASSWORD`。已有环境再次部署时会保留 KV 中现有管理员配置和加密密钥。SuperAdmin 密码改由 Cloudflare Worker 的 `SUBSTRACKER_SUPERADMIN_PASSWORD` Variable / Secret 在运行时提供，不写入 KV。
 
-Pages 项目：`substracker-manager-pages`
+## Cloudflare 资源
 
-- [ ] Pages deployment 成功
-- [ ] KV binding：`SUBSCRIPTIONS_KV`
-- [ ] D1 binding：`SUBSCRIPTIONS_DB`
-- [ ] （新部署可选）`SUBSTRACKER_ADMIN_PASSWORD` 已设置为首次登录/应急回退密码
-- [ ] `SUBSTRACKER_SUPERADMIN_USERNAME` 已在 Pages Variables and Secrets 设置
-- [ ] `SUBSTRACKER_SUPERADMIN_PASSWORD` 已在 Pages Variables and Secrets 设置
-- [ ] 登录页可打开
-- [ ] Admin 页面可登录
-- [ ] Database 页面可读取 D1
+部署脚本自动使用：
 
-## 定时提醒
-
-完整部署会额外创建 `substracker-pages-cron` Worker：
-
-- [ ] Cron `0 * * * *` 已存在
-- [ ] `SUBSTRACKER_CRON_SECRET` 已自动同步
-- [ ] 通知历史/调度日志有正常执行记录
+- Worker：`subscription-manager`
+- KV：`SUBSCRIPTIONS_KV` / `SUBSCRIPTIONS_KV_PREVIEW`
+- D1：`subscription-manager-db`，Worker binding 为 `SUBSCRIPTIONS_DB`
+- D1 migrations：`migrations/0001_subscription_history.sql`、`migrations/0002_accounts_database.sql`、`migrations/0003_menu_options_database.sql`
+- Cron：每小时一次
 
 ## 不应提交
 
-- API Token
-- Admin / SuperAdmin 密码
-- `.env*`
-- `.dev.vars`
-- `.wrangler/`
-- `node_modules/`
+不要提交 API Token、管理员密码、`.dev.vars`、`.env*`、`.wrangler/` 或 `node_modules/`。
 
-## Pages Build failed 专项检查（v3.2.2）
 
-- [ ] Cloudflare Pages Root directory 为仓库根目录 `/`
-- [ ] Build command 为 `npm run build:pages`
-- [ ] Build output directory 为 `public`
-- [ ] 没有把 `src/app.js` 恢复成 `import { Hono } from 'hono'`
-- [ ] GitHub 仓库未提交 `node_modules/`
+## Cloudflare Worker Variables and Secrets
+
+部署 Worker 后确认已配置：
+
+- `SUBSTRACKER_SUPERADMIN_PASSWORD`（推荐 Secret）
+
+登录页可以使用管理员用户名 + 该密码直接进入 SuperAdmin。

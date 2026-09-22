@@ -82,47 +82,6 @@ describe('POST /api/config', () => {
     expect(stored.TIMEZONE).toBe('UTC');
   });
 
-
-  it('可在系统配置更新管理员用户名和密码，空密码表示不修改', async () => {
-    const cookie = await loginCookie();
-    let res = await app.request(
-      '/api/config',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Cookie: cookie },
-        body: JSON.stringify({
-          ADMIN_USERNAME: 'newadmin',
-          ADMIN_PASSWORD: 'new-password',
-          ENABLED_NOTIFIERS: ['notifyx'],
-          TIMEZONE: 'Asia/Shanghai'
-        })
-      },
-      env
-    );
-    expect(res.status).toBe(200);
-    let stored = await getConfig(env);
-    expect(stored.ADMIN_USERNAME).toBe('newadmin');
-    expect(stored.ADMIN_PASSWORD).toBe('new-password');
-
-    res = await app.request(
-      '/api/config',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Cookie: cookie },
-        body: JSON.stringify({
-          ADMIN_USERNAME: 'newadmin',
-          ADMIN_PASSWORD: '',
-          ENABLED_NOTIFIERS: ['notifyx'],
-          TIMEZONE: 'Asia/Shanghai'
-        })
-      },
-      env
-    );
-    expect(res.status).toBe(200);
-    stored = await getConfig(env);
-    expect(stored.ADMIN_PASSWORD).toBe('new-password');
-  });
-
   it('CLEAR_SECRET_FIELDS 可显式清空', async () => {
     const cookie = await loginCookie();
     await app.request(

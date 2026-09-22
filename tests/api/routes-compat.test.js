@@ -2,7 +2,7 @@
 /**
  * API 路由兼容性 smoke 测试
  *
- * 验证原生 Cloudflare 路由与既有客户端的响应严格兼容：
+ * 验证 Hono 应用与既有客户端的路由响应严格兼容：
  * - 未授权时返回 401 + 同样的错误结构
  * - 公开端点（登录页、登录接口）行为一致
  * - 4xx/5xx 错误格式与既有约定一致
@@ -19,7 +19,7 @@ async function clearKv() {
 
 beforeEach(clearKv);
 
-describe('Cloudflare app 路由兼容', () => {
+describe('Hono app 路由兼容', () => {
   it('GET / 未登录返回登录页 HTML', async () => {
     const res = await app.request('/', {}, env);
     expect(res.status).toBe(200);

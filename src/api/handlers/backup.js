@@ -26,7 +26,7 @@ const BACKUP_FORMAT = 'substracker-backup';
 const BACKUP_VERSION = 4;
 
 /** 永不导出/覆盖的字段 */
-const NEVER_EXPORT_FIELDS = ['JWT_SECRET', 'ADMIN_PASSWORD', 'CREDENTIALS_ENCRYPTION_KEY'];
+const NEVER_EXPORT_FIELDS = ['JWT_SECRET', 'ADMIN_PASSWORD', 'CREDENTIALS_ENCRYPTION_KEY', 'SUPERADMIN_PASSWORD_HASH'];
 
 /**
  * @param {any} data
@@ -48,6 +48,7 @@ function buildExportConfig(config, includeSecrets) {
   const out = { ...config };
   delete out.JWT_SECRET;
   delete out.CREDENTIALS_ENCRYPTION_KEY;
+  delete out.SUPERADMIN_PASSWORD_HASH;
 
   if (!includeSecrets) {
     delete out.ADMIN_PASSWORD;

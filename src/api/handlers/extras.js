@@ -24,7 +24,7 @@ import { getCategories, addCategory } from '../../data/categories.js';
 import { getMenuOptions, addMenuOption, removeMenuOption, resetMenuOptions, isValidMenuGroup } from '../../data/menu-options.js';
 import { getNextFireTime } from '../../services/notify/reminder-engine.js';
 
-export const VERSION = '3.2.0';
+export const VERSION = '3.2.3';
 
 /** 标准 JSON 响应 */
 function json(data, status = 200) {

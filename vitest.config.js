@@ -25,7 +25,7 @@ export default defineWorkersConfig({
         },
         // 让生产环境用的 .html 文本 import 在测试中也能工作
         wrangler: {
-          configPath: './wrangler.worker.dev.toml'
+          configPath: './wrangler.toml'
         }
       }
     }

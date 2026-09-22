@@ -474,9 +474,3 @@ tests/                 # Vitest + workerd
 MIT License。
 
 ---
-
-## 关注作者
-
-![image](https://github.com/user-attachments/assets/96bae085-4299-4377-9958-9a3a11294efc)
-
-CDN 加速由 Tencent EdgeOne 赞助。

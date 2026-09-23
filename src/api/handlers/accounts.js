@@ -18,7 +18,8 @@ import {
   isDuplicateSerialAllowed,
   upsert,
   updateAndPropagate,
-  deleteAccount
+  deleteAccount,
+  bulkDeleteAccounts
 } from '../../data/accounts.repo.js';
 import {
   createAccountDatabaseBackup,
@@ -392,6 +393,16 @@ export async function handleAccounts(request, env, path) {
   }
 
   if (path === '/accounts/options' && method === 'GET') return json({ success: true, items: await listOptions(env) });
+
+  if (path === '/accounts/bulk-delete' && method === 'POST') {
+    let body;
+    try { body = await request.json(); } catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
+    const accounts = Array.isArray(body?.accounts) ? body.accounts : [];
+    if (!accounts.length) return json({ success: false, message: '请选择需要删除的账号' }, 400);
+    const result = await bulkDeleteAccounts(env, accounts);
+    // 部分失败属于业务结果，仍返回 200，让前端可以完整展示每一条结果。
+    return json(result, 200);
+  }
 
   if (path === '/accounts' && method === 'GET') {
     const page = Number(url.searchParams.get('page')) || 1;

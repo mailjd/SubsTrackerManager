@@ -580,6 +580,141 @@ export async function deleteAccount(env, accountOrSerial) {
   }
 }
 
+/**
+ * 批量删除账号。一次请求内完整处理全部选中项，避免前端逐条 DELETE 在网络波动、
+ * 浏览器并发或 Worker 请求限制下出现“删到一半停止”。
+ *
+ * 仍保留安全规则：被订阅引用的账号不会删除，并逐条返回失败原因。
+ * @param {any} env
+ * @param {string[]} accountKeys
+ */
+export async function bulkDeleteAccounts(env, accountKeys) {
+  if (!hasAccountsDb(env)) return { success: false, deleted: 0, failed: 0, results: [], message: 'D1 数据库未绑定' };
+  await ensureD1Schema(env);
+  const keys = [...new Set((Array.isArray(accountKeys) ? accountKeys : []).map(normalizeAccount).filter(Boolean))];
+  if (!keys.length) return { success: false, deleted: 0, failed: 0, results: [], message: '没有可删除的账号' };
+  if (keys.length > 500) return { success: false, deleted: 0, failed: keys.length, results: [], message: '单次批量删除最多 500 条，请分批处理' };
+
+  const db = env.SUBSCRIPTIONS_DB;
+  const accountMap = new Map();
+  const d1LinkedMap = new Map();
+  const chunkSize = 80;
+
+  // 一次性读取账号资料与 D1 订阅引用计数，避免逐条重复查询。
+  for (let offset = 0; offset < keys.length; offset += chunkSize) {
+    const chunk = keys.slice(offset, offset + chunkSize);
+    const placeholders = chunk.map(() => '?').join(',');
+    const accountRows = await db.prepare(`
+      SELECT a.account_serial, a.account, a.real_name, a.account_type, a.password_encrypted,
+             a.source_subscription_id, a.created_at, a.updated_at,
+        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='tapnow' AND c.password_encrypted<>'') AS has_tapnow,
+        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='jimeng' AND c.password_encrypted<>'') AS has_jimeng,
+        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='wechat' AND c.password_encrypted<>'') AS has_wechat,
+        EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='qq' AND c.password_encrypted<>'') AS has_qq,
+        (a.password_encrypted<>'' OR EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='legacy' AND c.password_encrypted<>'')) AS has_legacy
+      FROM accounts a WHERE a.account IN (${placeholders})
+    `).bind(...chunk).all();
+    for (const row of accountRows.results || []) {
+      const credentialStatus = {
+        tapnow: Number(row.has_tapnow || 0) === 1,
+        jimeng: Number(row.has_jimeng || 0) === 1,
+        wechat: Number(row.has_wechat || 0) === 1,
+        qq: Number(row.has_qq || 0) === 1,
+        legacy: Number(row.has_legacy || 0) === 1
+      };
+      accountMap.set(String(row.account || ''), {
+        accountSerial: String(row.account_serial || ''),
+        account: String(row.account || ''),
+        realName: String(row.real_name || ''),
+        accountType: String(row.account_type || ''),
+        passwordEncrypted: String(row.password_encrypted || ''),
+        sourceSubscriptionId: row.source_subscription_id ? String(row.source_subscription_id) : '',
+        createdAt: row.created_at ? String(row.created_at) : '',
+        updatedAt: row.updated_at ? String(row.updated_at) : '',
+        credentialStatus,
+        hasPassword: anyCredential(credentialStatus),
+        hasLegacyPassword: credentialStatus.legacy
+      });
+    }
+
+    const linkedRows = await db.prepare(`
+      SELECT account, COUNT(*) AS count
+      FROM subscriptions_current
+      WHERE account IN (${placeholders})
+      GROUP BY account
+    `).bind(...chunk).all();
+    for (const row of linkedRows.results || []) d1LinkedMap.set(String(row.account || ''), Number(row.count || 0));
+  }
+
+  // KV 订阅只读取一次；旧部署仍以 KV 为来源时也能正确保护被引用账号。
+  let subscriptions = [];
+  try { subscriptions = await subRepo.listAll(env); } catch (error) { console.warn('[accounts] 批量删除读取 KV 订阅失败:', error); }
+  const kvLinkedMap = new Map();
+  for (const sub of subscriptions) {
+    const account = normalizeAccount(sub?.account);
+    const serial = normalizeSerial(sub?.accountSerial);
+    if (!account || !serial) continue;
+    const pair = `${account}\u0000${serial}`;
+    kvLinkedMap.set(pair, (kvLinkedMap.get(pair) || 0) + 1);
+  }
+
+  const results = [];
+  const deletable = [];
+  for (const key of keys) {
+    const existing = accountMap.get(key);
+    if (!existing) {
+      results.push({ account: key, success: false, message: '账号记录不存在' });
+      continue;
+    }
+    const kvLinked = kvLinkedMap.get(`${existing.account}\u0000${existing.accountSerial}`) || 0;
+    const linked = Math.max(d1LinkedMap.get(existing.account) || 0, kvLinked);
+    if (linked > 0) {
+      results.push({ account: existing.account, accountSerial: existing.accountSerial, success: false, linkedSubscriptions: linked, message: `该账号仍被 ${linked} 条订阅引用，请先调整关联订阅` });
+      continue;
+    }
+    deletable.push(existing);
+  }
+
+  // 正常情况下按批次提交；若某批失败，则回退到逐条处理，确保不会因为其中一条异常而“中途停止”。
+  const deleteChunkSize = 30;
+  for (let offset = 0; offset < deletable.length; offset += deleteChunkSize) {
+    const chunk = deletable.slice(offset, offset + deleteChunkSize);
+    const statements = [];
+    for (const existing of chunk) {
+      statements.push(
+        db.prepare('DELETE FROM account_credentials WHERE account=?').bind(existing.account),
+        db.prepare('DELETE FROM accounts WHERE account=?').bind(existing.account),
+        buildHistoryStatement(db, 'delete', existing, { source: 'bulk_delete' })
+      );
+    }
+    try {
+      await db.batch(statements);
+      for (const existing of chunk) results.push({ account: existing.account, accountSerial: existing.accountSerial, success: true });
+    } catch (batchError) {
+      console.error('[accounts] 批量删除分批提交失败，回退逐条处理:', batchError);
+      for (const existing of chunk) {
+        try {
+          await db.batch([
+            db.prepare('DELETE FROM account_credentials WHERE account=?').bind(existing.account),
+            db.prepare('DELETE FROM accounts WHERE account=?').bind(existing.account),
+            buildHistoryStatement(db, 'delete', existing, { source: 'bulk_delete_fallback' })
+          ]);
+          results.push({ account: existing.account, accountSerial: existing.accountSerial, success: true });
+        } catch (error) {
+          results.push({ account: existing.account, accountSerial: existing.accountSerial, success: false, message: '删除账号失败: ' + (error?.message || String(error)) });
+        }
+      }
+    }
+  }
+
+  // 返回顺序按用户传入的账号排列，方便前端准确移除已成功项。
+  const byAccount = new Map(results.map((item) => [String(item.account || ''), item]));
+  const ordered = keys.map((key) => byAccount.get(key) || { account: key, success: false, message: '删除结果未知' });
+  const deleted = ordered.filter((item) => item.success).length;
+  const failed = ordered.length - deleted;
+  return { success: failed === 0, partial: deleted > 0 && failed > 0, deleted, failed, total: ordered.length, results: ordered };
+}
+
 /** 首次部署从旧订阅抽取账号；“配音供应商”可重复序号，账号仍唯一。 */
 export async function ensureAccountsSeed(env, knownSubscriptions) {
   if (!hasAccountsDb(env)) return { seeded: false, reason: 'd1_not_bound' };

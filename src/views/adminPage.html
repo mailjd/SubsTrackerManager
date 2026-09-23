@@ -416,6 +416,35 @@
     html.dark .subscription-excel-table td { background:#1f2937; color:#e5e7eb; border-color:#374151; }
     html.dark .subscription-excel-table tbody tr:hover td, html.dark .subscription-excel-table tbody tr.excel-row-selected td { background:#273449; }
 
+    /* v3.3.6 表格模式：列拖拽 / 排序菜单 / 单格暂存编辑 / 显示模板 */
+    .subscription-excel-table th { user-select:none; }
+    .subscription-excel-table th.table-column-dragging { opacity:.55; }
+    .subscription-excel-table th.table-column-drop-before { box-shadow:inset 3px 0 0 #fbbf24; }
+    .subscription-excel-table th.table-column-drop-after { box-shadow:inset -3px 0 0 #fbbf24; }
+    .subscription-table-th-inner { display:flex; align-items:center; justify-content:center; gap:6px; min-width:0; }
+    .subscription-table-th-label { overflow:hidden; text-overflow:ellipsis; }
+    .subscription-table-sort-btn { flex:0 0 auto; width:22px; height:22px; border-radius:5px; display:inline-flex; align-items:center; justify-content:center; color:#e0e7ff; }
+    .subscription-table-sort-btn:hover, .subscription-table-sort-btn.active { background:rgba(255,255,255,.18); color:#fff; }
+    .subscription-table-resize-grip { position:absolute; right:-3px; top:0; bottom:0; width:7px; cursor:col-resize; z-index:8; }
+    .subscription-table-resize-grip:hover { background:rgba(255,255,255,.28); }
+    .subscription-table-sort-menu { position:fixed; z-index:1200; min-width:150px; padding:6px; border:1px solid #dbe3ee; border-radius:9px; background:#fff; box-shadow:0 12px 30px rgba(15,23,42,.18); }
+    .subscription-table-sort-menu.hidden { display:none; }
+    .subscription-table-sort-menu button { width:100%; padding:8px 10px; border-radius:6px; text-align:left; font-size:13px; color:#334155; }
+    .subscription-table-sort-menu button:hover { background:#eef2ff; color:#3730a3; }
+    .subscription-excel-table td.table-cell-editable { cursor:cell; }
+    .subscription-excel-table td.table-cell-editable:hover { box-shadow:inset 0 0 0 1px #a5b4fc; }
+    .subscription-excel-table td.cell-pending-edit { background:#fff7d6 !important; color:#92400e; box-shadow:inset 0 0 0 1px #f59e0b; }
+    .subscription-excel-table td.cell-editing { padding:3px 5px; background:#eef2ff !important; box-shadow:inset 0 0 0 2px #6366f1; }
+    .subscription-table-cell-editor { width:100%; min-width:70px; border:1px solid #818cf8; border-radius:5px; background:#fff; color:#111827; padding:5px 7px; font-size:13px; outline:none; }
+    textarea.subscription-table-cell-editor { min-height:54px; resize:vertical; white-space:normal; }
+    .table-edit-actions button:disabled { opacity:.45; cursor:not-allowed; }
+    #tableTemplateSelect { min-width:150px; }
+    html.dark .subscription-table-sort-menu { background:#1f2937; border-color:#475569; }
+    html.dark .subscription-table-sort-menu button { color:#e5e7eb; }
+    html.dark .subscription-table-sort-menu button:hover { background:#273449; color:#fff; }
+    html.dark .subscription-excel-table td.cell-pending-edit { background:#493919 !important; color:#fde68a; }
+    html.dark .subscription-table-cell-editor { background:#111827; color:#f9fafb; border-color:#818cf8; }
+
     /* 模态框动画 */
     #subscriptionModal { transition: opacity 0.2s ease; opacity: 0; }
     #subscriptionModal:not(.hidden) { opacity: 1; }
@@ -550,7 +579,12 @@
             <button type="button" id="tableViewBtn" data-view-mode="table" class="px-3 py-2 text-sm bg-white text-gray-700 border-r border-gray-300"><i class="fas fa-table mr-1"></i>表格模式</button>
             <button type="button" id="cardViewBtn" data-view-mode="card" class="px-3 py-2 text-sm bg-white text-gray-700"><i class="fas fa-th-large mr-1"></i>卡片模式</button>
           </div>
-          <div class="inline-flex gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="tableTemplateSelect" class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white" title="加载已保存的表格显示模板">
+              <option value="">显示模板</option>
+            </select>
+            <button type="button" id="saveTableTemplateBtn" class="px-3 py-2 text-sm border border-indigo-200 text-indigo-700 rounded-lg bg-white hover:bg-indigo-50"><i class="fas fa-bookmark mr-1"></i>保存模板</button>
+            <button type="button" id="deleteTableTemplateBtn" disabled class="px-3 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"><i class="fas fa-trash-alt mr-1"></i>删除模板</button>
             <button type="button" id="resetTableLayoutBtn" class="px-3 py-2 text-sm border rounded-lg bg-white"><i class="fas fa-table mr-1"></i>重置Layout</button>
           </div>
         </div>
@@ -579,9 +613,17 @@
           <span id="selectedSubscriptionCount" class="text-gray-500">已选 0 条</span>
           <button type="button" id="clearSubscriptionSelection" class="text-indigo-600 hover:text-indigo-800 text-sm">清除选择</button>
         </div>
-        <button type="button" id="openBulkUpdateBtn" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
-          <i class="fas fa-edit mr-2"></i>批量修改 / 删除
-        </button>
+        <div class="flex flex-wrap items-center gap-2 table-edit-actions">
+          <button type="button" id="cancelTableEditsBtn" disabled class="border border-gray-300 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
+            <i class="fas fa-undo mr-2"></i>取消
+          </button>
+          <button type="button" id="saveTableEditsBtn" disabled class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
+            <i class="fas fa-save mr-2"></i>保存
+          </button>
+          <button type="button" id="openBulkUpdateBtn" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center justify-center">
+            <i class="fas fa-edit mr-2"></i>批量修改 / 删除
+          </button>
+        </div>
       </div>
     </div>
     
@@ -629,29 +671,29 @@
         <table class="subscription-excel-table">
           <thead>
             <tr>
-              <th class="excel-select-col">选择</th>
-              <th class="excel-name-col">订阅名称</th>
-              <th class="excel-account-col">账号</th>
-              <th class="excel-serial-col">账号序号</th>
-              <th>会员级别</th>
-              <th>积分</th>
-              <th class="excel-users-col">使用人</th>
-              <th>订阅类型</th>
-              <th class="excel-category-col">分类标签</th>
-              <th>费用</th>
-              <th>币种</th>
-              <th>订阅模式</th>
-              <th>开始日期</th>
-              <th>周期数值</th>
-              <th>周期单位</th>
-              <th>到期日期</th>
-              <th>农历周期</th>
-              <th>每月最后一天</th>
-              <th>提醒规则</th>
-              <th>启用订阅</th>
-              <th>自动续订</th>
-              <th class="excel-notes-col">备注</th>
-              <th class="excel-actions-col">操作</th>
+              <th class="excel-select-col" data-col="select" draggable="true">选择</th>
+              <th class="excel-name-col" data-col="name" draggable="true">订阅名称</th>
+              <th class="excel-account-col" data-col="account" draggable="true">账号</th>
+              <th class="excel-serial-col" data-col="accountSerial" draggable="true">账号序号</th>
+              <th data-col="memberLevel" draggable="true">会员级别</th>
+              <th data-col="points" draggable="true">积分</th>
+              <th class="excel-users-col" data-col="users" draggable="true">使用人</th>
+              <th data-col="customType" draggable="true">订阅类型</th>
+              <th class="excel-category-col" data-col="category" draggable="true">分类标签</th>
+              <th data-col="amount" draggable="true">费用</th>
+              <th data-col="currency" draggable="true">币种</th>
+              <th data-col="subscriptionMode" draggable="true">订阅模式</th>
+              <th data-col="startDate" draggable="true">开始日期</th>
+              <th data-col="periodValue" draggable="true">周期数值</th>
+              <th data-col="periodUnit" draggable="true">周期单位</th>
+              <th data-col="expiryDate" draggable="true">到期日期</th>
+              <th data-col="useLunar" draggable="true">农历周期</th>
+              <th data-col="endOfMonth" draggable="true">每月最后一天</th>
+              <th data-col="reminder" draggable="true">提醒规则</th>
+              <th data-col="isActive" draggable="true">启用订阅</th>
+              <th data-col="autoRenew" draggable="true">自动续订</th>
+              <th class="excel-notes-col" data-col="notes" draggable="true">备注</th>
+              <th class="excel-actions-col" data-col="actions" draggable="true">操作</th>
             </tr>
           </thead>
           <tbody id="subscriptionsExcelBody"></tbody>
@@ -2250,7 +2292,9 @@ const lunarBiz = {
         return;
       }
 
-      filtered.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+      filtered.sort(typeof window.getSubscriptionTableSortComparator === 'function'
+        ? window.getSubscriptionTableSortComparator()
+        : ((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate)));
       lastFilteredSubscriptions = filtered;
       const pageRange = updateSubscriptionPagination(filtered.length);
       const pageItems = filtered.slice(pageRange.start, pageRange.end);
@@ -6192,46 +6236,473 @@ const lunarBiz = {
 
 <script>
 (function(){
-  const layoutKey='subscriptionTableLayoutV1';
-  const defaultWidths={0:60,1:180,2:140,3:90,4:100,5:90,6:140,7:120,8:140,9:80,10:80,11:120,12:110,13:90,14:90,15:110,16:100,17:110,18:160,19:90,20:90,21:240,22:160};
-  function saveLayout(){
-    const table=document.querySelector('.subscription-excel-table'); if(!table)return;
-    const widths=[...table.querySelectorAll('thead th')].map(th=>th.offsetWidth);
-    localStorage.setItem(layoutKey,JSON.stringify(widths));
+  const COLUMN_DEFS = [
+    {id:'select',label:'选择',editable:false,type:'select'},
+    {id:'name',label:'订阅名称',editable:true,type:'text'},
+    {id:'account',label:'账号',editable:true,type:'text'},
+    {id:'accountSerial',label:'账号序号',editable:true,type:'text'},
+    {id:'memberLevel',label:'会员级别',editable:true,type:'text'},
+    {id:'points',label:'积分',editable:true,type:'number'},
+    {id:'users',label:'使用人',editable:true,type:'text'},
+    {id:'customType',label:'订阅类型',editable:true,type:'text'},
+    {id:'category',label:'分类标签',editable:true,type:'text'},
+    {id:'amount',label:'费用',editable:true,type:'decimal'},
+    {id:'currency',label:'币种',editable:true,type:'select',options:[['CNY','CNY'],['USD','USD'],['HKD','HKD'],['TWD','TWD'],['JPY','JPY'],['EUR','EUR'],['GBP','GBP'],['KRW','KRW'],['TRY','TRY']]},
+    {id:'subscriptionMode',label:'订阅模式',editable:true,type:'select',options:[['cycle','循环订阅'],['reset','到期重置']]},
+    {id:'startDate',label:'开始日期',editable:true,type:'date'},
+    {id:'periodValue',label:'周期数值',editable:true,type:'number'},
+    {id:'periodUnit',label:'周期单位',editable:true,type:'select',options:[['single','单次'],['day','天'],['month','月'],['year','年']]},
+    {id:'expiryDate',label:'到期日期',editable:true,type:'date'},
+    {id:'useLunar',label:'农历周期',editable:true,type:'boolean'},
+    {id:'endOfMonth',label:'每月最后一天',editable:true,type:'boolean'},
+    {id:'reminder',label:'提醒规则',editable:true,type:'reminder'},
+    {id:'isActive',label:'启用订阅',editable:true,type:'boolean'},
+    {id:'autoRenew',label:'自动续订',editable:true,type:'boolean'},
+    {id:'notes',label:'备注',editable:true,type:'textarea'},
+    {id:'actions',label:'操作',editable:false,type:'actions'}
+  ];
+  const COLUMN_IDS = COLUMN_DEFS.map((c)=>c.id);
+  const DEF_BY_ID = Object.fromEntries(COLUMN_DEFS.map((c)=>[c.id,c]));
+  const DEFAULT_WIDTHS = {
+    select:60,name:180,account:180,accountSerial:135,memberLevel:110,points:90,users:220,customType:125,category:170,
+    amount:90,currency:80,subscriptionMode:120,startDate:120,periodValue:92,periodUnit:92,expiryDate:120,useLunar:100,
+    endOfMonth:120,reminder:180,isActive:95,autoRenew:95,notes:260,actions:230
+  };
+  const LAYOUT_KEY = 'subscriptionTableLayoutV2';
+  const LEGACY_LAYOUT_KEY = 'subscriptionTableLayoutV1';
+  const TEMPLATE_KEY = 'subscriptionTableTemplatesV1';
+  const EDIT_KEY = 'subscriptionTablePendingEditsV1';
+  let activeSortColumn = null;
+  let activeEditorCell = null;
+  let dragColumnId = null;
+  let resizeActive = false;
+  let renderEnhanceQueued = false;
+
+  function clone(value){ return JSON.parse(JSON.stringify(value)); }
+  function defaultLayout(){ return { order:[...COLUMN_IDS], widths:{...DEFAULT_WIDTHS}, sort:{column:'expiryDate',direction:'asc'} }; }
+  function normalizeLayout(raw){
+    const base=defaultLayout();
+    if(!raw || typeof raw!=='object') return base;
+    const seen=new Set();
+    const order=Array.isArray(raw.order) ? raw.order.filter((id)=>COLUMN_IDS.includes(id) && !seen.has(id) && seen.add(id)) : [];
+    COLUMN_IDS.forEach((id)=>{ if(!seen.has(id)) order.push(id); });
+    const widths={...DEFAULT_WIDTHS};
+    if(raw.widths && typeof raw.widths==='object') COLUMN_IDS.forEach((id)=>{ const n=Number(raw.widths[id]); if(Number.isFinite(n)) widths[id]=Math.max(id==='select'?44:70,Math.min(800,n)); });
+    const sortColumn=raw.sort && COLUMN_IDS.includes(raw.sort.column) ? raw.sort.column : 'expiryDate';
+    const direction=raw.sort && ['asc','desc','none'].includes(raw.sort.direction) ? raw.sort.direction : 'asc';
+    return {order,widths,sort:{column:sortColumn,direction}};
   }
-  function applyLayout(){
-    const table=document.querySelector('.subscription-excel-table'); if(!table)return;
-    let widths; try{widths=JSON.parse(localStorage.getItem(layoutKey)||'null')}catch(e){}
-    widths=widths||Object.values(defaultWidths);
-    table.querySelectorAll('tr').forEach(tr=>[...tr.children].forEach((td,i)=>{if(widths[i])td.style.width=widths[i]+'px'}));
+  function loadLayout(){
+    try {
+      const parsed=JSON.parse(localStorage.getItem(LAYOUT_KEY)||'null');
+      if(parsed) return normalizeLayout(parsed);
+      const legacy=JSON.parse(localStorage.getItem(LEGACY_LAYOUT_KEY)||'null');
+      if(Array.isArray(legacy)){
+        const migrated=defaultLayout();
+        COLUMN_IDS.forEach((id,i)=>{ const n=Number(legacy[i]); if(Number.isFinite(n) && n>0) migrated.widths[id]=n; });
+        localStorage.setItem(LAYOUT_KEY,JSON.stringify(migrated));
+        return normalizeLayout(migrated);
+      }
+    } catch(_){}
+    return defaultLayout();
   }
-  function enableResize(){
-    const table=document.querySelector('.subscription-excel-table'); if(!table)return;
-    table.querySelectorAll('thead th').forEach((th)=>{
-      if(th.dataset.resize)return; th.dataset.resize='1';
-      const grip=document.createElement('span'); grip.style.cssText='float:right;width:6px;cursor:col-resize;height:20px'; th.appendChild(grip);
-      let startX,startW;
-      grip.onmousedown=e=>{startX=e.clientX;startW=th.offsetWidth;const move=e2=>{th.style.width=Math.max(50,startW+e2.clientX-startX)+'px';applyLayout()};const up=()=>{saveLayout();document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up)};document.addEventListener('mousemove',move);document.addEventListener('mouseup',up)};
+  let tableLayout=loadLayout();
+  function saveLayout(){ localStorage.setItem(LAYOUT_KEY,JSON.stringify(tableLayout)); }
+
+  function loadPendingEdits(){
+    try { const parsed=JSON.parse(sessionStorage.getItem(EDIT_KEY)||'{}'); return parsed && typeof parsed==='object' ? parsed : {}; }
+    catch(_){ return {}; }
+  }
+  let pendingEdits=loadPendingEdits();
+  function savePendingEdits(){
+    if(Object.keys(pendingEdits).length) sessionStorage.setItem(EDIT_KEY,JSON.stringify(pendingEdits));
+    else sessionStorage.removeItem(EDIT_KEY);
+    updateEditActionButtons();
+  }
+  function pendingCount(){ return Object.values(pendingEdits).reduce((sum,row)=>sum+Object.keys(row||{}).length,0); }
+  function hasPending(id,col){ return !!(pendingEdits[String(id)] && Object.prototype.hasOwnProperty.call(pendingEdits[String(id)],col)); }
+  function pendingValue(id,col){ return hasPending(id,col) ? pendingEdits[String(id)][col] : undefined; }
+  function updateEditActionButtons(){
+    const has=pendingCount()>0;
+    const cancel=document.getElementById('cancelTableEditsBtn');
+    const save=document.getElementById('saveTableEditsBtn');
+    if(cancel) cancel.disabled=!has;
+    if(save) save.disabled=!has;
+    if(save) save.title=has?`保存 ${pendingCount()} 个单格修改`:'没有待保存的单格修改';
+  }
+
+  function dateOnly(value){
+    if(!value) return '';
+    try { if(typeof formatDateInputInTimezone==='function') return formatDateInputInTimezone(value,globalTimezone)||String(value).slice(0,10); } catch(_){}
+    return String(value).slice(0,10);
+  }
+  function boolText(value,defaultTrue=false){ const v=value===undefined||value===null?defaultTrue:!!value; return v?'是':'否'; }
+  function baseDisplayValue(sub,col){
+    if(!sub) return '';
+    switch(col){
+      case 'select': try { return selectedSubscriptionIds.has(String(sub.id))?'已选择':'未选择'; } catch(_) { return ''; }
+      case 'amount': return sub.amount===null||sub.amount===undefined||sub.amount===''?'':Number(sub.amount).toFixed(2);
+      case 'currency': return String(sub.currency||'CNY');
+      case 'subscriptionMode': return sub.subscriptionMode==='reset'?'到期重置':'循环订阅';
+      case 'startDate': return dateOnly(sub.startDate);
+      case 'expiryDate': return dateOnly(sub.expiryDate);
+      case 'periodUnit': return ({single:'单次',day:'天',month:'月',year:'年'})[sub.periodUnit]||String(sub.periodUnit||'');
+      case 'useLunar': return boolText(sub.useLunar,false);
+      case 'endOfMonth': return boolText(sub.endOfMonth,false);
+      case 'isActive': return boolText(sub.isActive,true);
+      case 'autoRenew': return boolText(sub.autoRenew,true);
+      case 'reminder':
+        return sub.reminderRulesSummary || (typeof formatReminderRulesSummary==='function'?formatReminderRulesSummary(sub.reminderRules):'') || (typeof getReminderSettings==='function'?getReminderSettings(sub).displayText:'') || '';
+      case 'actions': return String(sub.id||'');
+      default: return sub[col]===null||sub[col]===undefined?'':String(sub[col]);
+    }
+  }
+  function effectiveDisplayValue(sub,col){ const id=String(sub && sub.id || ''); return hasPending(id,col)?String(pendingValue(id,col)):baseDisplayValue(sub,col); }
+  function findSubscription(id){ try { return (subscriptionsCache||[]).find((s)=>String(s.id)===String(id))||null; } catch(_) { return null; } }
+
+  function compareNatural(a,b){
+    const av=a===null||a===undefined?'':a; const bv=b===null||b===undefined?'':b;
+    const an=Number(av), bn=Number(bv);
+    if(String(av).trim()!=='' && String(bv).trim()!=='' && Number.isFinite(an) && Number.isFinite(bn)) return an-bn;
+    return String(av).localeCompare(String(bv),'zh-Hans-CN',{numeric:true,sensitivity:'base'});
+  }
+  function sortRaw(sub,col){
+    const id=String(sub && sub.id || '');
+    if(hasPending(id,col)) return pendingValue(id,col);
+    if(col==='startDate'||col==='expiryDate') return dateOnly(sub[col]);
+    if(['amount','points','periodValue'].includes(col)) return sub[col]===null||sub[col]===undefined?'':Number(sub[col]);
+    if(['useLunar','endOfMonth','isActive','autoRenew'].includes(col)) return sub[col] ? 1 : 0;
+    if(col==='select'){ try { return selectedSubscriptionIds.has(id)?1:0; } catch(_) { return 0; } }
+    if(col==='reminder') return baseDisplayValue(sub,col);
+    if(col==='actions') return id;
+    return sub[col]===null||sub[col]===undefined?'':sub[col];
+  }
+  window.getSubscriptionTableSortComparator=function(){
+    const sort=tableLayout.sort||{};
+    if(!sort.column || sort.direction==='none') return (a,b)=>new Date(a.expiryDate)-new Date(b.expiryDate);
+    const dir=sort.direction==='desc'?-1:1;
+    return (a,b)=>compareNatural(sortRaw(a,sort.column),sortRaw(b,sort.column))*dir;
+  };
+
+  function ensureHeaderMetadata(){
+    const headers=[...document.querySelectorAll('.subscription-excel-table thead th')];
+    headers.forEach((th,index)=>{
+      if(!th.dataset.col) th.dataset.col=COLUMN_IDS[index]||'';
+      const def=DEF_BY_ID[th.dataset.col]; if(!def) return;
+      if(th.dataset.tableEnhanced==='1') return;
+      th.dataset.tableEnhanced='1';
+      th.draggable=true;
+      th.innerHTML='';
+      const inner=document.createElement('div'); inner.className='subscription-table-th-inner';
+      const label=document.createElement('span'); label.className='subscription-table-th-label'; label.textContent=def.label; label.title='拖动表头可调整列位置；双击表头可切换排序';
+      const sortBtn=document.createElement('button'); sortBtn.type='button'; sortBtn.className='subscription-table-sort-btn'; sortBtn.dataset.col=def.id; sortBtn.title='设置排序顺序'; sortBtn.draggable=false;
+      sortBtn.innerHTML='<i class="fas fa-chevron-down"></i>';
+      inner.append(label,sortBtn); th.appendChild(inner);
+      const grip=document.createElement('span'); grip.className='subscription-table-resize-grip'; grip.dataset.col=def.id; grip.draggable=false; grip.title='拖动调整列宽'; th.appendChild(grip);
+    });
+    updateSortIcons();
+  }
+  function decorateBodyRows(){
+    document.querySelectorAll('#subscriptionsExcelBody tr').forEach((tr)=>{
+      const cells=[...tr.children]; if(cells.length!==COLUMN_IDS.length) return;
+      cells.forEach((td,index)=>{ if(!td.dataset.col) td.dataset.col=COLUMN_IDS[index]; });
+      const checkbox=tr.querySelector('.subscription-select');
+      if(checkbox && checkbox.dataset.id) tr.dataset.subscriptionId=checkbox.dataset.id;
+      cells.forEach((td)=>{
+        const col=td.dataset.col, def=DEF_BY_ID[col];
+        td.classList.toggle('table-cell-editable',!!(def&&def.editable));
+      });
     });
   }
-  function resetLayout(){localStorage.removeItem(layoutKey);location.reload()}
-  window.addEventListener('load',()=>{setTimeout(()=>{applyLayout();enableResize()},500);});
-  document.addEventListener('click',e=>{if(e.target.closest('#resetTableLayoutBtn'))resetLayout()});
-  document.addEventListener('dblclick',e=>{
-    const th=e.target.closest('.subscription-excel-table thead th');
-    if(!th)return;
-    const idx=[...th.parentNode.children].indexOf(th);
-    const rows=[...document.querySelectorAll('#subscriptionsExcelBody tr')];
-    rows.sort((a,b)=>a.children[idx].innerText.localeCompare(b.children[idx].innerText,'zh'));
-    document.querySelector('#subscriptionsExcelBody')?.append(...rows);
-  });
-  document.addEventListener('click',e=>{
-    if(e.target.closest('#redoClassificationBtn')){
-      if(confirm('确定重新执行分类？当前分类结果将重新生成。')){
-        if(typeof renderSubscriptionTable==='function')renderSubscriptionTable();
-        if(typeof showToast==='function')showToast('已重新执行分类刷新','success');
-      }
+  function applyColumnOrder(){
+    const table=document.querySelector('.subscription-excel-table'); if(!table) return;
+    const headerRow=table.querySelector('thead tr');
+    if(headerRow){ const map=new Map([...headerRow.children].map((el)=>[el.dataset.col,el])); tableLayout.order.forEach((id)=>{ const el=map.get(id); if(el) headerRow.appendChild(el); }); }
+    table.querySelectorAll('#subscriptionsExcelBody tr').forEach((tr)=>{
+      const cells=[...tr.children]; if(cells.length!==COLUMN_IDS.length) return;
+      const map=new Map(cells.map((el)=>[el.dataset.col,el])); tableLayout.order.forEach((id)=>{ const el=map.get(id); if(el) tr.appendChild(el); });
+    });
+  }
+  function setColumnWidth(col,width,save=false){
+    const table=document.querySelector('.subscription-excel-table'); if(!table) return;
+    const w=Math.max(col==='select'?44:70,Math.min(800,Math.round(width)));
+    tableLayout.widths[col]=w;
+    table.querySelectorAll(`thead th[data-col="${col}"], tbody td[data-col="${col}"]`).forEach((el)=>{ el.style.width=w+'px'; el.style.minWidth=w+'px'; el.style.maxWidth=w+'px'; });
+    const total=tableLayout.order.reduce((sum,id)=>sum+(Number(tableLayout.widths[id])||DEFAULT_WIDTHS[id]||100),0);
+    table.style.width=total+'px'; table.style.minWidth=total+'px';
+    if(save) saveLayout();
+  }
+  function applyWidths(){ tableLayout.order.forEach((id)=>setColumnWidth(id,tableLayout.widths[id]||DEFAULT_WIDTHS[id],false)); }
+  function applyPendingVisuals(){
+    document.querySelectorAll('#subscriptionsExcelBody tr[data-subscription-id]').forEach((tr)=>{
+      const id=tr.dataset.subscriptionId, sub=findSubscription(id); if(!sub) return;
+      tr.querySelectorAll('td[data-col]').forEach((td)=>{
+        const col=td.dataset.col; if(!DEF_BY_ID[col]||!DEF_BY_ID[col].editable) return;
+        const isPending=hasPending(id,col); td.classList.toggle('cell-pending-edit',isPending);
+        if(isPending && !td.classList.contains('cell-editing')) td.textContent=String(pendingValue(id,col));
+        else if(!isPending && td.dataset.pendingPainted==='1' && !td.classList.contains('cell-editing')) td.textContent=baseDisplayValue(sub,col);
+        td.dataset.pendingPainted=isPending?'1':'0';
+        td.title='双击编辑'+(isPending?'（有未保存修改）':'');
+      });
+    });
+  }
+  function updateSortIcons(){
+    document.querySelectorAll('.subscription-table-sort-btn').forEach((btn)=>{
+      const active=tableLayout.sort && tableLayout.sort.column===btn.dataset.col && tableLayout.sort.direction!=='none';
+      btn.classList.toggle('active',active);
+      const icon=btn.querySelector('i'); if(!icon) return;
+      icon.className=active ? (tableLayout.sort.direction==='asc'?'fas fa-sort-up':'fas fa-sort-down') : 'fas fa-chevron-down';
+    });
+  }
+  function enhanceTableNow(){
+    ensureHeaderMetadata(); decorateBodyRows(); applyColumnOrder(); applyWidths(); applyPendingVisuals(); updateSortIcons(); updateEditActionButtons();
+  }
+  function queueEnhance(){ if(renderEnhanceQueued) return; renderEnhanceQueued=true; requestAnimationFrame(()=>{renderEnhanceQueued=false;enhanceTableNow();}); }
+  window.applySubscriptionTableEnhancements=queueEnhance;
+
+  function openSortMenu(btn){
+    activeSortColumn=btn.dataset.col;
+    let menu=document.getElementById('subscriptionTableSortMenu');
+    if(!menu){
+      menu=document.createElement('div'); menu.id='subscriptionTableSortMenu'; menu.className='subscription-table-sort-menu hidden';
+      menu.innerHTML='<button type="button" data-dir="asc"><i class="fas fa-sort-amount-up mr-2"></i>升序</button><button type="button" data-dir="desc"><i class="fas fa-sort-amount-down mr-2"></i>降序</button><button type="button" data-dir="none"><i class="fas fa-times mr-2"></i>清除排序</button>';
+      document.body.appendChild(menu);
     }
+    const rect=btn.getBoundingClientRect(); menu.style.left=Math.min(window.innerWidth-165,Math.max(8,rect.right-150))+'px'; menu.style.top=Math.min(window.innerHeight-130,rect.bottom+5)+'px'; menu.classList.remove('hidden');
+  }
+  function closeSortMenu(){ document.getElementById('subscriptionTableSortMenu')?.classList.add('hidden'); activeSortColumn=null; }
+  function setSort(col,direction){
+    tableLayout.sort={column:col,direction}; saveLayout(); updateSortIcons();
+    try { subscriptionCurrentPage=1; renderSubscriptionTable(); } catch(_) { queueEnhance(); }
+  }
+
+  function headerDragStart(event){
+    const th=event.target.closest('th[data-col]'); if(!th||resizeActive||event.target.closest('.subscription-table-sort-btn,.subscription-table-resize-grip')){ event.preventDefault(); return; }
+    dragColumnId=th.dataset.col; th.classList.add('table-column-dragging'); event.dataTransfer.effectAllowed='move'; try{event.dataTransfer.setData('text/plain',dragColumnId);}catch(_){}
+  }
+  function headerDragOver(event){
+    const th=event.target.closest('th[data-col]'); if(!th||!dragColumnId||th.dataset.col===dragColumnId) return;
+    event.preventDefault();
+    document.querySelectorAll('.table-column-drop-before,.table-column-drop-after').forEach((el)=>el.classList.remove('table-column-drop-before','table-column-drop-after'));
+    const rect=th.getBoundingClientRect(); th.classList.add(event.clientX<rect.left+rect.width/2?'table-column-drop-before':'table-column-drop-after');
+  }
+  function headerDrop(event){
+    const target=event.target.closest('th[data-col]'); if(!target||!dragColumnId) return;
+    event.preventDefault(); const targetId=target.dataset.col; if(targetId===dragColumnId) return;
+    const next=tableLayout.order.filter((id)=>id!==dragColumnId); const idx=next.indexOf(targetId); const rect=target.getBoundingClientRect(); const after=event.clientX>=rect.left+rect.width/2; next.splice(Math.max(0,idx+(after?1:0)),0,dragColumnId); tableLayout.order=next; saveLayout(); enhanceTableNow();
+  }
+  function headerDragEnd(){
+    document.querySelectorAll('.table-column-dragging,.table-column-drop-before,.table-column-drop-after').forEach((el)=>el.classList.remove('table-column-dragging','table-column-drop-before','table-column-drop-after')); dragColumnId=null;
+  }
+  function startResize(event){
+    const grip=event.target.closest('.subscription-table-resize-grip'); if(!grip) return;
+    event.preventDefault(); event.stopPropagation(); resizeActive=true;
+    const col=grip.dataset.col; const th=grip.closest('th'); if(!th) return;
+    th.draggable=false; const startX=event.clientX; const startW=th.getBoundingClientRect().width;
+    const move=(e)=>setColumnWidth(col,startW+(e.clientX-startX),false);
+    const up=()=>{ resizeActive=false; th.draggable=true; saveLayout(); document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); };
+    document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+  }
+
+  function normalizeBoolInput(raw){
+    const s=String(raw||'').trim().toLowerCase();
+    if(['是','true','1','yes','启用','開啟','开启'].includes(s)) return true;
+    if(['否','false','0','no','停用','關閉','关闭'].includes(s)) return false;
+    return null;
+  }
+  function enumStoredValue(def,raw){
+    const s=String(raw||'').trim();
+    const match=(def.options||[]).find(([value,label])=>String(value)===s||String(label)===s);
+    return match?match[0]:s;
+  }
+  function editorInitialValue(sub,def){
+    const id=String(sub.id); if(hasPending(id,def.id)) return String(pendingValue(id,def.id));
+    if(def.type==='select') {
+      if(def.id==='currency') return String(sub.currency||'CNY');
+      if(def.id==='subscriptionMode') return String(sub.subscriptionMode||'cycle');
+      return String(sub[def.id]??'');
+    }
+    if(def.type==='boolean') return baseDisplayValue(sub,def.id);
+    if(def.type==='date') return dateOnly(sub[def.id]);
+    return baseDisplayValue(sub,def.id);
+  }
+  function beginCellEdit(td){
+    const tr=td.closest('tr[data-subscription-id]'); const def=DEF_BY_ID[td.dataset.col]; if(!tr||!def||!def.editable||td.classList.contains('cell-editing')) return;
+    if(activeEditorCell && activeEditorCell!==td) commitActiveEditor();
+    const sub=findSubscription(tr.dataset.subscriptionId); if(!sub) return;
+    const initial=editorInitialValue(sub,def); td.dataset.editorInitial=initial; td.classList.add('cell-editing'); td.textContent='';
+    let editor;
+    if(def.type==='select'||def.type==='boolean'){
+      editor=document.createElement('select'); editor.className='subscription-table-cell-editor';
+      const options=def.type==='boolean'?[['是','是'],['否','否']]:def.options;
+      options.forEach(([value,label])=>{ const opt=document.createElement('option'); opt.value=String(def.type==='select'?value:label); opt.textContent=label; editor.appendChild(opt); });
+      if(def.type==='select') editor.value=enumStoredValue(def,initial); else editor.value=initial==='否'?'否':'是';
+    } else if(def.type==='textarea'){
+      editor=document.createElement('textarea'); editor.className='subscription-table-cell-editor'; editor.value=initial;
+    } else {
+      editor=document.createElement('input'); editor.className='subscription-table-cell-editor'; editor.type=def.type==='date'?'date':(['number','decimal'].includes(def.type)?'number':'text');
+      if(def.type==='number') editor.step='1'; if(def.type==='decimal') editor.step='0.01';
+      if(def.type==='reminder') editor.placeholder='例如：7天、3天、到期当天';
+      editor.value=initial;
+    }
+    editor.dataset.tableCellEditor='1'; td.appendChild(editor); activeEditorCell=td; editor.focus(); if(editor.select&&def.type!=='select'&&def.type!=='boolean') editor.select();
+  }
+  function editorDisplayValue(def,editor){
+    if(def.type==='select'){ const match=(def.options||[]).find(([value])=>String(value)===String(editor.value)); return match?match[1]:editor.value; }
+    return editor.value;
+  }
+  function commitActiveEditor(){
+    const td=activeEditorCell; if(!td) return;
+    const editor=td.querySelector('[data-table-cell-editor]'); const tr=td.closest('tr[data-subscription-id]'); const def=DEF_BY_ID[td.dataset.col]; const sub=tr&&findSubscription(tr.dataset.subscriptionId);
+    activeEditorCell=null; if(!editor||!tr||!def||!sub){ td?.classList.remove('cell-editing'); queueEnhance(); return; }
+    const id=String(sub.id); let display=editorDisplayValue(def,editor).trim();
+    if(def.type==='number' && display!=='' && (!Number.isFinite(Number(display))||Number(display)<0)){ showToast('请输入大于等于 0 的整数','warning'); td.classList.remove('cell-editing'); queueEnhance(); return; }
+    if(def.type==='decimal' && display!=='' && (!Number.isFinite(Number(display))||Number(display)<0)){ showToast('请输入有效的非负费用','warning'); td.classList.remove('cell-editing'); queueEnhance(); return; }
+    if(def.id==='name' && !display){ showToast('订阅名称不能为空','warning'); td.classList.remove('cell-editing'); queueEnhance(); return; }
+    if(def.id==='expiryDate' && !/^\d{4}-\d{2}-\d{2}$/.test(display)){ showToast('到期日期必须为 YYYY-MM-DD','warning'); td.classList.remove('cell-editing'); queueEnhance(); return; }
+    const original=baseDisplayValue(sub,def.id);
+    if(display===String(original)){
+      if(pendingEdits[id]){ delete pendingEdits[id][def.id]; if(!Object.keys(pendingEdits[id]).length) delete pendingEdits[id]; }
+    } else {
+      if(!pendingEdits[id]) pendingEdits[id]={}; pendingEdits[id][def.id]=display;
+    }
+    td.classList.remove('cell-editing'); savePendingEdits(); queueEnhance();
+  }
+  function cancelActiveEditor(){ const td=activeEditorCell; activeEditorCell=null; if(td){td.classList.remove('cell-editing');queueEnhance();} }
+
+  function parseReminderRules(text){
+    const raw=String(text||'').trim(); if(!raw) return [];
+    const parts=raw.split(/[·，,；;、\n]+/).map((v)=>v.trim()).filter(Boolean); const rules=[]; const now=new Date().toISOString();
+    for(const token of parts){
+      const compact=token.replace(/\s+/g,'');
+      if(/^(未设置提醒|未設置提醒)$/.test(compact)) continue;
+      if(/^(到期当天|到期當天|当天|當天|0天)$/.test(compact)){ rules.push({type:'on_expiry',value:0,unit:'days',repeatInterval:null,repeatUntil:'renewed',isEnabled:true,createdAt:now}); continue; }
+      let summary=compact.match(/^提前(\d+(?:\/\d+)*)(天|日|小时|小時|時|时)$/);
+      if(summary){
+        const unit=/小时|小時|時|时/.test(summary[2])?'hours':'days';
+        summary[1].split('/').forEach((value)=>rules.push({type:'before_expiry',value:Number(value),unit,repeatInterval:null,repeatUntil:'renewed',isEnabled:true,createdAt:now}));
+        continue;
+      }
+      let repeat=compact.match(/^到期(?:后|後)每(\d+)(小时|小時|時|时)$/);
+      if(repeat){ rules.push({type:'after_expiry',value:0,unit:'hours',repeatInterval:Number(repeat[1]),repeatUntil:'renewed',isEnabled:true,createdAt:now}); continue; }
+      let m=compact.match(/^(?:到期)?(前|后|後)?(\d+)(天|日|小时|小時|時|时)$/);
+      if(!m) throw new Error(`无法识别提醒规则“${token}”，可填写：7天、12小时、到期当天、提前 7/3/1 天`);
+      const direction=m[1]||'前'; const value=Number(m[2]); const unit=/小时|小時|時|时/.test(m[3])?'hours':'days';
+      rules.push({type:(direction==='后'||direction==='後')?'after_expiry':'before_expiry',value,unit,repeatInterval:null,repeatUntil:'renewed',isEnabled:true,createdAt:now});
+    }
+    return rules;
+  }
+  function applyEditToPayload(payload,col,display){
+    const def=DEF_BY_ID[col]; if(!def) return;
+    switch(col){
+      case 'points': payload.points=display===''?null:Math.max(0,Math.floor(Number(display))); break;
+      case 'amount': payload.amount=display===''?null:Number(display); break;
+      case 'periodValue': payload.periodValue=display===''?1:Math.max(1,Math.floor(Number(display))); break;
+      case 'subscriptionMode': payload.subscriptionMode=enumStoredValue(def,display); break;
+      case 'periodUnit': payload.periodUnit=enumStoredValue(def,display); break;
+      case 'useLunar': case 'endOfMonth': case 'isActive': case 'autoRenew': { const b=normalizeBoolInput(display); if(b===null) throw new Error(`${def.label}只能填写“是”或“否”`); payload[col]=b; break; }
+      case 'reminder': { const rules=parseReminderRules(display); payload.reminderRules=rules; if(rules.length){ const first=rules.find((r)=>r.type==='before_expiry')||rules[0]; payload.reminderUnit=first.unit==='hours'?'hour':'day'; payload.reminderValue=first.value; } break; }
+      default: payload[col]=display;
+    }
+  }
+  function buildUpdatePayload(sub,edits){
+    const payload={...sub};
+    ['id','createdAt','updatedAt','paymentHistory','reminderRulesSummary','nextReminder'].forEach((k)=>delete payload[k]);
+    delete payload.password; delete payload.passwordEncrypted;
+    // 普通单格修改不触碰提醒规则仓库；只有提醒规则单格被编辑时才整体替换。
+    if(!Object.prototype.hasOwnProperty.call(edits,'reminder')) delete payload.reminderRules;
+    Object.entries(edits).forEach(([col,value])=>applyEditToPayload(payload,col,String(value)));
+    if(!String(payload.name||'').trim()) throw new Error('订阅名称不能为空');
+    if(!payload.expiryDate) throw new Error('到期日期不能为空');
+    return payload;
+  }
+  async function saveAllEdits(){
+    commitActiveEditor(); const ids=Object.keys(pendingEdits); if(!ids.length) return;
+    const btn=document.getElementById('saveTableEditsBtn'); const cancel=document.getElementById('cancelTableEditsBtn'); const old=btn?btn.innerHTML:'';
+    if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin mr-2"></i>保存中...';} if(cancel) cancel.disabled=true;
+    let success=0,failed=0; const failedMessages=[];
+    for(const id of ids){
+      const sub=findSubscription(id); if(!sub){ failed++; failedMessages.push(`${id}：找不到订阅记录`); continue; }
+      try{
+        const payload=buildUpdatePayload(sub,pendingEdits[id]);
+        const response=await apiFetch('/api/subscriptions/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        const result=await response.json();
+        if(!response.ok||!result.success) throw new Error(result.message||'保存失败');
+        delete pendingEdits[id]; success++;
+      }catch(error){ failed++; failedMessages.push(`${sub.name||id}：${error&&error.message?error.message:'保存失败'}`); }
+    }
+    savePendingEdits();
+    if(success){ showToast(`已保存 ${success} 条订阅的单格修改${failed?`，${failed} 条失败`:''}`,failed?'warning':'success'); try{await loadSubscriptions(false);}catch(_){} }
+    else if(failed) showToast('单格修改保存失败：'+failedMessages.slice(0,2).join('；'),'error');
+    if(failedMessages.length>2) console.warn('[表格单格编辑] 部分失败:',failedMessages);
+    if(btn){btn.innerHTML=old;btn.disabled=pendingCount()===0;} if(cancel) cancel.disabled=pendingCount()===0; queueEnhance();
+  }
+  function cancelAllEdits(){
+    if(!pendingCount()) return; cancelActiveEditor(); pendingEdits={}; savePendingEdits(); try{renderSubscriptionTable();}catch(_){queueEnhance();} showToast('已取消所有未保存的单格修改','info');
+  }
+
+  function loadTemplates(){ try{ const list=JSON.parse(localStorage.getItem(TEMPLATE_KEY)||'[]'); return Array.isArray(list)?list.slice(0,5):[]; }catch(_){return [];} }
+  function saveTemplates(list){ localStorage.setItem(TEMPLATE_KEY,JSON.stringify(list.slice(0,5))); }
+  function refreshTemplateSelect(selectedId=''){
+    const select=document.getElementById('tableTemplateSelect'); if(!select) return; const list=loadTemplates(); select.innerHTML='';
+    const base=document.createElement('option'); base.value=''; base.textContent='显示模板'; select.appendChild(base);
+    list.forEach((item)=>{ const opt=document.createElement('option'); opt.value=item.id; opt.textContent=item.name; select.appendChild(opt); });
+    select.value=selectedId&&list.some((x)=>x.id===selectedId)?selectedId:''; const del=document.getElementById('deleteTableTemplateBtn'); if(del) del.disabled=!select.value;
+  }
+  function saveCurrentTemplate(){
+    const name=prompt('请输入显示模板名称（最多保存 5 个）'); if(name===null) return; const clean=name.trim(); if(!clean){showToast('模板名称不能为空','warning');return;}
+    const list=loadTemplates(); const existing=list.find((x)=>x.name===clean);
+    if(existing){ if(!confirm(`已存在模板“${clean}”，是否覆盖？`)) return; existing.layout=clone(tableLayout); existing.updatedAt=new Date().toISOString(); saveTemplates(list); refreshTemplateSelect(existing.id); showToast('显示模板已更新','success'); return; }
+    if(list.length>=5){ showToast('最多只能保存 5 个显示模板，请先删除不需要的模板','warning'); return; }
+    const item={id:'tpl_'+Date.now().toString(36),name:clean,layout:clone(tableLayout),updatedAt:new Date().toISOString()}; list.push(item); saveTemplates(list); refreshTemplateSelect(item.id); showToast(`已保存模板“${clean}”`,'success');
+  }
+  function loadSelectedTemplate(id){
+    if(!id){ document.getElementById('deleteTableTemplateBtn').disabled=true; return; }
+    const item=loadTemplates().find((x)=>x.id===id); if(!item) return; tableLayout=normalizeLayout(item.layout); saveLayout(); const del=document.getElementById('deleteTableTemplateBtn'); if(del)del.disabled=false; try{subscriptionCurrentPage=1;renderSubscriptionTable();}catch(_){queueEnhance();} showToast(`已应用模板“${item.name}”`,'success');
+  }
+  function deleteSelectedTemplate(){
+    const select=document.getElementById('tableTemplateSelect'); const id=select&&select.value; if(!id)return; const list=loadTemplates(); const item=list.find((x)=>x.id===id); if(!item)return; if(!confirm(`确定删除显示模板“${item.name}”吗？`))return; saveTemplates(list.filter((x)=>x.id!==id)); refreshTemplateSelect(''); showToast('显示模板已删除','success');
+  }
+  function resetLayout(){
+    tableLayout=defaultLayout(); saveLayout(); const select=document.getElementById('tableTemplateSelect'); if(select)select.value=''; const del=document.getElementById('deleteTableTemplateBtn'); if(del)del.disabled=true; try{subscriptionCurrentPage=1;renderSubscriptionTable();}catch(_){enhanceTableNow();} showToast('已恢复默认表格 Layout','success');
+  }
+
+  document.addEventListener('mousedown',(e)=>{ if(e.target.closest('.subscription-table-resize-grip')) startResize(e); });
+  document.addEventListener('dragstart',(e)=>{ if(e.target.closest('.subscription-excel-table thead th')) headerDragStart(e); });
+  document.addEventListener('dragover',(e)=>{ if(e.target.closest('.subscription-excel-table thead th')) headerDragOver(e); });
+  document.addEventListener('drop',(e)=>{ if(e.target.closest('.subscription-excel-table thead th')) headerDrop(e); });
+  document.addEventListener('dragend',headerDragEnd);
+  document.addEventListener('click',(e)=>{
+    const sortBtn=e.target.closest('.subscription-table-sort-btn'); if(sortBtn){e.preventDefault();e.stopPropagation();openSortMenu(sortBtn);return;}
+    const sortChoice=e.target.closest('#subscriptionTableSortMenu button[data-dir]'); if(sortChoice&&activeSortColumn){const col=activeSortColumn,dir=sortChoice.dataset.dir;closeSortMenu();setSort(col,dir);return;}
+    if(!e.target.closest('#subscriptionTableSortMenu')) closeSortMenu();
+    if(e.target.closest('#resetTableLayoutBtn')) resetLayout();
+    if(e.target.closest('#saveTableTemplateBtn')) saveCurrentTemplate();
+    if(e.target.closest('#deleteTableTemplateBtn')) deleteSelectedTemplate();
+    if(e.target.closest('#saveTableEditsBtn')) saveAllEdits();
+    if(e.target.closest('#cancelTableEditsBtn')) cancelAllEdits();
+    if(e.target.closest('#redoClassificationBtn')){
+      if(confirm('确定重新执行分类？当前分类结果将重新生成。')){ try{renderSubscriptionTable();}catch(_){} if(typeof showToast==='function')showToast('已重新执行分类刷新','success'); }
+    }
+  });
+  document.addEventListener('change',(e)=>{ if(e.target&&e.target.id==='tableTemplateSelect') loadSelectedTemplate(e.target.value); });
+  document.addEventListener('dblclick',(e)=>{
+    const td=e.target.closest('#subscriptionsExcelBody td[data-col]'); if(td){ e.preventDefault(); beginCellEdit(td); return; }
+    const th=e.target.closest('.subscription-excel-table thead th[data-col]'); if(th&&!e.target.closest('.subscription-table-sort-btn,.subscription-table-resize-grip')){ const col=th.dataset.col; const current=tableLayout.sort&&tableLayout.sort.column===col?tableLayout.sort.direction:'none'; setSort(col,current==='asc'?'desc':'asc'); }
+  });
+  document.addEventListener('keydown',(e)=>{
+    if(!activeEditorCell) return;
+    const isTextarea=e.target&&e.target.tagName==='TEXTAREA';
+    if(e.key==='Escape'){e.preventDefault();cancelActiveEditor();}
+    else if(e.key==='Enter'&&!isTextarea){e.preventDefault();commitActiveEditor();}
+    else if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&isTextarea){e.preventDefault();commitActiveEditor();}
+  });
+  document.addEventListener('focusout',(e)=>{ if(activeEditorCell&&e.target&&e.target.dataset&&e.target.dataset.tableCellEditor==='1') setTimeout(()=>{ if(activeEditorCell&&!activeEditorCell.contains(document.activeElement)) commitActiveEditor(); },0); });
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    refreshTemplateSelect(''); updateEditActionButtons();
+    const tbody=document.getElementById('subscriptionsExcelBody'); if(tbody){ new MutationObserver(()=>queueEnhance()).observe(tbody,{childList:true,subtree:false}); }
+    setTimeout(enhanceTableNow,100);
   });
 })();
 </script>

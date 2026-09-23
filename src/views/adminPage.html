@@ -416,7 +416,7 @@
     html.dark .subscription-excel-table td { background:#1f2937; color:#e5e7eb; border-color:#374151; }
     html.dark .subscription-excel-table tbody tr:hover td, html.dark .subscription-excel-table tbody tr.excel-row-selected td { background:#273449; }
 
-    /* v3.3.7 表格模式：列拖拽 / 排序菜单 / 单格暂存编辑 / 显示模板 / 复制粘贴 */
+    /* v3.3.6 表格模式：列拖拽 / 排序菜单 / 单格暂存编辑 / 显示模板 */
     .subscription-excel-table th { user-select:none; }
     .subscription-excel-table th.table-column-dragging { opacity:.55; }
     .subscription-excel-table th.table-column-drop-before { box-shadow:inset 3px 0 0 #fbbf24; }
@@ -435,10 +435,6 @@
     .subscription-excel-table td.table-cell-editable:hover { box-shadow:inset 0 0 0 1px #a5b4fc; }
     .subscription-excel-table td.cell-pending-edit { background:#fff7d6 !important; color:#92400e; box-shadow:inset 0 0 0 1px #f59e0b; }
     .subscription-excel-table td.cell-editing { padding:3px 5px; background:#eef2ff !important; box-shadow:inset 0 0 0 2px #6366f1; }
-    .subscription-excel-table td.cell-grid-selected { background:#eef2ff !important; box-shadow:inset 0 0 0 1px #818cf8; }
-    .subscription-excel-table td.cell-grid-anchor { box-shadow:inset 0 0 0 2px #4f46e5 !important; }
-    .subscription-excel-table td.cell-pending-edit.cell-grid-selected { background:#fff7d6 !important; color:#92400e; box-shadow:inset 0 0 0 2px #f59e0b !important; }
-    .subscription-excel-table td.table-cell-editable { user-select:none; }
     .subscription-table-cell-editor { width:100%; min-width:70px; border:1px solid #818cf8; border-radius:5px; background:#fff; color:#111827; padding:5px 7px; font-size:13px; outline:none; }
     textarea.subscription-table-cell-editor { min-height:54px; resize:vertical; white-space:normal; }
     .table-edit-actions button:disabled { opacity:.45; cursor:not-allowed; }
@@ -5306,27 +5302,27 @@ const lunarBiz = {
     // Excel 批量录入：默认模板字段、剪贴板解析、预览和分批写入
     (function () {
       const IMPORT_FIELDS = [
-        { header: '订阅名称', key: 'name', tableId: 'name', aliases: ['订阅名称', '名称'] },
-        { header: '账号', key: 'account', tableId: 'account', aliases: ['账号'] },
-        { header: '账号序号', key: 'accountSerial', tableId: 'accountSerial', aliases: ['账号序号', '序号'] },
-        { header: '会员级别', key: 'memberLevel', tableId: 'memberLevel', aliases: ['会员级别'] },
-        { header: '积分', key: 'points', tableId: 'points', aliases: ['积分'] },
-        { header: '使用人', key: 'users', tableId: 'users', aliases: ['使用人'] },
-        { header: '订阅类型', key: 'customType', tableId: 'customType', aliases: ['订阅类型', '类型'] },
-        { header: '分类标签', key: 'category', tableId: 'category', aliases: ['分类标签', '分类'] },
-        { header: '费用', key: 'amount', tableId: 'amount', aliases: ['费用', '金额'] },
-        { header: '币种', key: 'currency', tableId: 'currency', aliases: ['币种', '货币'] },
-        { header: '订阅模式', key: 'subscriptionMode', tableId: 'subscriptionMode', aliases: ['订阅模式', '模式'] },
-        { header: '开始日期', key: 'startDate', tableId: 'startDate', aliases: ['开始日期'] },
-        { header: '周期数值', key: 'periodValue', tableId: 'periodValue', aliases: ['周期数值'] },
-        { header: '周期单位', key: 'periodUnit', tableId: 'periodUnit', aliases: ['周期单位'] },
-        { header: '到期日期', key: 'expiryDate', tableId: 'expiryDate', aliases: ['到期日期'] },
-        { header: '农历周期', key: 'useLunar', tableId: 'useLunar', aliases: ['农历周期'] },
-        { header: '每月最后一天', key: 'endOfMonth', tableId: 'endOfMonth', aliases: ['每月最后一天'] },
-        { header: '提醒规则', key: 'reminderRulesText', tableId: 'reminder', aliases: ['提醒规则', '提醒'] },
-        { header: '启用订阅', key: 'isActive', tableId: 'isActive', aliases: ['启用订阅', '启用'] },
-        { header: '自动续订', key: 'autoRenew', tableId: 'autoRenew', aliases: ['自动续订'] },
-        { header: '备注', key: 'notes', tableId: 'notes', aliases: ['备注'] }
+        { header: '订阅名称', key: 'name', aliases: ['订阅名称', '名称'] },
+        { header: '账号', key: 'account', aliases: ['账号'] },
+        { header: '账号序号', key: 'accountSerial', aliases: ['账号序号', '序号'] },
+        { header: '会员级别', key: 'memberLevel', aliases: ['会员级别'] },
+        { header: '积分', key: 'points', aliases: ['积分'] },
+        { header: '使用人', key: 'users', aliases: ['使用人'] },
+        { header: '订阅类型', key: 'customType', aliases: ['订阅类型', '类型'] },
+        { header: '分类标签', key: 'category', aliases: ['分类标签', '分类'] },
+        { header: '费用', key: 'amount', aliases: ['费用', '金额'] },
+        { header: '币种', key: 'currency', aliases: ['币种', '货币'] },
+        { header: '订阅模式', key: 'subscriptionMode', aliases: ['订阅模式', '模式'] },
+        { header: '开始日期', key: 'startDate', aliases: ['开始日期'] },
+        { header: '周期数值', key: 'periodValue', aliases: ['周期数值'] },
+        { header: '周期单位', key: 'periodUnit', aliases: ['周期单位'] },
+        { header: '到期日期', key: 'expiryDate', aliases: ['到期日期'] },
+        { header: '农历周期', key: 'useLunar', aliases: ['农历周期'] },
+        { header: '每月最后一天', key: 'endOfMonth', aliases: ['每月最后一天'] },
+        { header: '提醒规则', key: 'reminderRulesText', aliases: ['提醒规则', '提醒'] },
+        { header: '启用订阅', key: 'isActive', aliases: ['启用订阅', '启用'] },
+        { header: '自动续订', key: 'autoRenew', aliases: ['自动续订'] },
+        { header: '备注', key: 'notes', aliases: ['备注'] }
       ];
 
       const FIELD_BY_HEADER = new Map();
@@ -5343,62 +5339,7 @@ const lunarBiz = {
           .trim();
       }
 
-      async function downloadImportTemplate() {
-        // v3.3.7：下载模板的字段顺序跟随当前“表格模式”的表头顺序。
-        // 选择列 / 操作列不是导入字段，会自动忽略。
-        const layout = typeof window.getSubscriptionTableLayout === 'function'
-          ? window.getSubscriptionTableLayout()
-          : null;
-        const order = layout && Array.isArray(layout.order) ? layout.order : IMPORT_FIELDS.map((field) => field.tableId);
-        const byTableId = new Map(IMPORT_FIELDS.map((field) => [field.tableId, field]));
-        const orderedFields = [];
-        order.forEach((id) => {
-          const field = byTableId.get(id);
-          if (field && !orderedFields.includes(field)) orderedFields.push(field);
-        });
-        IMPORT_FIELDS.forEach((field) => {
-          if (!orderedFields.includes(field)) orderedFields.push(field);
-        });
-
-        // SheetJS 可用时，以服务器模板为底稿，重排第一个工作表并保留“字段说明 / 选项”工作表。
-        if (typeof XLSX !== 'undefined') {
-          try {
-            const response = await apiFetch('/api/subscriptions/import-template');
-            if (!response.ok) throw new Error('读取模板失败');
-            const buffer = await response.arrayBuffer();
-            const workbook = XLSX.read(buffer, { type: 'array' });
-            const firstName = workbook.SheetNames[0];
-            const source = workbook.Sheets[firstName];
-            const aoa = XLSX.utils.sheet_to_json(source, { header: 1, defval: '', raw: false });
-            const sourceHeaders = Array.isArray(aoa[0]) ? aoa[0].map((v) => String(v || '').trim()) : [];
-            const indexByHeader = new Map(sourceHeaders.map((header, index) => [header, index]));
-            const desiredHeaders = orderedFields.map((field) => field.header);
-            const reordered = aoa.length
-              ? aoa.map((row, rowIndex) => rowIndex === 0
-                ? desiredHeaders
-                : desiredHeaders.map((header) => {
-                    const sourceIndex = indexByHeader.get(header);
-                    return sourceIndex == null ? '' : (row[sourceIndex] == null ? '' : row[sourceIndex]);
-                  }))
-              : [desiredHeaders];
-
-            const ws = XLSX.utils.aoa_to_sheet(reordered);
-            const widths = (layout && layout.widths) || {};
-            ws['!cols'] = orderedFields.map((field) => ({
-              wch: Math.max(10, Math.min(42, Math.round((Number(widths[field.tableId]) || 120) / 8)))
-            }));
-            workbook.Sheets[firstName] = ws;
-            const stamp = new Date();
-            const date = `${stamp.getFullYear()}${String(stamp.getMonth()+1).padStart(2,'0')}${String(stamp.getDate()).padStart(2,'0')}`;
-            XLSX.writeFile(workbook, `SubsTracker_订阅批量导入模板_当前表头_${date}.xlsx`, { compression: true });
-            showToast('已按当前表格表头顺序下载 Excel 模板', 'success');
-            return;
-          } catch (error) {
-            console.warn('[下载Excel模板] 动态重排失败，回退默认模板:', error);
-          }
-        }
-
-        // 回退：若 Excel 组件不可用，仍允许下载服务器默认模板。
+      function downloadImportTemplate() {
         const link = document.createElement('a');
         link.href = '/api/subscriptions/import-template';
         link.download = 'SubsTracker_订阅批量导入模板.xlsx';
@@ -6336,10 +6277,6 @@ const lunarBiz = {
   let dragColumnId = null;
   let resizeActive = false;
   let renderEnhanceQueued = false;
-  let activeEditorDirty = false;
-  let selectedCellRange = null;
-  let selectionAnchor = null;
-  let isSelectingCells = false;
 
   function clone(value){ return JSON.parse(JSON.stringify(value)); }
   function defaultLayout(){ return { order:[...COLUMN_IDS], widths:{...DEFAULT_WIDTHS}, sort:{column:'expiryDate',direction:'asc'} }; }
@@ -6386,18 +6323,12 @@ const lunarBiz = {
   function hasPending(id,col){ return !!(pendingEdits[String(id)] && Object.prototype.hasOwnProperty.call(pendingEdits[String(id)],col)); }
   function pendingValue(id,col){ return hasPending(id,col) ? pendingEdits[String(id)][col] : undefined; }
   function updateEditActionButtons(){
-    const staged=pendingCount();
-    const has=staged>0 || activeEditorDirty;
+    const has=pendingCount()>0;
     const cancel=document.getElementById('cancelTableEditsBtn');
     const save=document.getElementById('saveTableEditsBtn');
-    if(cancel) {
-      cancel.disabled=!has;
-      cancel.title=has?'还原所有未保存修改并清除暂存':'没有待取消的单格修改';
-    }
-    if(save) {
-      save.disabled=!has;
-      save.title=has?`保存 ${staged + (activeEditorDirty ? 1 : 0)} 个待提交修改`:'没有待保存的单格修改';
-    }
+    if(cancel) cancel.disabled=!has;
+    if(save) save.disabled=!has;
+    if(save) save.title=has?`保存 ${pendingCount()} 个单格修改`:'没有待保存的单格修改';
   }
 
   function dateOnly(value){
@@ -6524,169 +6455,10 @@ const lunarBiz = {
     });
   }
   function enhanceTableNow(){
-    ensureHeaderMetadata(); decorateBodyRows(); applyColumnOrder(); applyWidths(); applyPendingVisuals(); paintSelectedRange(); updateSortIcons(); updateEditActionButtons();
+    ensureHeaderMetadata(); decorateBodyRows(); applyColumnOrder(); applyWidths(); applyPendingVisuals(); updateSortIcons(); updateEditActionButtons();
   }
   function queueEnhance(){ if(renderEnhanceQueued) return; renderEnhanceQueued=true; requestAnimationFrame(()=>{renderEnhanceQueued=false;enhanceTableNow();}); }
   window.applySubscriptionTableEnhancements=queueEnhance;
-
-
-  function editableColumnOrder(){
-    return tableLayout.order.filter((id)=>DEF_BY_ID[id] && DEF_BY_ID[id].editable);
-  }
-  function visibleTableRows(){
-    return [...document.querySelectorAll('#subscriptionsExcelBody tr[data-subscription-id]')];
-  }
-  function cellPosition(td){
-    const tr=td && td.closest('tr[data-subscription-id]');
-    if(!tr) return null;
-    const rows=visibleTableRows();
-    const row=rows.indexOf(tr);
-    const cols=editableColumnOrder();
-    const col=cols.indexOf(td.dataset.col);
-    if(row<0 || col<0) return null;
-    return {row,col};
-  }
-  function normalizeRange(a,b){
-    if(!a||!b) return null;
-    return {
-      r1:Math.min(a.row,b.row), r2:Math.max(a.row,b.row),
-      c1:Math.min(a.col,b.col), c2:Math.max(a.col,b.col)
-    };
-  }
-  function paintSelectedRange(){
-    document.querySelectorAll('#subscriptionsExcelBody td.cell-grid-selected,#subscriptionsExcelBody td.cell-grid-anchor').forEach((td)=>{
-      td.classList.remove('cell-grid-selected','cell-grid-anchor');
-    });
-    if(!selectedCellRange) return;
-    const rows=visibleTableRows(), cols=editableColumnOrder();
-    for(let r=selectedCellRange.r1;r<=selectedCellRange.r2;r++){
-      const tr=rows[r]; if(!tr) continue;
-      for(let c=selectedCellRange.c1;c<=selectedCellRange.c2;c++){
-        const col=cols[c]; if(!col) continue;
-        const td=tr.querySelector(`td[data-col="${col}"]`);
-        if(td) td.classList.add('cell-grid-selected');
-      }
-    }
-    if(selectionAnchor){
-      const tr=rows[selectionAnchor.row], col=cols[selectionAnchor.col];
-      const td=tr&&col?tr.querySelector(`td[data-col="${col}"]`):null;
-      if(td) td.classList.add('cell-grid-anchor');
-    }
-  }
-  function selectCellRange(td,extend=false){
-    const pos=cellPosition(td); if(!pos) return;
-    if(!extend || !selectionAnchor) selectionAnchor=pos;
-    selectedCellRange=normalizeRange(selectionAnchor,pos);
-    paintSelectedRange();
-  }
-  function clearCellSelection(){
-    selectedCellRange=null; selectionAnchor=null; paintSelectedRange();
-  }
-  function selectedRangeMatrix(){
-    if(!selectedCellRange) return [];
-    const rows=visibleTableRows(), cols=editableColumnOrder(), matrix=[];
-    for(let r=selectedCellRange.r1;r<=selectedCellRange.r2;r++){
-      const tr=rows[r]; if(!tr) continue;
-      const id=tr.dataset.subscriptionId, sub=findSubscription(id); if(!sub) continue;
-      const row=[];
-      for(let c=selectedCellRange.c1;c<=selectedCellRange.c2;c++){
-        const col=cols[c]; row.push(col?effectiveDisplayValue(sub,col):'');
-      }
-      matrix.push(row);
-    }
-    return matrix;
-  }
-  function clipboardTextFromSelection(){
-    return selectedRangeMatrix().map((row)=>row.map((value)=>String(value??'').replace(/\r?\n/g,' ')).join('\t')).join('\n');
-  }
-  function parseClipboardMatrix(text){
-    const normalized=String(text??'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-    let lines=normalized.split('\n');
-    if(lines.length>1 && lines[lines.length-1]==='') lines=lines.slice(0,-1);
-    return lines.map((line)=>line.split('\t'));
-  }
-  function normalizePastedDisplay(def,raw){
-    const value=String(raw??'').trim();
-    if(!def || !def.editable) return {ok:false,error:'该列不可编辑'};
-    if(def.type==='number'){
-      if(value!=='' && (!Number.isFinite(Number(value)) || Number(value)<0)) return {ok:false,error:`${def.label}必须为非负数字`};
-      return {ok:true,value:value===''?'':String(Math.floor(Number(value)))};
-    }
-    if(def.type==='decimal'){
-      if(value!=='' && (!Number.isFinite(Number(value)) || Number(value)<0)) return {ok:false,error:`${def.label}必须为非负数字`};
-      return {ok:true,value};
-    }
-    if(def.type==='date'){
-      if(value==='' && def.id==='expiryDate') return {ok:false,error:'到期日期不能为空'};
-      if(value!=='' && !/^\d{4}-\d{2}-\d{2}$/.test(value)) return {ok:false,error:`${def.label}格式必须为 YYYY-MM-DD`};
-      return {ok:true,value};
-    }
-    if(def.type==='boolean'){
-      const bool=normalizeBoolInput(value);
-      if(bool===null) return {ok:false,error:`${def.label}只能填写“是”或“否”`};
-      return {ok:true,value:bool?'是':'否'};
-    }
-    if(def.type==='select'){
-      const match=(def.options||[]).find(([stored,label])=>String(stored)===value||String(label)===value);
-      if(!match) return {ok:false,error:`${def.label}值无效`};
-      return {ok:true,value:String(match[1])};
-    }
-    if(def.type==='reminder'){
-      try{ parseReminderRules(value); }catch(error){ return {ok:false,error:error&&error.message?error.message:'提醒规则格式无效'}; }
-      return {ok:true,value};
-    }
-    if(def.id==='name' && !value) return {ok:false,error:'订阅名称不能为空'};
-    return {ok:true,value};
-  }
-  function setPendingCellValue(sub,col,display){
-    const id=String(sub.id);
-    const original=String(baseDisplayValue(sub,col));
-    if(String(display)===original){
-      if(pendingEdits[id]){
-        delete pendingEdits[id][col];
-        if(!Object.keys(pendingEdits[id]).length) delete pendingEdits[id];
-      }
-    } else {
-      if(!pendingEdits[id]) pendingEdits[id]={};
-      pendingEdits[id][col]=String(display);
-    }
-  }
-  function pasteMatrixIntoSelection(matrix){
-    if(!selectedCellRange || !matrix.length) return;
-    if(activeEditorCell) return;
-    const rows=visibleTableRows(), cols=editableColumnOrder();
-    const targetRows=selectedCellRange.r2-selectedCellRange.r1+1;
-    const targetCols=selectedCellRange.c2-selectedCellRange.c1+1;
-    const fillSingle=matrix.length===1 && matrix[0].length===1 && (targetRows>1 || targetCols>1);
-    let changed=0, rejected=0, clipped=0;
-    const errors=[];
-    const rowCount=fillSingle?targetRows:matrix.length;
-    const colCount=fillSingle?targetCols:Math.max(...matrix.map((row)=>row.length));
-    for(let rr=0;rr<rowCount;rr++){
-      const r=selectedCellRange.r1+rr;
-      const tr=rows[r];
-      if(!tr){ clipped += colCount; continue; }
-      const sub=findSubscription(tr.dataset.subscriptionId);
-      if(!sub){ clipped += colCount; continue; }
-      for(let cc=0;cc<colCount;cc++){
-        const c=selectedCellRange.c1+cc;
-        const col=cols[c], def=DEF_BY_ID[col];
-        if(!col||!def){clipped++;continue;}
-        const raw=fillSingle?matrix[0][0]:(matrix[rr]&&matrix[rr][cc]!==undefined?matrix[rr][cc]:'');
-        const normalized=normalizePastedDisplay(def,raw);
-        if(!normalized.ok){rejected++; if(errors.length<3) errors.push(`${def.label}：${normalized.error}`); continue;}
-        setPendingCellValue(sub,col,normalized.value); changed++;
-      }
-    }
-    savePendingEdits();
-    queueEnhance();
-    if(changed) showToast(`已粘贴 ${changed} 个单格，修改已暂存，点击“保存”后写入`, rejected||clipped?'warning':'success');
-    if(rejected) showToast(`有 ${rejected} 个单格未粘贴：${errors.join('；')}`,'warning');
-    if(clipped) showToast(`有 ${clipped} 个单格超出当前可见表格范围，已忽略`,'warning');
-  }
-
-  // 供“下载Excel模板”读取当前表头顺序 / 宽度。
-  window.getSubscriptionTableLayout=function(){ return clone(tableLayout); };
 
   function openSortMenu(btn){
     activeSortColumn=btn.dataset.col;
@@ -6758,7 +6530,7 @@ const lunarBiz = {
     const tr=td.closest('tr[data-subscription-id]'); const def=DEF_BY_ID[td.dataset.col]; if(!tr||!def||!def.editable||td.classList.contains('cell-editing')) return;
     if(activeEditorCell && activeEditorCell!==td) commitActiveEditor();
     const sub=findSubscription(tr.dataset.subscriptionId); if(!sub) return;
-    const initial=editorInitialValue(sub,def); td.dataset.editorInitial=initial; td.classList.add('cell-editing'); td.textContent=''; activeEditorDirty=false; updateEditActionButtons();
+    const initial=editorInitialValue(sub,def); td.dataset.editorInitial=initial; td.classList.add('cell-editing'); td.textContent='';
     let editor;
     if(def.type==='select'||def.type==='boolean'){
       editor=document.createElement('select'); editor.className='subscription-table-cell-editor';
@@ -6780,21 +6552,23 @@ const lunarBiz = {
     return editor.value;
   }
   function commitActiveEditor(){
-    const td=activeEditorCell; if(!td) return true;
+    const td=activeEditorCell; if(!td) return;
     const editor=td.querySelector('[data-table-cell-editor]'); const tr=td.closest('tr[data-subscription-id]'); const def=DEF_BY_ID[td.dataset.col]; const sub=tr&&findSubscription(tr.dataset.subscriptionId);
-    if(!editor||!tr||!def||!sub){ activeEditorCell=null; activeEditorDirty=false; td?.classList.remove('cell-editing'); queueEnhance(); updateEditActionButtons(); return true; }
+    activeEditorCell=null; if(!editor||!tr||!def||!sub){ td?.classList.remove('cell-editing'); queueEnhance(); return; }
     const id=String(sub.id); let display=editorDisplayValue(def,editor).trim();
-    const normalized=normalizePastedDisplay(def,display);
-    if(!normalized.ok){ showToast(normalized.error||'单格内容格式无效','warning'); editor.focus(); return false; }
-    display=normalized.value;
-    setPendingCellValue(sub,def.id,display);
-    activeEditorCell=null; activeEditorDirty=false; td.classList.remove('cell-editing'); savePendingEdits(); queueEnhance(); updateEditActionButtons(); return true;
+    if(def.type==='number' && display!=='' && (!Number.isFinite(Number(display))||Number(display)<0)){ showToast('请输入大于等于 0 的整数','warning'); td.classList.remove('cell-editing'); queueEnhance(); return; }
+    if(def.type==='decimal' && display!=='' && (!Number.isFinite(Number(display))||Number(display)<0)){ showToast('请输入有效的非负费用','warning'); td.classList.remove('cell-editing'); queueEnhance(); return; }
+    if(def.id==='name' && !display){ showToast('订阅名称不能为空','warning'); td.classList.remove('cell-editing'); queueEnhance(); return; }
+    if(def.id==='expiryDate' && !/^\d{4}-\d{2}-\d{2}$/.test(display)){ showToast('到期日期必须为 YYYY-MM-DD','warning'); td.classList.remove('cell-editing'); queueEnhance(); return; }
+    const original=baseDisplayValue(sub,def.id);
+    if(display===String(original)){
+      if(pendingEdits[id]){ delete pendingEdits[id][def.id]; if(!Object.keys(pendingEdits[id]).length) delete pendingEdits[id]; }
+    } else {
+      if(!pendingEdits[id]) pendingEdits[id]={}; pendingEdits[id][def.id]=display;
+    }
+    td.classList.remove('cell-editing'); savePendingEdits(); queueEnhance();
   }
-  function cancelActiveEditor(){
-    const td=activeEditorCell; activeEditorCell=null; activeEditorDirty=false;
-    if(td){td.classList.remove('cell-editing');queueEnhance();}
-    updateEditActionButtons();
-  }
+  function cancelActiveEditor(){ const td=activeEditorCell; activeEditorCell=null; if(td){td.classList.remove('cell-editing');queueEnhance();} }
 
   function parseReminderRules(text){
     const raw=String(text||'').trim(); if(!raw) return [];
@@ -6843,8 +6617,7 @@ const lunarBiz = {
     return payload;
   }
   async function saveAllEdits(){
-    if(activeEditorCell && !commitActiveEditor()) return;
-    const ids=Object.keys(pendingEdits); if(!ids.length){ updateEditActionButtons(); return; }
+    commitActiveEditor(); const ids=Object.keys(pendingEdits); if(!ids.length) return;
     const btn=document.getElementById('saveTableEditsBtn'); const cancel=document.getElementById('cancelTableEditsBtn'); const old=btn?btn.innerHTML:'';
     if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin mr-2"></i>保存中...';} if(cancel) cancel.disabled=true;
     let success=0,failed=0; const failedMessages=[];
@@ -6865,10 +6638,7 @@ const lunarBiz = {
     if(btn){btn.innerHTML=old;btn.disabled=pendingCount()===0;} if(cancel) cancel.disabled=pendingCount()===0; queueEnhance();
   }
   function cancelAllEdits(){
-    if(!pendingCount() && !activeEditorDirty && !activeEditorCell) return;
-    cancelActiveEditor(); pendingEdits={}; savePendingEdits(); clearCellSelection();
-    try{renderSubscriptionTable();}catch(_){queueEnhance();}
-    showToast('已还原编辑前内容，并清除全部暂存修改','info');
+    if(!pendingCount()) return; cancelActiveEditor(); pendingEdits={}; savePendingEdits(); try{renderSubscriptionTable();}catch(_){queueEnhance();} showToast('已取消所有未保存的单格修改','info');
   }
 
   function loadTemplates(){ try{ const list=JSON.parse(localStorage.getItem(TEMPLATE_KEY)||'[]'); return Array.isArray(list)?list.slice(0,5):[]; }catch(_){return [];} }
@@ -6897,41 +6667,6 @@ const lunarBiz = {
     tableLayout=defaultLayout(); saveLayout(); const select=document.getElementById('tableTemplateSelect'); if(select)select.value=''; const del=document.getElementById('deleteTableTemplateBtn'); if(del)del.disabled=true; try{subscriptionCurrentPage=1;renderSubscriptionTable();}catch(_){enhanceTableNow();} showToast('已恢复默认表格 Layout','success');
   }
 
-  document.addEventListener('input',(e)=>{
-    if(!activeEditorCell || !e.target || !e.target.dataset || e.target.dataset.tableCellEditor!=='1') return;
-    const def=DEF_BY_ID[activeEditorCell.dataset.col];
-    if(!def) return;
-    const current=editorDisplayValue(def,e.target).trim();
-    activeEditorDirty=current!==String(activeEditorCell.dataset.editorInitial||'');
-    updateEditActionButtons();
-  });
-  document.addEventListener('change',(e)=>{
-    if(activeEditorCell && e.target && e.target.dataset && e.target.dataset.tableCellEditor==='1'){
-      const def=DEF_BY_ID[activeEditorCell.dataset.col];
-      if(def){
-        const current=editorDisplayValue(def,e.target).trim();
-        activeEditorDirty=current!==String(activeEditorCell.dataset.editorInitial||'');
-        updateEditActionButtons();
-      }
-    }
-  });
-
-  document.addEventListener('mousedown',(e)=>{
-    const td=e.target.closest('#subscriptionsExcelBody td.table-cell-editable[data-col]');
-    if(!td || e.target.closest('[data-table-cell-editor]')) return;
-    if(e.button!==0) return;
-    if(activeEditorCell && activeEditorCell!==td && !commitActiveEditor()) return;
-    if(e.shiftKey && selectionAnchor) selectCellRange(td,true);
-    else selectCellRange(td,false);
-    isSelectingCells=true;
-  });
-  document.addEventListener('mouseover',(e)=>{
-    if(!isSelectingCells || !(e.buttons&1)) return;
-    const td=e.target.closest('#subscriptionsExcelBody td.table-cell-editable[data-col]');
-    if(td) selectCellRange(td,true);
-  });
-  document.addEventListener('mouseup',()=>{ isSelectingCells=false; });
-
   document.addEventListener('mousedown',(e)=>{ if(e.target.closest('.subscription-table-resize-grip')) startResize(e); });
   document.addEventListener('dragstart',(e)=>{ if(e.target.closest('.subscription-excel-table thead th')) headerDragStart(e); });
   document.addEventListener('dragover',(e)=>{ if(e.target.closest('.subscription-excel-table thead th')) headerDragOver(e); });
@@ -6955,30 +6690,8 @@ const lunarBiz = {
     const td=e.target.closest('#subscriptionsExcelBody td[data-col]'); if(td){ e.preventDefault(); beginCellEdit(td); return; }
     const th=e.target.closest('.subscription-excel-table thead th[data-col]'); if(th&&!e.target.closest('.subscription-table-sort-btn,.subscription-table-resize-grip')){ const col=th.dataset.col; const current=tableLayout.sort&&tableLayout.sort.column===col?tableLayout.sort.direction:'none'; setSort(col,current==='asc'?'desc':'asc'); }
   });
-  document.addEventListener('copy',(e)=>{
-    const tag=(document.activeElement&&document.activeElement.tagName)||'';
-    if(['INPUT','TEXTAREA','SELECT'].includes(tag) || activeEditorCell || !selectedCellRange) return;
-    const text=clipboardTextFromSelection();
-    if(!text) return;
-    e.preventDefault();
-    if(e.clipboardData) e.clipboardData.setData('text/plain',text);
-    showToast('已复制所选表格单格','success');
-  });
-  document.addEventListener('paste',(e)=>{
-    const tag=(document.activeElement&&document.activeElement.tagName)||'';
-    if(['INPUT','TEXTAREA','SELECT'].includes(tag) || activeEditorCell || !selectedCellRange) return;
-    const text=e.clipboardData&&e.clipboardData.getData('text/plain');
-    if(text==null) return;
-    e.preventDefault();
-    const matrix=parseClipboardMatrix(text);
-    pasteMatrixIntoSelection(matrix);
-  });
-
   document.addEventListener('keydown',(e)=>{
-    if(!activeEditorCell){
-      if(e.key==='Escape' && selectedCellRange){ clearCellSelection(); }
-      return;
-    }
+    if(!activeEditorCell) return;
     const isTextarea=e.target&&e.target.tagName==='TEXTAREA';
     if(e.key==='Escape'){e.preventDefault();cancelActiveEditor();}
     else if(e.key==='Enter'&&!isTextarea){e.preventDefault();commitActiveEditor();}

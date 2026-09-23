@@ -416,7 +416,7 @@
     html.dark .subscription-excel-table td { background:#1f2937; color:#e5e7eb; border-color:#374151; }
     html.dark .subscription-excel-table tbody tr:hover td, html.dark .subscription-excel-table tbody tr.excel-row-selected td { background:#273449; }
 
-    /* v3.3.7 表格模式：列拖拽 / 排序菜单 / 单格暂存编辑 / 显示模板 / 复制粘贴 */
+    /* v3.3.8 表格模式：列拖拽 / 排序菜单 / 单格暂存编辑 / 显示模板 / 复制粘贴 */
     .subscription-excel-table th { user-select:none; }
     .subscription-excel-table th.table-column-dragging { opacity:.55; }
     .subscription-excel-table th.table-column-drop-before { box-shadow:inset 3px 0 0 #fbbf24; }
@@ -1019,6 +1019,16 @@
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
           <div class="error-message text-red-500"></div>
         </div>
+
+        <div id="syncAccountDatabaseOnCreateWrap" class="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3">
+          <label class="flex items-start gap-3 cursor-pointer select-none">
+            <input type="checkbox" id="syncAccountDatabaseOnCreate" class="mt-0.5 form-checkbox h-5 w-5 text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500">
+            <span>
+              <span class="block text-sm font-semibold text-indigo-900"><i class="fas fa-database mr-1"></i>同时导入账号信息到 Database · 账号数据库</span>
+              <span class="block text-xs text-indigo-700 mt-1">仅当账号 + 账号序号都已填写时生效。保存前会比对账号数据库；已存在的对应账号不会覆盖或更新，只新增不存在的账号映射。</span>
+            </span>
+          </label>
+        </div>
         
         <input type="hidden" id="subscriptionId">
 
@@ -1163,6 +1173,16 @@
 
         <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><i class="fas fa-shield-alt mr-2"></i><strong>导入保护：</strong>Excel 导入只会创建新记录；检测到“同账号 + 同订阅”重复时自动跳过；同一账号可以绑定不同订阅，绝不会覆盖原记录。</div>
         <div class="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900"><i class="fas fa-cloud mr-2"></i><strong>Cloudflare 稳定模式：</strong>大量数据会自动拆分为每批 4 条独立 Worker 请求；若极端情况下仍触发单次 API/Subrequest 上限，受影响行会自动改为单条请求重试。</div>
+
+        <div class="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3">
+          <label class="flex items-start gap-3 cursor-pointer select-none">
+            <input type="checkbox" id="bulkImportAccountsToDatabase" class="mt-0.5 form-checkbox h-5 w-5 text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500">
+            <span>
+              <span class="block text-sm font-semibold text-indigo-900"><i class="fas fa-database mr-1"></i>同时导入账号信息到 Database · 账号数据库</span>
+              <span class="block text-xs text-indigo-700 mt-1">仅使用“账号序号 + 账号”建立账号记录；导入时先比对 Database，已存在记录只跳过、不覆盖，只有不存在的账号映射才会新增。</span>
+            </span>
+          </label>
+        </div>
 
         <div>
           <div class="flex items-center justify-between mb-2 gap-3">
@@ -3365,6 +3385,10 @@ const lunarBiz = {
       document.getElementById('subscriptionForm').reset();
       document.getElementById('currency').value = 'CNY'; // 默认设置为CNY
       document.getElementById('subscriptionId').value = '';
+      const syncDbWrap = document.getElementById('syncAccountDatabaseOnCreateWrap');
+      const syncDbCheckbox = document.getElementById('syncAccountDatabaseOnCreate');
+      if (syncDbWrap) syncDbWrap.classList.remove('hidden');
+      if (syncDbCheckbox) syncDbCheckbox.checked = false;
       clearFieldErrors();
 
       const today = getTodayDateStringInTimezone(globalTimezone);
@@ -3407,6 +3431,10 @@ const lunarBiz = {
           clearFieldErrors();
 
         document.getElementById('subscriptionId').value = '';
+        const syncDbWrap = document.getElementById('syncAccountDatabaseOnCreateWrap');
+        const syncDbCheckbox = document.getElementById('syncAccountDatabaseOnCreate');
+        if (syncDbWrap) syncDbWrap.classList.remove('hidden');
+        if (syncDbCheckbox) syncDbCheckbox.checked = false;
         document.getElementById('name').value = (subscription.name || '') + ' (副本)';
         document.getElementById('subscriptionMode').value = subscription.subscriptionMode || 'cycle';
         document.getElementById('customType').value = subscription.customType || '';
@@ -4757,6 +4785,11 @@ const lunarBiz = {
         endOfMonth: isSinglePeriod ? false : !!(document.getElementById('endOfMonth') && document.getElementById('endOfMonth').checked && !document.getElementById('useLunar').checked)
       };
 
+      if (!id) {
+        const syncDbCheckbox = document.getElementById('syncAccountDatabaseOnCreate');
+        subscription.importAccountToDatabase = !!(syncDbCheckbox && syncDbCheckbox.checked);
+      }
+
       // 显式附带多规则，避免 window.fetch 劫持
       if (window.ReminderRulesEditor && typeof window.ReminderRulesEditor.collect === 'function') {
         subscription.reminderRules = window.ReminderRulesEditor.collect();
@@ -4782,7 +4815,14 @@ const lunarBiz = {
         const result = await response.json();
         
         if (result.success) {
-          showToast((id ? '更新' : '添加') + '订阅成功', 'success');
+          let successMessage = (id ? '更新' : '添加') + '订阅成功';
+          if (!id && result.accountDatabase) {
+            if (result.accountDatabase.created) successMessage += '；账号信息已新增到 Database';
+            else if (result.accountDatabase.status === 'exists') successMessage += '；Database 已有对应账号，已跳过';
+            else if (result.accountDatabase.status === 'incomplete') successMessage += '；账号信息不完整，未写入 Database';
+            else if (!result.accountDatabase.success) successMessage += '；账号 Database 同步失败：' + (result.accountDatabase.message || '未知原因');
+          }
+          showToast(successMessage, result.accountDatabase && !result.accountDatabase.success ? 'warning' : 'success');
           document.getElementById('subscriptionModal').classList.add('hidden');
           document.body.classList.remove('overflow-hidden'); // 恢复背景滚动
           loadMenuOptions(false);
@@ -4811,6 +4851,10 @@ const lunarBiz = {
         
         if (subscription) {
           document.getElementById('modalTitle').textContent = '编辑订阅';
+          const syncDbWrap = document.getElementById('syncAccountDatabaseOnCreateWrap');
+          const syncDbCheckbox = document.getElementById('syncAccountDatabaseOnCreate');
+          if (syncDbWrap) syncDbWrap.classList.add('hidden');
+          if (syncDbCheckbox) syncDbCheckbox.checked = false;
               document.getElementById('subscriptionId').value = subscription.id;
           document.getElementById('name').value = subscription.name;
           document.getElementById('subscriptionMode').value = subscription.subscriptionMode || 'cycle'; // 默认为 cycle
@@ -5344,7 +5388,7 @@ const lunarBiz = {
       }
 
       async function downloadImportTemplate() {
-        // v3.3.7：下载模板的字段顺序跟随当前“表格模式”的表头顺序。
+        // v3.3.8：下载模板的字段顺序跟随当前“表格模式”的表头顺序。
         // 选择列 / 操作列不是导入字段，会自动忽略。
         const layout = typeof window.getSubscriptionTableLayout === 'function'
           ? window.getSubscriptionTableLayout()
@@ -5443,6 +5487,8 @@ const lunarBiz = {
           result.innerHTML = '';
         }
         if (executeBtn) executeBtn.disabled = true;
+        const accountDbCheckbox = document.getElementById('bulkImportAccountsToDatabase');
+        if (accountDbCheckbox) accountDbCheckbox.checked = false;
         parsedRows = [];
       }
 
@@ -5799,9 +5845,26 @@ const lunarBiz = {
         let imported = 0;
         let failed = 0;
         let skipped = 0;
+        const importAccountsToDatabase = !!document.getElementById('bulkImportAccountsToDatabase')?.checked;
+        let accountDbCreated = 0;
+        let accountDbExisting = 0;
+        let accountDbSkipped = 0;
+        let accountDbFailed = 0;
+        const accountDbFailures = [];
         let completed = false;
         const failures = [];
         const skippedRows = [];
+        function collectAccountDb(payload) {
+          const info = payload && payload.accountDatabase;
+          if (!info || !info.enabled) return;
+          accountDbCreated += Number(info.created || 0);
+          accountDbExisting += Number(info.existing || 0);
+          accountDbSkipped += Number(info.skipped || 0);
+          accountDbFailed += Number(info.failed || 0);
+          if (Array.isArray(info.results)) {
+            info.results.filter((item) => item && !item.success).forEach((item) => accountDbFailures.push(item));
+          }
+        }
         try {
           const chunkSize = 4; // Cloudflare Worker 子请求保护：每次只处理少量记录
           for (let i = 0; i < validRows.length; i += chunkSize) {
@@ -5813,9 +5876,10 @@ const lunarBiz = {
             const response = await apiFetch('/api/subscriptions/import', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ rows: chunk })
+              body: JSON.stringify({ rows: chunk, importAccountsToDatabase })
             });
             const payload = await response.json();
+            collectAccountDb(payload);
             const resultItems = Array.isArray(payload.results) ? payload.results : null;
             const apiLimitRows = [];
 
@@ -5855,9 +5919,10 @@ const lunarBiz = {
               const retryResponse = await apiFetch('/api/subscriptions/import', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rows: [retryRow] })
+                body: JSON.stringify({ rows: [retryRow], importAccountsToDatabase })
               });
               const retryPayload = await retryResponse.json();
+              collectAccountDb(retryPayload);
               const retryItem = Array.isArray(retryPayload.results) ? retryPayload.results[0] : null;
               if (retryItem?.success) {
                 imported += 1;
@@ -5891,6 +5956,13 @@ const lunarBiz = {
             `<div>成功新增：<strong class="text-emerald-700">${imported}</strong> 条；原有记录跳过：<strong class="text-blue-700">${skipped}</strong> 条；服务器失败：<strong class="text-red-600">${failed}</strong> 条；本地校验跳过：<strong class="text-amber-600">${totalSkipped}</strong> 条。</div>`,
             `<div class="mt-1 text-xs opacity-75">已启用 Cloudflare 安全分批导入，每批最多 ${chunkSize} 条，避免单次 Worker 调用超过 API/Subrequest 限制。</div>`
           ];
+          if (importAccountsToDatabase) {
+            summaryParts.push(`<div class="mt-2 border-t border-current border-opacity-20 pt-2"><i class="fas fa-database mr-1"></i>账号数据库：新增 <strong class="text-emerald-700">${accountDbCreated}</strong> 条；已存在跳过 <strong class="text-blue-700">${accountDbExisting}</strong> 条；资料不完整/环境跳过 <strong>${accountDbSkipped}</strong> 条；冲突/失败 <strong class="text-red-600">${accountDbFailed}</strong> 条。</div>`);
+            if (accountDbFailures.length) {
+              summaryParts.push('<div class="mt-2 font-medium text-red-700">账号数据库未写入：</div>');
+              summaryParts.push('<ul class="mt-1 list-disc pl-5 max-h-32 overflow-y-auto text-red-700">' + accountDbFailures.slice(0, 100).map((item) => `<li>第 ${escapeHtml(String(item.row || '—'))} 行：${escapeHtml(item.message || '账号数据库写入失败')}</li>`).join('') + '</ul>');
+            }
+          }
           if (skippedRows.length > 0) {
             summaryParts.push('<div class="mt-3 font-medium text-blue-800">未覆盖的原有记录：</div>');
             summaryParts.push('<ul class="mt-1 list-disc pl-5 max-h-32 overflow-y-auto text-blue-800">' + skippedRows.slice(0, 100).map((item) =>

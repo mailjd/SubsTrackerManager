@@ -397,7 +397,9 @@ export async function handleAccounts(request, env, path) {
     const page = Number(url.searchParams.get('page')) || 1;
     const pageSize = Number(url.searchParams.get('pageSize')) || 20;
     const q = url.searchParams.get('q') || '';
-    return json({ success: true, ...(await listPaged(env, { page, pageSize, q })) });
+    const sortKey = url.searchParams.get('sortKey') || 'updatedAt';
+    const sortDir = url.searchParams.get('sortDir') || 'desc';
+    return json({ success: true, ...(await listPaged(env, { page, pageSize, q, sortKey, sortDir })) });
   }
 
   if (path === '/accounts' && method === 'POST') {

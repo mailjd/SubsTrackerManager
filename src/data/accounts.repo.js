@@ -234,6 +234,23 @@ export async function listPaged(env, options = {}) {
   const pageSize = Math.min(100, Math.max(10, Number(options.pageSize) || 20));
   const page = Math.max(1, Number(options.page) || 1);
   const q = String(options.q || '').trim();
+  const sortMap = {
+    accountSerial: 'a.account_serial',
+    account: 'a.account',
+    realName: 'a.real_name',
+    accountType: 'a.account_type',
+    tapnow: 'has_tapnow',
+    jimeng: 'has_jimeng',
+    wechat: 'has_wechat',
+    qq: 'has_qq',
+    updatedAt: 'a.updated_at'
+  };
+  const sortKey = Object.prototype.hasOwnProperty.call(sortMap, options.sortKey) ? options.sortKey : 'updatedAt';
+  const sortDir = String(options.sortDir || '').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+  const numericSort = ['tapnow', 'jimeng', 'wechat', 'qq'].includes(sortKey);
+  const sortSql = sortKey === 'updatedAt' || numericSort
+    ? `${sortMap[sortKey]} ${sortDir}, a.account_serial COLLATE NOCASE ASC, a.account COLLATE NOCASE ASC`
+    : `${sortMap[sortKey]} COLLATE NOCASE ${sortDir}, a.account_serial COLLATE NOCASE ASC, a.account COLLATE NOCASE ASC`;
   const where = q ? 'WHERE account_serial LIKE ? OR account LIKE ? OR real_name LIKE ? OR account_type LIKE ?' : '';
   const binds = q ? [`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`] : [];
   const countStmt = env.SUBSCRIPTIONS_DB.prepare(`SELECT COUNT(*) AS count FROM accounts ${where}`);
@@ -252,7 +269,7 @@ export async function listPaged(env, options = {}) {
       (a.password_encrypted<>'' OR EXISTS(SELECT 1 FROM account_credentials c WHERE c.account=a.account AND c.credential_type='legacy' AND c.password_encrypted<>'')) AS has_legacy
     FROM accounts a
     ${where}
-    ORDER BY a.updated_at DESC, a.account_serial COLLATE NOCASE ASC, a.account COLLATE NOCASE ASC
+    ORDER BY ${sortSql}
     LIMIT ? OFFSET ?
   `;
   const stmt = env.SUBSCRIPTIONS_DB.prepare(sql);

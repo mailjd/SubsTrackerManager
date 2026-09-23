@@ -22,6 +22,12 @@ import {
   SUBSCRIPTION_IMPORT_TEMPLATE_FILENAME,
   SUBSCRIPTION_IMPORT_TEMPLATE_MIME
 } from '../../data/subscription-import-template.js';
+import {
+  getBySerial as getAccountBySerial,
+  getByAccount as getAccountByAccount,
+  isDuplicateSerialAllowed as isAccountDuplicateSerialAllowed,
+  upsert as upsertAccount
+} from '../../data/accounts.repo.js';
 
 
 function base64ToBytes(base64) {
@@ -59,6 +65,45 @@ function sanitizeSubscription(subscription) {
 
 function normalizeImportText(value) {
   return String(value == null ? '' : value).trim().toLowerCase();
+}
+
+async function importMissingAccountFromSubscription(env, subscription, metadata = {}) {
+  const accountSerial = String(subscription?.accountSerial || '').trim();
+  const account = String(subscription?.account || '').trim();
+  if (!accountSerial || !account) {
+    return { success: true, created: false, skipped: true, status: 'incomplete', message: '账号或账号序号为空，未写入账号数据库' };
+  }
+  try {
+    const existingAccount = await getAccountByAccount(env, account);
+    if (existingAccount) {
+      if (String(existingAccount.accountSerial || '') === accountSerial) {
+        return { success: true, created: false, skipped: true, status: 'exists', message: '账号数据库已存在对应账号信息' };
+      }
+      return { success: false, created: false, skipped: true, status: 'conflict', message: `账号 ${account} 已绑定账号序号 ${existingAccount.accountSerial}` };
+    }
+    if (!isAccountDuplicateSerialAllowed(accountSerial)) {
+      const existingSerial = await getAccountBySerial(env, accountSerial);
+      if (existingSerial) {
+        return { success: false, created: false, skipped: true, status: 'conflict', message: `账号序号 ${accountSerial} 已绑定账号 ${existingSerial.account}` };
+      }
+    }
+    const result = await upsertAccount(env, {
+      accountSerial,
+      account,
+      realName: '',
+      accountType: '',
+      sourceSubscriptionId: String(subscription?.id || '')
+    }, {
+      action: 'subscription_opt_in_import',
+      metadata: { source: 'subscription_opt_in', ...metadata }
+    });
+    if (!result.success) return { success: false, created: false, skipped: false, status: 'failed', message: result.message || '账号数据库写入失败' };
+    if (result.skipped) return { success: true, created: false, skipped: true, status: result.reason || 'skipped', message: result.reason === 'd1_not_bound' ? 'D1 未绑定，账号数据库未写入' : '账号数据库未写入' };
+    return { success: true, created: true, skipped: false, status: 'created', message: '账号信息已新增到账号数据库' };
+  } catch (error) {
+    console.error('[subscriptions] 同步账号数据库失败:', error);
+    return { success: false, created: false, skipped: false, status: 'failed', message: error?.message || '账号数据库写入失败' };
+  }
 }
 
 function makeSubscriptionImportFingerprint(subscription) {
@@ -267,6 +312,7 @@ async function handleSubscriptions(request, env, path) {
     }
 
     const rows = Array.isArray(payload) ? payload : payload && Array.isArray(payload.rows) ? payload.rows : null;
+    const importAccountsToDatabase = !Array.isArray(payload) && payload?.importAccountsToDatabase === true;
     if (!rows || rows.length === 0) {
       return new Response(
         JSON.stringify({ success: false, message: '没有可导入的数据' }),
@@ -287,7 +333,23 @@ async function handleSubscriptions(request, env, path) {
     let imported = 0;
     let failed = 0;
     let skipped = 0;
+    let accountDbCreated = 0;
+    let accountDbExisting = 0;
+    let accountDbSkipped = 0;
+    let accountDbFailed = 0;
+    const accountDbResults = [];
     const existingFingerprints = await loadExistingImportFingerprints(env);
+
+    async function collectAccountDatabaseResult(subscription, sourceRow, sourceStatus) {
+      if (!importAccountsToDatabase) return null;
+      const sync = await importMissingAccountFromSubscription(env, subscription, { sourceRow, sourceStatus });
+      accountDbResults.push({ row: sourceRow, account: subscription?.account || '', accountSerial: subscription?.accountSerial || '', ...sync });
+      if (sync.created) accountDbCreated += 1;
+      else if (sync.status === 'exists') accountDbExisting += 1;
+      else if (sync.success) accountDbSkipped += 1;
+      else accountDbFailed += 1;
+      return sync;
+    }
 
     for (let index = 0; index < rows.length; index++) {
       const raw = rows[index];
@@ -303,12 +365,14 @@ async function handleSubscriptions(request, env, path) {
       const fingerprint = makeSubscriptionImportFingerprint(subscription);
       if (existingFingerprints.has(fingerprint)) {
         skipped += 1;
+        const accountDatabase = await collectAccountDatabaseResult(subscription, sourceRow, 'subscription_exists');
         results.push({
           row: sourceRow,
           success: false,
           skipped: true,
           name: subscription.name || '',
-          message: '检测到原有订阅记录，按“只新增、不覆盖”规则跳过'
+          message: '检测到原有订阅记录，按“只新增、不覆盖”规则跳过',
+          ...(accountDatabase ? { accountDatabase } : {})
         });
         continue;
       }
@@ -322,11 +386,13 @@ async function handleSubscriptions(request, env, path) {
         await persistCreatedReminderRules(env, result.subscription.id, subscription.reminderRules, { syncLegacy: false });
         imported += 1;
         existingFingerprints.add(fingerprint);
+        const accountDatabase = await collectAccountDatabaseResult(result.subscription, sourceRow, 'subscription_created');
         results.push({
           row: sourceRow,
           success: true,
           id: result.subscription.id,
-          name: result.subscription.name
+          name: result.subscription.name,
+          ...(accountDatabase ? { accountDatabase } : {})
         });
       } else {
         failed += 1;
@@ -346,7 +412,15 @@ async function handleSubscriptions(request, env, path) {
       failed,
       skipped,
       total: rows.length,
-      results
+      results,
+      accountDatabase: {
+        enabled: importAccountsToDatabase,
+        created: accountDbCreated,
+        existing: accountDbExisting,
+        skipped: accountDbSkipped,
+        failed: accountDbFailed,
+        results: accountDbResults
+      }
     }), {
       status: imported > 0 || (failed === 0 && skipped > 0) ? 200 : 400,
       headers: { 'Content-Type': 'application/json' }
@@ -536,13 +610,19 @@ async function handleSubscriptions(request, env, path) {
           { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
       }
-      const result = await createSubscription(subscription, env);
+      const importAccountToDatabase = subscription?.importAccountToDatabase === true;
+      const { importAccountToDatabase: _importAccountToDatabase, ...subscriptionData } = subscription || {};
+      const result = await createSubscription(subscriptionData, env);
       // 创建成功后写入提醒规则，并同步 legacy 提醒字段（列表展示依赖）
+      let accountDatabase = null;
       if (result.success && result.subscription) {
-        await persistCreatedReminderRules(env, result.subscription.id, subscription.reminderRules, { syncLegacy: false });
+        await persistCreatedReminderRules(env, result.subscription.id, subscriptionData.reminderRules, { syncLegacy: false });
+        if (importAccountToDatabase) {
+          accountDatabase = await importMissingAccountFromSubscription(env, result.subscription, { sourceStatus: 'manual_create' });
+        }
       }
       const responseResult = result.success && result.subscription
-        ? { ...result, subscription: sanitizeSubscription(result.subscription) }
+        ? { ...result, subscription: sanitizeSubscription(result.subscription), ...(accountDatabase ? { accountDatabase } : {}) }
         : result;
       return new Response(JSON.stringify(responseResult), {
         status: result.success ? 201 : 400,

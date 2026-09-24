@@ -1,0 +1,147 @@
+[
+  {
+    "path": ".github/workflows/deploy.yml",
+    "status": "modified",
+    "sha256": "cf92689c6c9eb7fc03ff611b53ac635b93a62bd9df455374e37c4b207b84170f"
+  },
+  {
+    "path": ".github/workflows/test.yml",
+    "status": "modified",
+    "sha256": "e5fd190c7e3e404520b0eeee1f8e506bfbe32bb86fc214f767a5d9d07d50f042"
+  },
+  {
+    "path": "DEPLOY_CHECKLIST.md",
+    "status": "modified",
+    "sha256": "0b3e58d938d1aec25084a05d08486bac846875a4490fa06c42347d1f4f97e5bc"
+  },
+  {
+    "path": "GITHUB_DEPLOY.md",
+    "status": "modified",
+    "sha256": "b489a501cd83acf9566d895872ace516c2855d4b303225090ad9759642c22454"
+  },
+  {
+    "path": "README.md",
+    "status": "modified",
+    "sha256": "d7e91931ebe875637662006cd9d79be10c73e39b9bbb97288e6146712a1b8b7c"
+  },
+  {
+    "path": "TABLE_SAVE_AUDIT_3.3.18.md",
+    "status": "added",
+    "sha256": "e7285d0e53aef5df54196b0dd2ffeef6f86e2dbd394699372c70e76ed62d7f8a"
+  },
+  {
+    "path": "package-lock.json",
+    "status": "modified",
+    "sha256": "8a6a4f05c116fe986506d444ce79a89a2ca5cb6f724e4951b575baf509c78a1e"
+  },
+  {
+    "path": "package.json",
+    "status": "modified",
+    "sha256": "c6dd859ba662c5937a9ed143896bbf0df956b17600efe9a48c494e278211bb14"
+  },
+  {
+    "path": "src/api/admin.js",
+    "status": "modified",
+    "sha256": "709a8229b781e795c4841a8cb6306f61d43b8cf00397fa3ccfab4f04198ebaad"
+  },
+  {
+    "path": "src/api/handlers/extras.js",
+    "status": "modified",
+    "sha256": "b6df474494229529e0b0b0a8a2dd4cf74c4624a3a31dfedab6d75a12fe6b2566"
+  },
+  {
+    "path": "src/api/handlers/subscriptions.js",
+    "status": "modified",
+    "sha256": "a71abcb1545ba000e43642af41de131f2cbac63aa61f5fadbd5f479080bef71c"
+  },
+  {
+    "path": "src/data/subscription-history.repo.js",
+    "status": "modified",
+    "sha256": "a193b7504eaffc1f8cc0b359a48f740be9ea18f5e631685fd328266479e13060"
+  },
+  {
+    "path": "src/data/subscriptions.js",
+    "status": "modified",
+    "sha256": "3cc8d85e219aa3cc7ab038f1bed3f2a749b95487cfb8f8c2fa2dc3ce4a90d45e"
+  },
+  {
+    "path": "src/data/table-edit-contract.js",
+    "status": "added",
+    "sha256": "2e36babc552ee1dbcc7bc908048c78ca49fa82e7995d9bfe483d332fffbecdf6"
+  },
+  {
+    "path": "src/services/scheduler.js",
+    "status": "modified",
+    "sha256": "4348f6f45696dd3064c445415286e4cd644c46ca9cb23ee326846f9e98123312"
+  },
+  {
+    "path": "src/version.js",
+    "status": "added",
+    "sha256": "ea9e4fdb9e1b103aa7d4ca261e7bbcdcc84ee7d0e2a2a7b8599b331c53a7afbb"
+  },
+  {
+    "path": "src/views/adminPage.html",
+    "status": "modified",
+    "sha256": "3c7a0b6bf1e2894a6745b7b6a3cedb4ce7b683d6937c40f075dbde3ae2fb6725"
+  },
+  {
+    "path": "tests/api/subscriptions-table-edit.test.js",
+    "status": "modified",
+    "sha256": "4404052ed715f99549618aee84f7ccad53055150c478afece4ec80c007718c4e"
+  },
+  {
+    "path": "tests/data/reminders.test.js",
+    "status": "modified",
+    "sha256": "e86ac48e9bac918a6175e775d1497ba6ee543926af3518296e3d7d2e4659c3b6"
+  },
+  {
+    "path": "tests/regression/README.md",
+    "status": "added",
+    "sha256": "1413971792f2fa7fd993f72b002b9ae0c2a41602b04ada50a16bed7b44946c19"
+  },
+  {
+    "path": "tests/regression/api-regression.py",
+    "status": "added",
+    "sha256": "edc79008c4aaa38e4c6c4ef804f9e2b145cc10e8f7330ec8c4e060c222cc354e"
+  },
+  {
+    "path": "tests/regression/browser-regression.py",
+    "status": "added",
+    "sha256": "9ecdaec3321d277c61a3c91f69d5186b4ff216860c4df20a1d092e716422d08c"
+  },
+  {
+    "path": "tests/regression/contract.node.mjs",
+    "status": "added",
+    "sha256": "f4cb3d6caea333de09d299f105345aba9779587c539ba325eeea0659e3d21533"
+  },
+  {
+    "path": "tests/regression/local-server.mjs",
+    "status": "added",
+    "sha256": "c864a23af4ac2d94378b649b40184407277ef142a3f28c9cbcb83ee473ffbef6"
+  },
+  {
+    "path": "tests/regression/results/api-results.json",
+    "status": "added",
+    "sha256": "513a4688609b4ea5fca41b73c2e6667b1674718e01f6d66a73163a7ae9ff7b3b"
+  },
+  {
+    "path": "tests/regression/results/baseline-outdated-assertion.log",
+    "status": "added",
+    "sha256": "abff7226feb56762df723d8976440c82d9b2606aaad6e8a03fdc355c9f211750"
+  },
+  {
+    "path": "tests/regression/results/browser-results.json",
+    "status": "added",
+    "sha256": "547223bf5114aa9ec7df375cc2dd6b52892f870a99256619b7ee4b3bfe10cbf2"
+  },
+  {
+    "path": "tests/regression/results/contract-tests.tap",
+    "status": "added",
+    "sha256": "7b3a123a6ca2b8e3e4d64deeb2bf09b8f8d6414d30a4368c6baf04136914f5d5"
+  },
+  {
+    "path": "tests/regression/results/syntax-results.json",
+    "status": "added",
+    "sha256": "27cf33cffa795f0b1921358dd5e5861aa088bb3d05371b99f07de4f493771868"
+  }
+]

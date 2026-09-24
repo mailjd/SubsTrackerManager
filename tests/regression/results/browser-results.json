@@ -1,0 +1,71 @@
+{
+  "environment": "Chromium DOM + async loopback fetch + file KV / SQLite; Web Storage adapters; not Cloudflare or pixel-perfect CDN styles",
+  "tests": [
+    {
+      "name": "active input -> actual Save click -> disk",
+      "passed": true
+    },
+    {
+      "name": "cleared subscription type stays cleared",
+      "passed": true
+    },
+    {
+      "name": "entered expired date is persisted exactly",
+      "passed": true
+    },
+    {
+      "name": "text + select + number saved together",
+      "passed": true
+    },
+    {
+      "name": "start date recalculates expiry and saves both",
+      "passed": true
+    },
+    {
+      "name": "Cancel restores active and staged edits with no write",
+      "passed": true
+    },
+    {
+      "name": "HTTP failure keeps drafts, retry persists",
+      "passed": true
+    },
+    {
+      "name": "partial batch only clears successful row drafts",
+      "passed": true
+    },
+    {
+      "name": "multi-cell paste enters draft and is persisted",
+      "passed": true
+    },
+    {
+      "name": "in-flight guard prevents duplicate save and new edits",
+      "passed": true
+    },
+    {
+      "name": "forged success with wrong returned value rejected",
+      "passed": true
+    },
+    {
+      "name": "older backend detected before PATCH; draft kept",
+      "passed": true
+    },
+    {
+      "name": "reminder editing and clear survive fresh page",
+      "passed": true
+    },
+    {
+      "name": "focused editor draft survives page reconstruction",
+      "passed": true
+    },
+    {
+      "name": "Escape removes editor and restores previous value",
+      "passed": true
+    },
+    {
+      "name": "new server process + fresh browser storage still reads edit",
+      "passed": true
+    }
+  ],
+  "passed": 16,
+  "failed": 0
+}

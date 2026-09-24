@@ -15,6 +15,7 @@
  */
 
 import { getConfig } from './config.js';
+import { mismatchedTableFields } from './table-edit-contract.js';
 import {
   addCalendarPeriodInTimezone,
   getNowInTimezone,
@@ -153,8 +154,9 @@ async function getAllSubscriptions(env) {
     }
     return Promise.all(
       subs.map(async (sub) => {
-        let rules = await listForSubscription(env, sub.id);
-        if (rules.length === 0) {
+        const hasSnapshotRules = Array.isArray(sub.reminderRules);
+        let rules = hasSnapshotRules ? sub.reminderRules : await listForSubscription(env, sub.id);
+        if (!hasSnapshotRules && rules.length === 0) {
           rules = [legacyFieldToRule(sub)];
         }
         return {
@@ -179,17 +181,19 @@ async function getAllSubscriptions(env) {
  */
 async function syncLegacyReminderFields(env, subId, rules, baseSubscription = null) {
   try {
-    const { deriveLegacyFromRules } = await import('./reminders.repo.js');
+    const { deriveLegacyFromRules, formatRulesSummary } = await import('./reminders.repo.js');
     // 表格保存会在同一个请求里先写订阅本体、再写提醒规则。
     // Cloudflare KV 属于最终一致性存储；若这里立刻重新读取，可能拿到写入前旧值，
     // 再次 save 时会把刚刚的表格修改覆盖掉。允许调用方传入刚保存的对象，避免“成功但实际被旧值覆盖”。
     const existing = baseSubscription && String(baseSubscription.id || '') === String(subId)
       ? baseSubscription
-      : await subRepo.getById(env, subId);
+      : await getSubscription(subId, env);
     if (!existing) return null;
     const legacy = deriveLegacyFromRules(rules);
     const synced = {
       ...existing,
+      reminderRules: rules,
+      reminderRulesSummary: formatRulesSummary(rules),
       reminderUnit: legacy.unit,
       reminderValue: legacy.value,
       reminderDays: legacy.unit === 'day' ? legacy.value : undefined,
@@ -371,7 +375,7 @@ async function createSubscription(subscription, env, options = {}) {
  * @param {any} subscription
  * @param {any} env
  */
-async function updateSubscription(id, subscription, env) {
+async function updateSubscription(id, subscription, env, editOptions = {}) {
   try {
     const existing = await getSubscription(id, env);
     if (!existing) {
@@ -405,7 +409,7 @@ async function updateSubscription(id, subscription, env) {
       if (!lunar) {
         return { success: false, message: '农历日期超出支持范围（1900-2100年）' };
       }
-      if (!isSinglePeriod && lunar && getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight && subscription.periodValue && effectivePeriodUnit) {
+      if (!editOptions.preserveEnteredDates && !isSinglePeriod && lunar && getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight && subscription.periodValue && effectivePeriodUnit) {
         do {
           lunar = lunarBiz.addLunarPeriod(lunar, subscription.periodValue, effectivePeriodUnit);
           const solar = lunarBiz.lunar2solar(lunar);
@@ -417,7 +421,7 @@ async function updateSubscription(id, subscription, env) {
         subscription.endOfMonth !== undefined
           ? !!subscription.endOfMonth && !useLunar
           : !!existing.endOfMonth && !useLunar;
-      if (!isSinglePeriod && getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight && subscription.periodValue && effectivePeriodUnit) {
+      if (!editOptions.preserveEnteredDates && !isSinglePeriod && getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight && subscription.periodValue && effectivePeriodUnit) {
         while (getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight) {
           expiryDate = addCalendarPeriodInTimezone(
             expiryDate,
@@ -458,7 +462,7 @@ async function updateSubscription(id, subscription, env) {
         amount: newAmount,
         currency: subscription.currency || existing.currency || 'CNY'
       };
-    } else if (!hasInitialPayment && newAmount !== null && newAmount !== undefined && newAmount > 0) {
+    } else if ((!editOptions.preserveEnteredDates || amountChanged) && !hasInitialPayment && newAmount !== null && newAmount !== undefined && newAmount > 0) {
       const initialDate = existing.startDate || existing.createdAt || new Date().toISOString();
       paymentHistory.unshift({
         id: Date.now().toString(),
@@ -477,7 +481,7 @@ async function updateSubscription(id, subscription, env) {
       ...existingWithoutPassword,
       name: subscription.name,
       subscriptionMode: subscription.subscriptionMode || existing.subscriptionMode || 'cycle',
-      customType: subscription.customType || existing.customType || '',
+      customType: subscription.customType !== undefined ? String(subscription.customType ?? '').trim() : existing.customType || '',
       category:
         subscription.category !== undefined
           ? subscription.category.trim()
@@ -509,7 +513,7 @@ async function updateSubscription(id, subscription, env) {
         subscription.startDate !== undefined
           ? incomingStartDate
             ? incomingStartDate.toISOString()
-            : existing.startDate
+            : editOptions.preserveEnteredDates ? null : existing.startDate
           : existing.startDate,
       expiryDate: expiryDate.toISOString(),
       periodValue: isSinglePeriod ? 1 : (subscription.periodValue || existing.periodValue || 1),
@@ -544,7 +548,23 @@ async function updateSubscription(id, subscription, env) {
       updatedAt: new Date().toISOString()
     };
 
-    if (merged.account && merged.accountSerial) {
+    // Reminder edits share this single subscription write. The full rule snapshot
+    // permits readback (and D1 fallback) to verify the actual submitted rule values.
+    if (Array.isArray(editOptions.reminderRules)) {
+      const { formatRulesSummary } = await import('./reminders.repo.js');
+      merged.reminderRules = editOptions.reminderRules;
+      merged.reminderRulesSummary = formatRulesSummary(editOptions.reminderRules);
+    }
+    if (editOptions.expectedChanges) {
+      const mismatchedFields = mismatchedTableFields(merged, editOptions.expectedChanges, timezone);
+      if (mismatchedFields.length) {
+        return { success: false, code: 'table_value_conflict', mismatchedFields,
+          message: '修改与业务规则冲突，未写入：' + mismatchedFields.join('、') +
+            (mismatchedFields.includes('memberLevel') ? '（已过期记录的会员级别必须为 Free；请先修改到期日期）' : '') };
+      }
+    }
+    const accountChanged = merged.account !== existing.account || merged.accountSerial !== existing.accountSerial;
+    if (merged.account && merged.accountSerial && (!editOptions.preserveEnteredDates || accountChanged)) {
       const accountCheck = await validatePair(env, merged.accountSerial, merged.account);
       if (!accountCheck.ok) {
         return { success: false, message: accountCheck.message || '账号与账号序号冲突' };
@@ -552,10 +572,9 @@ async function updateSubscription(id, subscription, env) {
     }
 
     await subRepo.save(env, merged);
-    await syncFromSubscription(env, merged, {
-      action: 'subscription_update',
-      syncPassword: false
-    });
+    if (!editOptions.preserveEnteredDates || accountChanged) {
+      await syncFromSubscription(env, merged, { action: 'subscription_update', syncPassword: false });
+    }
     await recordSubscriptionChange(env, 'update', merged);
     if (merged.category) await addCategory(env, merged.category);
     await syncSubscriptionMenuOptions(env, merged);

@@ -1,5 +1,13 @@
 # GitHub → Cloudflare 部署检查清单
 
+## v3.3.18 必查：确认真正部署到新版
+
+本版请提交完整发布包（包括 `.github/`、`tests/`、`src/version.js`、package.json 和 package-lock.json），不要只复制 adminPage.html。
+旧版 tests/data/reminders.test.js 的“缺失值=7天”断言与当前业务返回的 1 天不一致，会使 `npm test` 失败；部署工作流执行测试成功后才会运行 Deploy Worker。此版将断言修正为 1 天，7/3 天预建但停用的预设保持不变。
+确认 GitHub Actions 的部署步骤成功；重新打开页面后，“保存诊断”中的页面版本与保存时检查的服务器版本都应为 3.3.18，协议为 2。不匹配时禁止提交并保留暂存，不能将上传 ZIP 等同于线上部署成功。
+继续绑定原有 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB；不要为升级新建存储空间。此版不清空订阅、账号、历史或显示模板。
+
+
 这个发布包同时面向 GitHub 仓库和 Cloudflare Workers 部署。
 
 ## GitHub 仓库

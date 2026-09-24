@@ -85,3 +85,48 @@ describe('订阅表格字段级保存', () => {
     expect(stored.reminderValue).toBe(1);
   });
 });
+
+// 3.3.18: the acknowledgement must reflect INPUT values, not only updater output.
+describe('表格保存输入值契约回归', () => {
+  async function fixture() {
+    const cookie=await loginCookie();
+    await subRepo.save(env, {id:'intent-regression',name:'Before',customType:'开会员',
+      expiryDate:'2030-10-24T16:00:00.000Z',startDate:'2030-09-24T16:00:00.000Z',
+      periodValue:1,periodUnit:'month',subscriptionMode:'reset',memberLevel:'Pro',
+      isActive:true,autoRenew:false,useLunar:false,endOfMonth:false,amount:null,currency:'CNY',notes:'Original',
+      createdAt:'2026-01-01T00:00:00.000Z',updatedAt:'2026-01-01T00:00:00.000Z'});
+    return (changes)=>app.request('/api/subscriptions/intent-regression/table-edit',{
+      method:'PATCH',headers:{'Content-Type':'application/json',Cookie:cookie},
+      body:JSON.stringify({changes,clientVersion:'3.3.18'})
+    },env);
+  }
+  it('空订阅类型不回填旧值',async()=>{
+    const patch=await fixture();const response=await patch({customType:''});
+    expect(response.status).toBe(200);
+    const body=await response.json();expect(body.subscription.customType).toBe('');
+    expect(body.tableEditProtocol).toBe(2);
+    expect((await subRepo.getById(env,'intent-regression')).customType).toBe('');
+  });
+  it('过去的到期日期不被表格更新流程续期',async()=>{
+    const patch=await fixture();const response=await patch({expiryDate:'2025-10-25'});
+    expect(response.status).toBe(200);
+    expect((await subRepo.getById(env,'intent-regression')).expiryDate).toBe('2025-10-24T16:00:00.000Z');
+  });
+  it('业务规则会丢弃输入值时必须在写入前拒绝',async()=>{
+    const patch=await fixture();await patch({expiryDate:'2025-10-25'});
+    const response=await patch({memberLevel:'Pro',notes:'MUST NOT WRITE'});
+    expect(response.status).toBe(400);
+    expect((await response.json()).saved).toBe(false);
+    expect((await subRepo.getById(env,'intent-regression')).notes).toBe('Original');
+  });
+  it('清空提醒后 GET 不重新补回旧 legacy 提醒',async()=>{
+    const patch=await fixture();const response=await patch({reminderRules:[]});
+    expect(response.status).toBe(200);
+    const saved=await response.json();expect(saved.verification.reminders).toBe(true);
+    expect((await subRepo.getById(env,'intent-regression')).reminderRules).toEqual([]);
+  });
+  it('零周期与未知字段不允许静默转换/忽略',async()=>{
+    const patch=await fixture();expect((await patch({periodValue:0})).status).toBe(400);
+    expect((await patch({updatedAt:'edited'})).status).toBe(400);
+  });
+});

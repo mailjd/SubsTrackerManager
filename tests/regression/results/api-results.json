@@ -1,0 +1,155 @@
+{
+  "environment": "production modules; local file-KV + SQLite adapter, not Cloudflare",
+  "tests": [
+    {
+      "name": "KV+SQLite: normal fields persisted",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: clear subscription type stays empty",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: explicit past expiry is not renewed",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: editing history note does not advance dates",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: clear optional start date",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: invalid zero period rejected without writes",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: invalid calendar date rejected",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: expired paid tier rejected instead of false success",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: server/client version mismatch rejected",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: unknown/read-only field rejected",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: rules and cells share one subscription write",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: rules-only save is verified",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: empty reminder rules survive GET",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: malformed reminder payload rejected",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: dropped reminder write cannot report success",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: dropped storage writes cannot report success",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: new process GET and disk read retain changes",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: cloud template API/storage keys unchanged",
+      "passed": true
+    },
+    {
+      "name": "KV+SQLite: stale KV plus newer D1 returns persisted input",
+      "passed": true
+    },
+    {
+      "name": "KV-only: normal fields persisted",
+      "passed": true
+    },
+    {
+      "name": "KV-only: clear subscription type stays empty",
+      "passed": true
+    },
+    {
+      "name": "KV-only: explicit past expiry is not renewed",
+      "passed": true
+    },
+    {
+      "name": "KV-only: editing history note does not advance dates",
+      "passed": true
+    },
+    {
+      "name": "KV-only: clear optional start date",
+      "passed": true
+    },
+    {
+      "name": "KV-only: invalid zero period rejected without writes",
+      "passed": true
+    },
+    {
+      "name": "KV-only: invalid calendar date rejected",
+      "passed": true
+    },
+    {
+      "name": "KV-only: expired paid tier rejected instead of false success",
+      "passed": true
+    },
+    {
+      "name": "KV-only: server/client version mismatch rejected",
+      "passed": true
+    },
+    {
+      "name": "KV-only: unknown/read-only field rejected",
+      "passed": true
+    },
+    {
+      "name": "KV-only: rules and cells share one subscription write",
+      "passed": true
+    },
+    {
+      "name": "KV-only: rules-only save is verified",
+      "passed": true
+    },
+    {
+      "name": "KV-only: empty reminder rules survive GET",
+      "passed": true
+    },
+    {
+      "name": "KV-only: malformed reminder payload rejected",
+      "passed": true
+    },
+    {
+      "name": "KV-only: dropped reminder write cannot report success",
+      "passed": true
+    },
+    {
+      "name": "KV-only: dropped storage writes cannot report success",
+      "passed": true
+    },
+    {
+      "name": "KV-only: new process GET and disk read retain changes",
+      "passed": true
+    },
+    {
+      "name": "KV-only: cloud template API/storage keys unchanged",
+      "passed": true
+    }
+  ],
+  "passed": 37,
+  "failed": 0
+}

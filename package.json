@@ -1,6 +1,6 @@
 {
   "name": "subscription-manager",
-  "version": "3.3.17",
+  "version": "3.3.18",
   "description": "订阅管理系统 - 基于 Cloudflare Workers + Hono",
   "main": "src/index.js",
   "type": "module",
@@ -12,7 +12,8 @@
     "lint": "tsc --noEmit -p jsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "setup:local-d1": "npx wrangler d1 migrations apply subscription-manager-dev --local --config wrangler.dev.toml"
+    "setup:local-d1": "npx wrangler d1 migrations apply subscription-manager-dev --local --config wrangler.dev.toml",
+    "test:table-contract": "node --test tests/regression/contract.node.mjs"
   },
   "dependencies": {
     "hono": "^4.6.14"

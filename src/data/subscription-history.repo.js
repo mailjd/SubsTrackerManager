@@ -23,8 +23,6 @@ export function toSafeSnapshot(subscription) {
   const {
     passwordEncrypted,
     password: _password,
-    reminderRules: _reminderRules,
-    reminderRulesSummary: _reminderRulesSummary,
     ...rest
   } = subscription;
   return {

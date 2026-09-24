@@ -81,9 +81,9 @@ describe('reminders.repo', () => {
     expect(r.type).toBe('on_expiry');
   });
 
-  it('legacyFieldToRule：缺失值兜底 7 天', () => {
+  it('legacyFieldToRule：缺失值兜底 1 天（7/3 天预设仍存在但未启用）', () => {
     const r = repo.legacyFieldToRule({});
-    expect(r).toMatchObject({ type: 'before_expiry', value: 7, unit: 'days' });
+    expect(r).toMatchObject({ type: 'before_expiry', value: 1, unit: 'days' });
   });
 
   it('normalizeRule：非法 type 兜底为 before_expiry', () => {

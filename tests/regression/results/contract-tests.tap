@@ -1,0 +1,62 @@
+TAP version 13
+# Subtest: input intent: empty string must not match old nonempty value
+ok 1 - input intent: empty string must not match old nonempty value
+  ---
+  duration_ms: 1.351919
+  type: 'test'
+  ...
+# Subtest: date equivalence uses configured date semantics, not string representation
+ok 2 - date equivalence uses configured date semantics, not string representation
+  ---
+  duration_ms: 14.213574
+  type: 'test'
+  ...
+# Subtest: empty optional values remain valid
+ok 3 - empty optional values remain valid
+  ---
+  duration_ms: 0.240605
+  type: 'test'
+  ...
+# Subtest: normalization never silently accepts invalid dates or periods
+ok 4 - normalization never silently accepts invalid dates or periods
+  ---
+  duration_ms: 0.467008
+  type: 'test'
+  ...
+# Subtest: disabled reminder rules are different; IDs and creation timestamps are not business values
+ok 5 - disabled reminder rules are different; IDs and creation timestamps are not business values
+  ---
+  duration_ms: 0.281877
+  type: 'test'
+  ...
+# Subtest: D1 safe snapshot retains reminder content but no password data
+ok 6 - D1 safe snapshot retains reminder content but no password data
+  ---
+  duration_ms: 0.129387
+  type: 'test'
+  ...
+# Subtest: preset still builds 7/3 disabled and 1/day-of enabled
+ok 7 - preset still builds 7/3 disabled and 1/day-of enabled
+  ---
+  duration_ms: 2.181465
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 生成新的订阅凭据加密密钥
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: empty rules stay disabled and legacy rule keeps stable dedupe id
+ok 8 - scheduler: empty rules stay disabled and legacy rule keeps stable dedupe id
+  ---
+  duration_ms: 43.438271
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 118.361101

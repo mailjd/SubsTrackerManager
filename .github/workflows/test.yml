@@ -25,5 +25,8 @@ jobs:
       - name: Type check (JSDoc + // @ts-check)
         run: npm run lint
 
+      - name: Run table input contract regression
+        run: npm run test:table-contract
+
       - name: Run unit tests
         run: npm test

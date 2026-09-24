@@ -28,30 +28,30 @@ async function handleAdminRequest(request, env) {
 
     if (pathname === '/admin/config') {
       return new Response(configPage, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }
       });
     }
 
     if (pathname === '/admin/dashboard') {
       return new Response(dashboardPage(), {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }
       });
     }
 
     if (pathname === '/admin/database' || pathname === '/admin/database/') {
       return new Response(databasePage, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }
       });
     }
 
     if (pathname === '/admin/notify-logs') {
       return new Response(notifyLogsPage, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }
       });
     }
 
     return new Response(adminPage, {
-      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }
     });
   } catch (error) {
     console.error('[管理页面] 处理请求时出错:', error);
@@ -64,7 +64,7 @@ async function handleAdminRequest(request, env) {
 
 function handleLoginPage() {
   return new Response(loginPage, {
-    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }
   });
 }
 

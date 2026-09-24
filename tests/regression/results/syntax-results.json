@@ -1,0 +1,283 @@
+{
+  "javascript_files": 57,
+  "inline_scripts": 12,
+  "duplicate_admin_ids": {},
+  "checks": [
+    {
+      "path": "src/api/admin.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/debug.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/handlers/accounts.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/handlers/auth.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/handlers/backup.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/handlers/config.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/handlers/dashboard.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/handlers/extras.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/handlers/notify.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/handlers/subscriptions.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/handlers/test-notification.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/router.js",
+      "passed": true
+    },
+    {
+      "path": "src/api/utils.js",
+      "passed": true
+    },
+    {
+      "path": "src/app.js",
+      "passed": true
+    },
+    {
+      "path": "src/core/auth.js",
+      "passed": true
+    },
+    {
+      "path": "src/core/credentials.js",
+      "passed": true
+    },
+    {
+      "path": "src/core/currency-format.js",
+      "passed": true
+    },
+    {
+      "path": "src/core/currency.js",
+      "passed": true
+    },
+    {
+      "path": "src/core/lunar.js",
+      "passed": true
+    },
+    {
+      "path": "src/core/superadmin.js",
+      "passed": true
+    },
+    {
+      "path": "src/core/time.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/account-database-backups.repo.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/account-import-template.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/accounts.repo.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/categories.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/config.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/d1-schema.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/kv.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/menu-options.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/migrate.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/notification-logs.repo.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/reminders.repo.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/scheduler-logs.repo.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/subscription-history.repo.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/subscription-import-template.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/subscriptions.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/subscriptions.repo.js",
+      "passed": true
+    },
+    {
+      "path": "src/data/table-edit-contract.js",
+      "passed": true
+    },
+    {
+      "path": "src/index.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/bark.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/channel.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/dispatch.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/email.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/gotify.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/index.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/notifyx.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/ntfy.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/pushplus.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/reminder-engine.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/reminder.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/serverchan.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/telegram.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/webhook.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/notify/wechat.js",
+      "passed": true
+    },
+    {
+      "path": "src/services/scheduler.js",
+      "passed": true
+    },
+    {
+      "path": "src/version.js",
+      "passed": true
+    },
+    {
+      "path": "src/views/pages.js",
+      "passed": true
+    },
+    {
+      "path": "src/views/adminPage.html inline #1",
+      "passed": true
+    },
+    {
+      "path": "src/views/adminPage.html inline #2",
+      "passed": true
+    },
+    {
+      "path": "src/views/adminPage.html inline #3",
+      "passed": true
+    },
+    {
+      "path": "src/views/adminPage.html inline #4",
+      "passed": true
+    },
+    {
+      "path": "src/views/adminPage.html inline #5",
+      "passed": true
+    },
+    {
+      "path": "src/views/configPage.html inline #0",
+      "passed": true
+    },
+    {
+      "path": "src/views/dashboardPage.html inline #0",
+      "passed": true
+    },
+    {
+      "path": "src/views/databasePage.html inline #1",
+      "passed": true
+    },
+    {
+      "path": "src/views/databasePage.html inline #2",
+      "passed": true
+    },
+    {
+      "path": "src/views/loginPage.html inline #0",
+      "passed": true
+    },
+    {
+      "path": "src/views/notifyLogsPage.html inline #1",
+      "passed": true
+    },
+    {
+      "path": "src/views/theme-resources.html inline #0",
+      "passed": true
+    }
+  ]
+}

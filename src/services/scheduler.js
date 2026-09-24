@@ -173,7 +173,10 @@ export async function checkExpiringSubscriptions(env) {
 
       // 加载规则；老订阅没有规则时，用稳定 id 的 legacy 规则（避免每 tick 新 UUID 打穿 dedupe）
       let rules = await remindersRepo.listForSubscription(env, subscription.id);
-      if (rules.length === 0) {
+      // An explicitly cleared rule set must stay empty. Legacy rows still need
+      // the stable legacy:id below; getAllSubscriptions generates temporary IDs.
+      const explicitlyEmpty = Array.isArray(subscription.reminderRules) && subscription.reminderRules.length === 0;
+      if (rules.length === 0 && !explicitlyEmpty) {
         const legacy = remindersRepo.legacyFieldToRule(subscription);
         legacy.id = `legacy:${subscription.id}`;
         rules = [legacy];

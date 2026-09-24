@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="substracker-build" content="3.3.18">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>订阅管理系统</title>
@@ -691,6 +692,10 @@
       </div>
     </div>
     
+    <details id="tableSaveDiagnosticDetails" class="text-xs text-gray-500 mb-3" style="padding:6px 0">
+      <summary style="cursor:pointer">保存诊断 · 页面版本 3.3.18</summary>
+      <pre id="tableSaveDiagnostic" style="white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;padding:8px">尚未发起保存。诊断仅记录版本、请求编号、字段名与校验状态，不记录账号密码或单格内容。</pre>
+    </details>
     <!-- 原始模式：保持历史版本的摘要表格布局不变 -->
     <div id="subscriptionsOriginalView" class="table-container bg-white rounded-lg overflow-hidden">
       <div class="overflow-x-auto">
@@ -2819,6 +2824,7 @@ const lunarBiz = {
 
         const response = await apiFetch('/api/subscriptions', { cache: 'no-store' });
         const data = await response.json();
+        if(!response.ok || !Array.isArray(data)) throw new Error(data?.message || '订阅接口返回格式无效');
 
         subscriptionsCache = typeof window.applySubscriptionRecentWriteOverlay === 'function' ? window.applySubscriptionRecentWriteOverlay(Array.isArray(data) ? data : []) : (Array.isArray(data) ? data : []);
         const validSubscriptionIds = new Set(subscriptionsCache.map((item) => String(item.id)));
@@ -6535,6 +6541,10 @@ const lunarBiz = {
     amount:90,currency:80,subscriptionMode:120,startDate:120,periodValue:92,periodUnit:92,expiryDate:120,useLunar:100,
     endOfMonth:120,reminder:180,isActive:95,autoRenew:95,updatedAt:175,notes:260,actions:230
   };
+  const TABLE_BUILD_VERSION = document.querySelector('meta[name="substracker-build"]').content;
+  const TABLE_EDIT_PROTOCOL = 2;
+  let savingEdits = false;
+  const ACTIVE_DRAFT_KEY = 'subscriptionTableActiveEditorV1';
   const LAYOUT_KEY = 'subscriptionTableLayoutV2';
   const LEGACY_LAYOUT_KEY = 'subscriptionTableLayoutV1';
   const TEMPLATE_KEY = 'subscriptionTableTemplatesV1';
@@ -6660,6 +6670,25 @@ const lunarBiz = {
     catch(_){ return {}; }
   }
   let pendingEdits=loadPendingEdits();
+  try{
+    const draft=JSON.parse(sessionStorage.getItem(ACTIVE_DRAFT_KEY)||'null');
+    if(draft && draft.id && DEF_BY_ID[draft.col]?.editable && typeof draft.value==='string'){
+      pendingEdits[draft.id]={...(pendingEdits[draft.id]||{}),[draft.col]:draft.value};
+      sessionStorage.setItem(EDIT_KEY,JSON.stringify(pendingEdits));
+    }
+    sessionStorage.removeItem(ACTIVE_DRAFT_KEY);
+  }catch(_){}
+  function rememberActiveDraft(){
+    if(!activeEditorCell) return;
+    const editor=activeEditorCell.querySelector('[data-table-cell-editor]');
+    const def=DEF_BY_ID[activeEditorCell.dataset.col];
+    const id=activeEditorCell.closest('tr[data-subscription-id]')?.dataset.subscriptionId;
+    if(!editor||!def||!id) return;
+    try{
+      if(activeEditorDirty) sessionStorage.setItem(ACTIVE_DRAFT_KEY,JSON.stringify({id,col:def.id,value:editorDisplayValue(def,editor)}));
+      else sessionStorage.removeItem(ACTIVE_DRAFT_KEY);
+    }catch(_){}
+  }
   function savePendingEdits(){
     if(Object.keys(pendingEdits).length) sessionStorage.setItem(EDIT_KEY,JSON.stringify(pendingEdits));
     else sessionStorage.removeItem(EDIT_KEY);
@@ -6670,7 +6699,7 @@ const lunarBiz = {
   function pendingValue(id,col){ return hasPending(id,col) ? pendingEdits[String(id)][col] : undefined; }
   function updateEditActionButtons(){
     const staged=pendingCount();
-    const has=staged>0 || activeEditorDirty;
+    const has=!savingEdits && (staged>0 || activeEditorDirty);
     const cancel=document.getElementById('cancelTableEditsBtn');
     const save=document.getElementById('saveTableEditsBtn');
     if(cancel) {
@@ -6799,10 +6828,10 @@ const lunarBiz = {
   function applyColumnOrder(){
     const table=document.querySelector('.subscription-excel-table'); if(!table) return;
     const headerRow=table.querySelector('thead tr');
-    if(headerRow){ const map=new Map([...headerRow.children].map((el)=>[el.dataset.col,el])); tableLayout.order.forEach((id)=>{ const el=map.get(id); if(el) headerRow.appendChild(el); }); }
+    if(headerRow){ const map=new Map([...headerRow.children].map((el)=>[el.dataset.col,el])); tableLayout.order.forEach((id)=>{ const el=map.get(id); if(el && headerRow.children[tableLayout.order.indexOf(id)]!==el) headerRow.insertBefore(el,headerRow.children[tableLayout.order.indexOf(id)]||null); }); }
     table.querySelectorAll('#subscriptionsExcelBody tr').forEach((tr)=>{
       const cells=[...tr.children]; if(cells.length!==COLUMN_IDS.length) return;
-      const map=new Map(cells.map((el)=>[el.dataset.col,el])); tableLayout.order.forEach((id)=>{ const el=map.get(id); if(el) tr.appendChild(el); });
+      const map=new Map(cells.map((el)=>[el.dataset.col,el])); tableLayout.order.forEach((id)=>{ const el=map.get(id); if(el && tr.children[tableLayout.order.indexOf(id)]!==el) tr.insertBefore(el,tr.children[tableLayout.order.indexOf(id)]||null); });
     });
   }
   function setColumnWidth(col,width,save=false){
@@ -6935,11 +6964,12 @@ const lunarBiz = {
     return lines.map((line)=>line.split('\t'));
   }
   function normalizePastedDisplay(def,raw){
-    const value=String(raw??'').trim();
+    const value=def?.id==='notes'?String(raw??''):String(raw??'').trim();
     if(!def || !def.editable) return {ok:false,error:'该列不可编辑'};
     if(def.type==='number'){
+      if(def.id==='periodValue' && (value==='' || !Number.isInteger(Number(value)) || Number(value)<1)) return {ok:false,error:'周期数值必须为正整数'};
       if(value!=='' && (!Number.isFinite(Number(value)) || Number(value)<0)) return {ok:false,error:`${def.label}必须为非负数字`};
-      return {ok:true,value:value===''?'':String(Math.floor(Number(value)))};
+      return {ok:true,value:value===''?'':String(Number(value))};
     }
     if(def.type==='decimal'){
       if(value!=='' && (!Number.isFinite(Number(value)) || Number(value)<0)) return {ok:false,error:`${def.label}必须为非负数字`};
@@ -7010,6 +7040,7 @@ const lunarBiz = {
     }
   }
   function pasteMatrixIntoSelection(matrix){
+    if(savingEdits) return;
     if(!selectedCellRange || !matrix.length) return;
     if(activeEditorCell) return;
     const rows=visibleTableRows(), cols=editableColumnOrder();
@@ -7208,6 +7239,7 @@ const lunarBiz = {
     return [];
   }
   function beginCellEdit(td){
+    if(savingEdits) return;
     const tr=td.closest('tr[data-subscription-id]'); const def=DEF_BY_ID[td.dataset.col]; if(!tr||!def||!def.editable||td.classList.contains('cell-editing')) return;
     if(activeEditorCell && activeEditorCell!==td && !commitActiveEditor()) return;
     const sub=findSubscription(tr.dataset.subscriptionId); if(!sub) return;
@@ -7233,6 +7265,7 @@ const lunarBiz = {
       if(def.type==='reminder') editor.placeholder='例如：提前1天 · 到期当天';
       editor.value=initial;
     }
+    td.dataset.editorInitial=editorDisplayValue(def,editor);
     editor.dataset.tableCellEditor='1'; td.appendChild(editor); activeEditorCell=td; editor.focus(); if(editor.select&&def.type!=='select'&&def.type!=='boolean') editor.select();
   }
   function editorDisplayValue(def,editor){
@@ -7243,21 +7276,30 @@ const lunarBiz = {
     const td=activeEditorCell; if(!td) return true;
     const editor=td.querySelector('[data-table-cell-editor]'); const tr=td.closest('tr[data-subscription-id]'); const def=DEF_BY_ID[td.dataset.col]; const sub=tr&&findSubscription(tr.dataset.subscriptionId);
     if(!editor||!tr||!def||!sub){ activeEditorCell=null; activeEditorDirty=false; td?.classList.remove('cell-editing'); queueEnhance(); updateEditActionButtons(); return true; }
-    const id=String(sub.id); let display=editorDisplayValue(def,editor).trim();
+    const id=String(sub.id); let display=editorDisplayValue(def,editor);
     const normalized=normalizePastedDisplay(def,display);
     if(!normalized.ok){ showToast(normalized.error||'单格内容格式无效','warning'); editor.focus(); return false; }
     display=normalized.value;
     setPendingCellValue(sub,def.id,display);
-    activeEditorCell=null; activeEditorDirty=false; td.classList.remove('cell-editing'); savePendingEdits(); queueEnhance(); updateEditActionButtons(); return true;
+    activeEditorCell=null; activeEditorDirty=false; td.classList.remove('cell-editing');
+    td.textContent=String(hasPending(id,def.id)?pendingValue(id,def.id):baseDisplayValue(sub,def.id));
+    try{sessionStorage.removeItem(ACTIVE_DRAFT_KEY);}catch(_){}
+    savePendingEdits(); queueEnhance(); updateEditActionButtons(); return true;
   }
   function cancelActiveEditor(){
     const td=activeEditorCell; activeEditorCell=null; activeEditorDirty=false;
-    if(td){td.classList.remove('cell-editing');queueEnhance();}
+    if(td){
+      td.classList.remove('cell-editing');
+      const id=td.closest('tr[data-subscription-id]')?.dataset.subscriptionId; const sub=findSubscription(id);
+      td.textContent=String(hasPending(id,td.dataset.col)?pendingValue(id,td.dataset.col):baseDisplayValue(sub,td.dataset.col));
+      queueEnhance();
+    }
+    try{sessionStorage.removeItem(ACTIVE_DRAFT_KEY);}catch(_){}
     updateEditActionButtons();
   }
 
   function parseReminderRules(text){
-    const raw=String(text||'').trim(); if(!raw) return [];
+    const raw=String(text||'').trim(); if(!raw || ['未设置提醒','无提醒','不提醒','无','無'].includes(raw)) return [];
     const parts=raw.split(/[·，,；;、\n]+/).map((v)=>v.trim()).filter(Boolean); const rules=[]; const now=new Date().toISOString();
     for(const token of parts){
       const compact=token.replace(/\s+/g,'');
@@ -7281,13 +7323,13 @@ const lunarBiz = {
   function applyEditToPayload(payload,col,display){
     const def=DEF_BY_ID[col]; if(!def) return;
     switch(col){
-      case 'points': payload.points=display===''?null:Math.max(0,Math.floor(Number(display))); break;
+      case 'points': payload.points=display===''?null:Number(display); break;
       case 'amount': payload.amount=display===''?null:Number(display); break;
-      case 'periodValue': payload.periodValue=display===''?1:Math.max(1,Math.floor(Number(display))); break;
+      case 'periodValue': payload.periodValue=Number(display); break;
       case 'subscriptionMode': payload.subscriptionMode=enumStoredValue(def,display); break;
       case 'periodUnit': payload.periodUnit=enumStoredValue(def,display); break;
       case 'useLunar': case 'endOfMonth': case 'isActive': case 'autoRenew': { const b=normalizeBoolInput(display); if(b===null) throw new Error(`${def.label}只能填写“是”或“否”`); payload[col]=b; break; }
-      case 'reminder': { const rules=parseReminderRules(display); payload.reminderRules=rules; if(rules.length){ const first=rules.find((r)=>r.type==='before_expiry')||rules[0]; payload.reminderUnit=first.unit==='hours'?'hour':'day'; payload.reminderValue=first.value; } break; }
+      case 'reminder': payload.reminderRules=parseReminderRules(display); break;
       default: payload[col]=display;
     }
   }
@@ -7306,43 +7348,107 @@ const lunarBiz = {
     // 表格保存只提交本次真正变更的字段，由服务端基于数据库现值合并。
     // 避免浏览器里的旧整条记录覆盖服务器新数据，也避免提醒规则同步时把刚保存的字段回滚。
     const changes={};
-    Object.entries(edits||{}).forEach(([col,value])=>applyEditToPayload(changes,col,String(value)));
+    Object.entries(edits||{}).forEach(([col,value])=>{
+      const normalized=normalizePastedDisplay(DEF_BY_ID[col],String(value));
+      if(!normalized.ok) throw new Error(normalized.error||'单格内容格式无效');
+      applyEditToPayload(changes,col,normalized.value);
+    });
     if(Object.prototype.hasOwnProperty.call(changes,'name') && !String(changes.name||'').trim()) throw new Error('订阅名称不能为空');
     if(Object.prototype.hasOwnProperty.call(changes,'expiryDate') && !String(changes.expiryDate||'').trim()) throw new Error('到期日期不能为空');
     return changes;
   }
-  async function saveAllEdits(){
-    if(activeEditorCell && !commitActiveEditor()) return;
-    const ids=Object.keys(pendingEdits); if(!ids.length){ updateEditActionButtons(); return; }
-    const btn=document.getElementById('saveTableEditsBtn'); const cancel=document.getElementById('cancelTableEditsBtn'); const old=btn?btn.innerHTML:'';
-    if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin mr-2"></i>保存中...';} if(cancel) cancel.disabled=true;
-    let success=0,failed=0; const failedMessages=[];
-    for(const id of ids){
-      const sub=findSubscription(id); if(!sub){ failed++; failedMessages.push(`${id}：找不到订阅记录`); continue; }
-      try{
-        const changes=buildTableChanges(sub,pendingEdits[id]);
-        const response=await apiFetch('/api/subscriptions/'+encodeURIComponent(id)+'/table-edit',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({changes}),cache:'no-store'});
-        const result=await response.json();
-        if(!response.ok||!result.success||result.saved!==true||result.storageVerified!==true) throw new Error(result.message||'服务器未确认数据已实际持久化');
-        if(!result.subscription || String(result.subscription.id||'')!==String(id)) throw new Error('服务器未返回已持久化的订阅记录');
-        const requestedFields=Object.keys(changes).filter((key)=>key!=='reminderRules');
-        const savedFields=new Set(Array.isArray(result.savedFields)?result.savedFields:[]);
-        const missing=requestedFields.filter((key)=>!savedFields.has(key));
-        if(missing.length) throw new Error('服务器未确认保存字段：'+missing.join('、'));
-        // 使用服务器已校验的持久化快照更新本地缓存；只有确认成功后才清除暂存修改。
-        recordRecentWrite(result.subscription);
-        const cacheIndex=(subscriptionsCache||[]).findIndex((item)=>String(item.id)===String(id));
-        if(cacheIndex>=0) subscriptionsCache[cacheIndex]={...subscriptionsCache[cacheIndex],...result.subscription};
-        delete pendingEdits[id]; success++;
-      }catch(error){ failed++; failedMessages.push(`${sub.name||id}：${error&&error.message?error.message:'保存失败'}`); }
+  function diagnostic(entry){
+    const box=document.getElementById('tableSaveDiagnostic');
+    const detail=document.getElementById('tableSaveDiagnosticDetails');
+    const item={time:new Date().toISOString(),pageVersion:TABLE_BUILD_VERSION,...entry};
+    let history=[];try{history=JSON.parse(sessionStorage.getItem('subscriptionTableSaveDiagnosticV1')||'[]');}catch(_){}
+    history=(Array.isArray(history)?history:[]).concat(item).slice(-12);
+    try{sessionStorage.setItem('subscriptionTableSaveDiagnosticV1',JSON.stringify(history));}catch(_){}
+    if(box) box.textContent=history.map((x)=>JSON.stringify(x)).join('\n');
+    if(detail && entry.stage==='failed') detail.open=true;
+    // Diagnostics intentionally exclude account details, passwords and cell contents.
+  }
+  function comparableClientValue(field,value){
+    if(field==='reminderRules'){
+      if(!Array.isArray(value)) return '__missing_rules__';
+      return JSON.stringify(value.map((r)=>JSON.stringify({type:r.type,value:Number(r.value),unit:r.unit,
+        repeatInterval:r.repeatInterval==null?null:Number(r.repeatInterval),repeatUntil:r.repeatUntil||'renewed',isEnabled:r.isEnabled!==false})).sort());
     }
-    savePendingEdits();
-    if(success){ showToast(`已保存 ${success} 条订阅的单格修改${failed?`，${failed} 条失败`:''}`,failed?'warning':'success'); try{renderSubscriptionTable();}catch(_){queueEnhance();} }
-    else if(failed) showToast('单格修改保存失败：'+failedMessages.slice(0,2).join('；'),'error');
-    if(failedMessages.length>2) console.warn('[表格单格编辑] 部分失败:',failedMessages);
-    if(btn){btn.innerHTML=old;btn.disabled=pendingCount()===0;} if(cancel) cancel.disabled=pendingCount()===0; queueEnhance();
+    if(field==='startDate'||field==='expiryDate') return value?dateOnly(value):'';
+    if(field==='users') return [...new Set(String(value||'').split(/[,，]/).map(x=>x.trim()).filter(Boolean))].join(',');
+    if(['name','account','accountSerial','memberLevel','customType','category'].includes(field)) return String(value??'').trim();
+    return JSON.stringify(value);
+  }
+  async function saveAllEdits(){
+    if(savingEdits) return;
+    if(activeEditorCell && !commitActiveEditor()) return;
+    const submitted=clone(pendingEdits);
+    const ids=Object.keys(submitted); if(!ids.length){updateEditActionButtons();return;}
+    const btn=document.getElementById('saveTableEditsBtn'); const old=btn?btn.innerHTML:'';
+    savingEdits=true; updateEditActionButtons();
+    if(btn) btn.innerHTML='<i class="fas fa-spinner fa-spin mr-2"></i>保存中...';
+    const failedMessages=[]; let success=0; let serverVersion=null;
+    diagnostic({stage:'started',rows:ids.length,fields:[...new Set(Object.values(submitted).flatMap(Object.keys))]});
+    try{
+      // Reject stale HTML/API combinations before submitting any edited data.
+      const versionResponse=await apiFetch('/api/version?_tableSave='+Date.now(),{cache:'no-store'});
+      const version=await versionResponse.json(); serverVersion=version.version;
+      diagnostic({stage:'version-check',serverVersion,protocol:version.tableEditProtocol});
+      if(!versionResponse.ok || serverVersion!==TABLE_BUILD_VERSION || version.tableEditProtocol!==TABLE_EDIT_PROTOCOL){
+        throw new Error(`页面 ${TABLE_BUILD_VERSION} / 服务器 ${serverVersion||'未知'} 的保存协议不一致。请检查部署是否成功并重新加载，暂存修改不会清除`);
+      }
+      for(const id of ids){
+        const sub=findSubscription(id);
+        try{
+          if(!sub) throw new Error('找不到订阅记录');
+          const changes=buildTableChanges(sub,submitted[id]);
+          diagnostic({stage:'request',fields:Object.keys(changes),serverVersion});
+          const response=await apiFetch('/api/subscriptions/'+encodeURIComponent(id)+'/table-edit',{
+            method:'PATCH',headers:{'Content-Type':'application/json'},cache:'no-store',
+            body:JSON.stringify({changes,clientVersion:TABLE_BUILD_VERSION,tableEditProtocol:TABLE_EDIT_PROTOCOL})
+          });
+          let result;try{result=await response.json();}catch(_){throw new Error(`保存接口返回的不是 JSON（HTTP ${response.status}），请检查部署或登录状态`);}
+          diagnostic({stage:'response',httpStatus:response.status,serverVersion:result.serverVersion,
+            requestId:result.requestId,fields:Object.keys(changes),verification:result.verification,
+            code:result.code,mismatchedFields:result.mismatchedFields});
+          if(!response.ok||!result.success||result.saved!==true||result.storageVerified!==true) throw new Error(result.message||'服务器未确认输入值已持久化');
+          if(result.serverVersion!==TABLE_BUILD_VERSION||result.tableEditProtocol!==TABLE_EDIT_PROTOCOL) throw new Error('保存响应来自不同版本，暂存修改保留');
+          if(!result.subscription||String(result.subscription.id||'')!==String(id)) throw new Error('服务器未返回对应记录的持久化快照');
+          const savedFields=new Set(Array.isArray(result.savedFields)?result.savedFields:[]);
+          const mismatched=Object.keys(changes).filter((field)=>!savedFields.has(field)||
+            comparableClientValue(field,result.subscription[field])!==comparableClientValue(field,changes[field]));
+          if(mismatched.length) throw Object.assign(new Error('服务器确认值与输入值不一致：'+mismatched.join('、')+'；暂存修改保留'),{code:'input_value_mismatch',mismatchedFields:mismatched});
+          recordRecentWrite(result.subscription);
+          const index=(subscriptionsCache||[]).findIndex((item)=>String(item.id)===String(id));
+          if(index>=0) subscriptionsCache[index]={...subscriptionsCache[index],...result.subscription};
+          // Clear only exactly the submitted draft, never edits created after the request.
+          for(const [col,value] of Object.entries(submitted[id])){
+            if(pendingEdits[id]&&pendingEdits[id][col]===value) delete pendingEdits[id][col];
+          }
+          if(pendingEdits[id]&&!Object.keys(pendingEdits[id]).length) delete pendingEdits[id];
+          success++;
+          diagnostic({stage:'verified',requestId:result.requestId,fields:Object.keys(changes),derivedFields:result.derivedFields||[]});
+        }catch(error){
+          const message=error&&error.message?error.message:'保存失败';
+          failedMessages.push(`${sub?.name||'订阅'}：${message}`);
+          // No cell values or account identifiers are added to the diagnostic log.
+          diagnostic({stage:'failed',serverVersion,code:error?.code||'save_not_confirmed',mismatchedFields:error?.mismatchedFields||[]});
+        }
+      }
+    }catch(error){
+      const message=error&&error.message?error.message:'保存请求失败';failedMessages.push(message);
+      diagnostic({stage:'failed',serverVersion,code:error?.code||'save_not_confirmed',mismatchedFields:error?.mismatchedFields||[]});
+    }finally{
+      savingEdits=false; savePendingEdits();
+      if(btn) btn.innerHTML=old;
+      try{renderSubscriptionTable();}catch(_){queueEnhance();}
+      updateEditActionButtons();queueEnhance();
+    }
+    if(failedMessages.length) showToast(`已保存 ${success} 条；未确认的修改仍保留。`+failedMessages.slice(0,2).join('；'),success?'warning':'error');
+    else showToast(`已核对输入值并保存 ${success} 条订阅`,'success');
   }
   function cancelAllEdits(){
+    if(savingEdits) return;
     if(!pendingCount() && !activeEditorDirty && !activeEditorCell) return;
     cancelActiveEditor(); pendingEdits={}; savePendingEdits(); clearCellSelection();
     try{renderSubscriptionTable();}catch(_){queueEnhance();}
@@ -7420,23 +7526,24 @@ const lunarBiz = {
     if(!activeEditorCell || !e.target || !e.target.dataset || e.target.dataset.tableCellEditor!=='1') return;
     const def=DEF_BY_ID[activeEditorCell.dataset.col];
     if(!def) return;
-    const current=editorDisplayValue(def,e.target).trim();
+    const current=editorDisplayValue(def,e.target);
     activeEditorDirty=current!==String(activeEditorCell.dataset.editorInitial||'');
-    updateEditActionButtons();
+    rememberActiveDraft(); updateEditActionButtons();
   });
   document.addEventListener('change',(e)=>{
     if(activeEditorCell && e.target && e.target.dataset && e.target.dataset.tableCellEditor==='1'){
       const def=DEF_BY_ID[activeEditorCell.dataset.col];
       if(def){
-        const current=editorDisplayValue(def,e.target).trim();
+        const current=editorDisplayValue(def,e.target);
         activeEditorDirty=current!==String(activeEditorCell.dataset.editorInitial||'');
-        updateEditActionButtons();
+        rememberActiveDraft(); updateEditActionButtons();
       }
     }
   });
 
   document.addEventListener('mousedown',(e)=>{
     const td=e.target.closest('#subscriptionsExcelBody td.table-cell-editable[data-col]');
+    if(savingEdits) return;
     if(!td || e.target.closest('[data-table-cell-editor]')) return;
     if(e.button!==0) return;
     if(activeEditorCell && activeEditorCell!==td && !commitActiveEditor()) return;

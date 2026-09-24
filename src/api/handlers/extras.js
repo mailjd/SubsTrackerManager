@@ -24,7 +24,8 @@ import { getCategories, addCategory } from '../../data/categories.js';
 import { getMenuOptions, addMenuOption, removeMenuOption, resetMenuOptions, isValidMenuGroup } from '../../data/menu-options.js';
 import { getNextFireTime } from '../../services/notify/reminder-engine.js';
 
-export const VERSION = '3.3.17';
+import { VERSION, TABLE_EDIT_PROTOCOL } from '../../version.js';
+export { VERSION };
 
 
 
@@ -79,7 +80,7 @@ async function writeTableTemplates(env, scope, templates) {
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
   });
 }
 
@@ -177,7 +178,7 @@ export async function handleExtraRoutes(request, env, path) {
 
   // /version
   if (path === '/version' && method === 'GET') {
-    return json({ success: true, version: VERSION });
+    return json({ success: true, version: VERSION, tableEditProtocol: TABLE_EDIT_PROTOCOL });
   }
 
   // /menu-options：订阅名称 / 订阅类型 / 分类标签 / 会员级别 / 使用人的 D1 可配置菜单

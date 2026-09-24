@@ -427,10 +427,22 @@
     .subscription-table-sort-btn:hover, .subscription-table-sort-btn.active { background:rgba(255,255,255,.18); color:#fff; }
     .subscription-table-resize-grip { position:absolute; right:-3px; top:0; bottom:0; width:7px; cursor:col-resize; z-index:8; }
     .subscription-table-resize-grip:hover { background:rgba(255,255,255,.28); }
-    .subscription-table-sort-menu { position:fixed; z-index:1200; min-width:150px; padding:6px; border:1px solid #dbe3ee; border-radius:9px; background:#fff; box-shadow:0 12px 30px rgba(15,23,42,.18); }
+    .subscription-table-sort-menu { position:fixed; z-index:1200; width:290px; max-width:calc(100vw - 16px); padding:6px; border:1px solid #dbe3ee; border-radius:9px; background:#fff; box-shadow:0 12px 30px rgba(15,23,42,.18); }
     .subscription-table-sort-menu.hidden { display:none; }
     .subscription-table-sort-menu button { width:100%; padding:8px 10px; border-radius:6px; text-align:left; font-size:13px; color:#334155; }
     .subscription-table-sort-menu button:hover { background:#eef2ff; color:#3730a3; }
+    .subscription-table-sort-btn.filtered { background:rgba(251,191,36,.24); color:#fef3c7; box-shadow:inset 0 0 0 1px rgba(251,191,36,.5); }
+    .subscription-table-sort-btn.filtered::after { content:''; width:5px; height:5px; border-radius:999px; background:#fbbf24; position:absolute; right:2px; top:2px; }
+    .subscription-table-sort-btn { position:relative; }
+    .subscription-header-filter { border-top:1px solid #e5e7eb; margin-top:5px; padding-top:7px; }
+    .subscription-header-filter-search { width:100%; padding:7px 9px; border:1px solid #d1d5db; border-radius:6px; font-size:12px; background:#fff; color:#111827; outline:none; }
+    .subscription-header-filter-values { max-height:190px; overflow:auto; margin-top:6px; border:1px solid #e5e7eb; border-radius:6px; padding:4px; }
+    .subscription-header-filter-value { display:flex; align-items:center; gap:7px; padding:5px 6px; border-radius:5px; font-size:12px; cursor:pointer; color:#334155; }
+    .subscription-header-filter-value:hover { background:#f3f4f6; }
+    .subscription-header-filter-tools { display:flex; gap:5px; margin-top:6px; }
+    .subscription-header-filter-tools button { width:auto; flex:1; padding:6px 7px; text-align:center; font-size:12px; border:1px solid #dbe3ee; }
+    .subscription-header-filter-actions { display:flex; gap:6px; margin-top:7px; }
+    .subscription-header-filter-actions button { flex:1; text-align:center; }
     .subscription-excel-table td.table-cell-editable { cursor:cell; }
     .subscription-excel-table td.table-cell-editable:hover { box-shadow:inset 0 0 0 1px #a5b4fc; }
     .subscription-excel-table td.cell-pending-edit { background:#fff7d6 !important; color:#92400e; box-shadow:inset 0 0 0 1px #f59e0b; }
@@ -446,7 +458,30 @@
     html.dark .subscription-table-sort-menu { background:#1f2937; border-color:#475569; }
     html.dark .subscription-table-sort-menu button { color:#e5e7eb; }
     html.dark .subscription-table-sort-menu button:hover { background:#273449; color:#fff; }
+    html.dark .subscription-header-filter { border-top-color:#475569; }
+    html.dark .subscription-header-filter-search { background:#111827; color:#f9fafb; border-color:#475569; color-scheme:dark; }
+    html.dark .subscription-header-filter-values { border-color:#475569; }
+    html.dark .subscription-header-filter-value { color:#e5e7eb; }
+    html.dark .subscription-header-filter-value:hover { background:#273449; }
+    html.dark .subscription-header-filter-tools button { border-color:#475569; }
     html.dark .subscription-excel-table td.cell-pending-edit { background:#493919 !important; color:#fde68a; }
+    /* v3.3.12：深色模式下，单击/拖选单元格的“选中态”也保持深色，避免未进入编辑模式时爆白。 */
+    html.dark .subscription-excel-table td.cell-grid-selected {
+      background:#253247 !important;
+      color:#f3f4f6 !important;
+      box-shadow:inset 0 0 0 1px #818cf8 !important;
+    }
+    html.dark .subscription-excel-table td.cell-grid-anchor {
+      background:#2b3952 !important;
+      color:#fff !important;
+      box-shadow:inset 0 0 0 2px #818cf8 !important;
+    }
+    html.dark .subscription-excel-table td.cell-pending-edit.cell-grid-selected,
+    html.dark .subscription-excel-table td.cell-pending-edit.cell-grid-anchor {
+      background:#493919 !important;
+      color:#fde68a !important;
+      box-shadow:inset 0 0 0 2px #f59e0b !important;
+    }
     html.dark .subscription-table-cell-editor { background:#111827 !important; color:#f9fafb !important; border-color:#818cf8 !important; color-scheme:dark; }
     html.dark select.subscription-table-cell-editor, html.dark select.subscription-table-cell-editor option, html.dark input.subscription-table-cell-editor, html.dark textarea.subscription-table-cell-editor { background-color:#111827 !important; color:#f9fafb !important; }
     html.dark td.cell-editing { background:#172033 !important; }
@@ -2341,10 +2376,15 @@ const lunarBiz = {
         });
       }
 
+      // v3.3.11：表头下拉菜单的 Excel 风格多值筛选，与顶部筛选条件叠加生效。
+      if (typeof window.applySubscriptionHeaderFilters === 'function') {
+        filtered = window.applySubscriptionHeaderFilters(filtered);
+      }
+
       if (filtered.length === 0) {
         lastFilteredSubscriptions = [];
         updateSubscriptionPagination(0);
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500"><div>没有符合条件的订阅</div><button onclick="document.getElementById(\'searchKeyword\').value=\'\';document.getElementById(\'clearSearch\').style.display=\'none\';document.getElementById(\'categoryFilter\').value=\'\';document.getElementById(\'customTypeFilter\').value=\'\';document.getElementById(\'modeFilter\').value=\'\';document.getElementById(\'statusFilter\').value=\'\';subscriptionCurrentPage=1;renderSubscriptionTable();" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800"><i class="fas fa-undo mr-1"></i>清除筛选条件</button></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500"><div>没有符合条件的订阅</div><button onclick="document.getElementById(\'searchKeyword\').value=\'\';document.getElementById(\'clearSearch\').style.display=\'none\';document.getElementById(\'categoryFilter\').value=\'\';document.getElementById(\'customTypeFilter\').value=\'\';document.getElementById(\'modeFilter\').value=\'\';document.getElementById(\'statusFilter\').value=\'\';if(window.clearSubscriptionHeaderFilters)window.clearSubscriptionHeaderFilters(false);subscriptionCurrentPage=1;renderSubscriptionTable();" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800"><i class="fas fa-undo mr-1"></i>清除筛选条件</button></td></tr>';
         renderSubscriptionExcelTable([]);
         renderSubscriptionCards([]);
         updateSelectionUI();
@@ -5152,7 +5192,7 @@ const lunarBiz = {
     // ───────────────────────────────────────────────────────
     // 多提醒规则编辑器（内嵌在订阅表单中）
     //   - 数据形态：[{ id, type, value, unit, repeatInterval?, repeatUntil?, isEnabled }]
-    //   - 新建订阅时默认渲染 2 条预设（到期前 1 天 + 到期当天）
+    //   - 新建订阅时默认渲染 4 条预设（7/3 天预建未勾选，1 天 + 到期当天启用）
     //   - 编辑订阅时通过 /api/subscriptions/:id/reminders 拉取
     //   - 表单提交时自动收集并附加在 reminderRules 字段
     // ───────────────────────────────────────────────────────
@@ -5179,7 +5219,10 @@ const lunarBiz = {
       }
 
       function defaultPresets() {
+        // 默认建立 7/3/1 天 + 到期当天四条规则；7 天、3 天仅预建但默认不勾选。
         return [
+          { id: uuid(), type: 'before_expiry', value: 7, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: false },
+          { id: uuid(), type: 'before_expiry', value: 3, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: false },
           { id: uuid(), type: 'before_expiry', value: 1, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: true },
           { id: uuid(), type: 'on_expiry', value: 0, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: true }
         ];
@@ -6472,6 +6515,7 @@ const lunarBiz = {
   const LEGACY_LAYOUT_KEY = 'subscriptionTableLayoutV1';
   const TEMPLATE_KEY = 'subscriptionTableTemplatesV1';
   const EDIT_KEY = 'subscriptionTablePendingEditsV1';
+  const HEADER_FILTER_KEY = 'subscriptionTableHeaderFiltersV1';
   let activeSortColumn = null;
   let activeEditorCell = null;
   let dragColumnId = null;
@@ -6513,6 +6557,24 @@ const lunarBiz = {
   }
   let tableLayout=loadLayout();
   function saveLayout(){ localStorage.setItem(LAYOUT_KEY,JSON.stringify(tableLayout)); }
+
+  function loadHeaderFilters(){
+    try {
+      const parsed=JSON.parse(localStorage.getItem(HEADER_FILTER_KEY)||'{}');
+      if(!parsed || typeof parsed!=='object' || Array.isArray(parsed)) return {};
+      const out={};
+      Object.entries(parsed).forEach(([col,values])=>{
+        if(DEF_BY_ID[col] && !['select','actions'].includes(col) && Array.isArray(values)) out[col]=values.map((v)=>String(v));
+      });
+      return out;
+    } catch(_) { return {}; }
+  }
+  let headerFilters=loadHeaderFilters();
+  function saveHeaderFilters(){
+    if(Object.keys(headerFilters).length) localStorage.setItem(HEADER_FILTER_KEY,JSON.stringify(headerFilters));
+    else localStorage.removeItem(HEADER_FILTER_KEY);
+  }
+  function hasHeaderFilter(col){ return Object.prototype.hasOwnProperty.call(headerFilters,col); }
 
   function loadPendingEdits(){
     try { const parsed=JSON.parse(sessionStorage.getItem(EDIT_KEY)||'{}'); return parsed && typeof parsed==='object' ? parsed : {}; }
@@ -6570,6 +6632,31 @@ const lunarBiz = {
   }
   function effectiveDisplayValue(sub,col){ const id=String(sub && sub.id || ''); return hasPending(id,col)?String(pendingValue(id,col)):baseDisplayValue(sub,col); }
   function findSubscription(id){ try { return (subscriptionsCache||[]).find((s)=>String(s.id)===String(id))||null; } catch(_) { return null; } }
+  function headerFilterValue(sub,col){ return String(effectiveDisplayValue(sub,col) ?? '').trim(); }
+  function uniqueHeaderFilterValues(col){
+    const values=[]; const seen=new Set();
+    try {
+      (subscriptionsCache||[]).forEach((sub)=>{
+        const value=headerFilterValue(sub,col);
+        if(!seen.has(value)){ seen.add(value); values.push(value); }
+      });
+    } catch(_) {}
+    values.sort((a,b)=>compareNatural(a,b));
+    return values;
+  }
+  window.applySubscriptionHeaderFilters=function(rows){
+    let output=Array.isArray(rows)?rows:[];
+    Object.entries(headerFilters).forEach(([col,selected])=>{
+      if(!DEF_BY_ID[col] || !Array.isArray(selected)) return;
+      const allowed=new Set(selected.map((v)=>String(v)));
+      output=output.filter((sub)=>allowed.has(headerFilterValue(sub,col)));
+    });
+    return output;
+  };
+  window.clearSubscriptionHeaderFilters=function(shouldRender=true){
+    headerFilters={}; saveHeaderFilters(); updateSortIcons();
+    if(shouldRender){ try{subscriptionCurrentPage=1;renderSubscriptionTable();}catch(_){queueEnhance();} }
+  };
 
   function compareNatural(a,b){
     const av=a===null||a===undefined?'':a; const bv=b===null||b===undefined?'':b;
@@ -6606,7 +6693,7 @@ const lunarBiz = {
       th.innerHTML='';
       const inner=document.createElement('div'); inner.className='subscription-table-th-inner';
       const label=document.createElement('span'); label.className='subscription-table-th-label'; label.textContent=def.label; label.title='拖动表头可调整列位置；双击表头可切换排序';
-      const sortBtn=document.createElement('button'); sortBtn.type='button'; sortBtn.className='subscription-table-sort-btn'; sortBtn.dataset.col=def.id; sortBtn.title='设置排序顺序'; sortBtn.draggable=false;
+      const sortBtn=document.createElement('button'); sortBtn.type='button'; sortBtn.className='subscription-table-sort-btn'; sortBtn.dataset.col=def.id; sortBtn.title='设置排序与筛选'; sortBtn.draggable=false;
       sortBtn.innerHTML='<i class="fas fa-chevron-down"></i>';
       inner.append(label,sortBtn); th.appendChild(inner);
       const grip=document.createElement('span'); grip.className='subscription-table-resize-grip'; grip.dataset.col=def.id; grip.draggable=false; grip.title='拖动调整列宽'; th.appendChild(grip);
@@ -6673,7 +6760,10 @@ const lunarBiz = {
   function updateSortIcons(){
     document.querySelectorAll('.subscription-table-sort-btn').forEach((btn)=>{
       const active=tableLayout.sort && tableLayout.sort.column===btn.dataset.col && tableLayout.sort.direction!=='none';
+      const filtered=hasHeaderFilter(btn.dataset.col);
       btn.classList.toggle('active',active);
+      btn.classList.toggle('filtered',filtered);
+      btn.title=filtered?'设置排序与筛选（当前列已筛选）':'设置排序与筛选';
       const icon=btn.querySelector('i'); if(!icon) return;
       icon.className=active ? (tableLayout.sort.direction==='asc'?'fas fa-sort-up':'fas fa-sort-down') : 'fas fa-chevron-down';
     });
@@ -6895,18 +6985,79 @@ const lunarBiz = {
 
   function openSortMenu(btn){
     activeSortColumn=btn.dataset.col;
+    const col=activeSortColumn;
+    const def=DEF_BY_ID[col];
     let menu=document.getElementById('subscriptionTableSortMenu');
     if(!menu){
       menu=document.createElement('div'); menu.id='subscriptionTableSortMenu'; menu.className='subscription-table-sort-menu hidden';
-      menu.innerHTML='<button type="button" data-dir="asc"><i class="fas fa-sort-amount-up mr-2"></i>升序</button><button type="button" data-dir="desc"><i class="fas fa-sort-amount-down mr-2"></i>降序</button><button type="button" data-dir="none"><i class="fas fa-times mr-2"></i>清除排序</button>';
       document.body.appendChild(menu);
     }
-    const rect=btn.getBoundingClientRect(); menu.style.left=Math.min(window.innerWidth-165,Math.max(8,rect.right-150))+'px'; menu.style.top=Math.min(window.innerHeight-130,rect.bottom+5)+'px'; menu.classList.remove('hidden');
+    menu.innerHTML='<button type="button" data-dir="asc"><i class="fas fa-sort-amount-up mr-2"></i>升序</button><button type="button" data-dir="desc"><i class="fas fa-sort-amount-down mr-2"></i>降序</button><button type="button" data-dir="none"><i class="fas fa-times mr-2"></i>清除排序</button>';
+
+    if(def && !['select','actions'].includes(col)){
+      const section=document.createElement('div'); section.className='subscription-header-filter';
+      const title=document.createElement('div'); title.className='px-1 pb-1 text-xs font-semibold text-gray-500'; title.textContent='筛选 · '+def.label; section.appendChild(title);
+      const search=document.createElement('input'); search.type='search'; search.className='subscription-header-filter-search'; search.placeholder='搜索筛选值…'; search.dataset.headerFilterSearch='1'; section.appendChild(search);
+      const valuesWrap=document.createElement('div'); valuesWrap.className='subscription-header-filter-values';
+      const values=uniqueHeaderFilterValues(col);
+      const hasActive=hasHeaderFilter(col);
+      const selected=new Set(hasActive ? headerFilters[col].map((v)=>String(v)) : values);
+      if(values.length===0){
+        const empty=document.createElement('div'); empty.className='px-2 py-3 text-xs text-gray-400'; empty.textContent='当前列没有可筛选值'; valuesWrap.appendChild(empty);
+      } else {
+        values.forEach((value)=>{
+          const label=document.createElement('label'); label.className='subscription-header-filter-value'; label.dataset.filterSearchText=(value||'(空白)').toLocaleLowerCase('zh-CN');
+          const check=document.createElement('input'); check.type='checkbox'; check.dataset.headerFilterValue='1'; check.value=value; check.checked=selected.has(value);
+          const span=document.createElement('span'); span.className='truncate'; span.textContent=value||'(空白)'; span.title=value||'(空白)';
+          label.append(check,span); valuesWrap.appendChild(label);
+        });
+      }
+      section.appendChild(valuesWrap);
+      const tools=document.createElement('div'); tools.className='subscription-header-filter-tools';
+      tools.innerHTML='<button type="button" data-filter-action="all">全选</button><button type="button" data-filter-action="none">全不选</button><button type="button" data-filter-action="clear">清除筛选</button>';
+      section.appendChild(tools);
+      const actions=document.createElement('div'); actions.className='subscription-header-filter-actions';
+      actions.innerHTML='<button type="button" data-filter-action="apply" class="bg-indigo-600 text-white hover:bg-indigo-700"><i class="fas fa-filter mr-1"></i>应用筛选</button>';
+      section.appendChild(actions);
+      menu.appendChild(section);
+      search.addEventListener('input',()=>{
+        const q=search.value.trim().toLocaleLowerCase('zh-CN');
+        valuesWrap.querySelectorAll('.subscription-header-filter-value').forEach((label)=>{ label.style.display=!q||String(label.dataset.filterSearchText||'').includes(q)?'':'none'; });
+      });
+    }
+
+    const rect=btn.getBoundingClientRect();
+    menu.style.left=Math.min(window.innerWidth-300,Math.max(8,rect.right-290))+'px';
+    menu.style.top=Math.min(window.innerHeight-Math.min(440,menu.scrollHeight||440)-8,rect.bottom+5)+'px';
+    if(parseFloat(menu.style.top)<8) menu.style.top='8px';
+    menu.classList.remove('hidden');
   }
   function closeSortMenu(){ document.getElementById('subscriptionTableSortMenu')?.classList.add('hidden'); activeSortColumn=null; }
   function setSort(col,direction){
     tableLayout.sort={column:col,direction}; saveLayout(); updateSortIcons();
     try { subscriptionCurrentPage=1; renderSubscriptionTable(); } catch(_) { queueEnhance(); }
+  }
+
+  function handleHeaderFilterAction(action){
+    const menu=document.getElementById('subscriptionTableSortMenu');
+    const col=activeSortColumn;
+    if(!menu||!col||!DEF_BY_ID[col]) return;
+    const boxes=[...menu.querySelectorAll('input[data-header-filter-value]')];
+    if(action==='all'){ boxes.forEach((box)=>box.checked=true); return; }
+    if(action==='none'){ boxes.forEach((box)=>box.checked=false); return; }
+    if(action==='clear'){
+      delete headerFilters[col]; saveHeaderFilters(); closeSortMenu(); updateSortIcons();
+      try{subscriptionCurrentPage=1;renderSubscriptionTable();}catch(_){queueEnhance();}
+      return;
+    }
+    if(action==='apply'){
+      const selected=boxes.filter((box)=>box.checked).map((box)=>String(box.value));
+      const allValues=uniqueHeaderFilterValues(col);
+      if(selected.length===allValues.length && allValues.every((value)=>selected.includes(String(value)))) delete headerFilters[col];
+      else headerFilters[col]=selected;
+      saveHeaderFilters(); closeSortMenu(); updateSortIcons();
+      try{subscriptionCurrentPage=1;renderSubscriptionTable();}catch(_){queueEnhance();}
+    }
   }
 
   function headerDragStart(event){
@@ -7167,6 +7318,7 @@ const lunarBiz = {
   document.addEventListener('click',(e)=>{
     const sortBtn=e.target.closest('.subscription-table-sort-btn'); if(sortBtn){e.preventDefault();e.stopPropagation();openSortMenu(sortBtn);return;}
     const sortChoice=e.target.closest('#subscriptionTableSortMenu button[data-dir]'); if(sortChoice&&activeSortColumn){const col=activeSortColumn,dir=sortChoice.dataset.dir;closeSortMenu();setSort(col,dir);return;}
+    const filterAction=e.target.closest('#subscriptionTableSortMenu button[data-filter-action]'); if(filterAction){e.preventDefault();e.stopPropagation();handleHeaderFilterAction(filterAction.dataset.filterAction);return;}
     if(!e.target.closest('#subscriptionTableSortMenu')) closeSortMenu();
     if(e.target.closest('#resetTableLayoutBtn')) resetLayout();
     const columnsBtn=e.target.closest('#toggleTableColumnsBtn'); if(columnsBtn){e.preventDefault();e.stopPropagation();openColumnVisibilityMenu(columnsBtn);return;}

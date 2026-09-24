@@ -14,7 +14,7 @@
  *   createdAt: string                           // ISO
  * }
  *
- * 智能预设（新订阅默认 4 条）：到期前 7/3/1 天 + 到期当天。
+ * 智能预设（新订阅默认 2 条）：到期前 1 天 + 到期当天。
  *
  */
 
@@ -42,15 +42,13 @@ export function makeRuleId() {
 }
 
 /**
- * 智能预设：4 条 — 到期前 7/3/1 天 + 当天。
+ * 智能预设：2 条 — 到期前 1 天 + 当天。
  *
  * @returns {ReminderRule[]}
  */
 export function defaultPresetRules() {
   const now = new Date().toISOString();
   return [
-    { id: makeRuleId(), type: 'before_expiry', value: 7, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: true, createdAt: now },
-    { id: makeRuleId(), type: 'before_expiry', value: 3, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: true, createdAt: now },
     { id: makeRuleId(), type: 'before_expiry', value: 1, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: true, createdAt: now },
     { id: makeRuleId(), type: 'on_expiry', value: 0, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: true, createdAt: now }
   ];
@@ -69,8 +67,8 @@ export function legacyFieldToRule(sub) {
   const value = Number(
     sub.reminderValue !== undefined && sub.reminderValue !== null ? sub.reminderValue : fallback
   );
-  // value 为非数字时回退 7；value=0 视为"到期当天"，保留
-  const safeValue = Number.isFinite(value) && value >= 0 ? value : 7;
+  // value 为非数字时回退 1；value=0 视为"到期当天"，保留
+  const safeValue = Number.isFinite(value) && value >= 0 ? value : 1;
   return {
     id: makeRuleId(),
     type: safeValue === 0 ? 'on_expiry' : 'before_expiry',
@@ -215,14 +213,14 @@ export async function clearForSubscription(env, subId) {
  */
 export function deriveLegacyFromRules(rules) {
   const list = Array.isArray(rules) ? rules.filter((r) => r && r.isEnabled !== false) : [];
-  if (list.length === 0) return { unit: 'day', value: 7 };
+  if (list.length === 0) return { unit: 'day', value: 1 };
 
   const befores = list.filter((r) => r.type === 'before_expiry');
   if (befores.length > 0) {
     const sorted = [...befores].sort((a, b) => Number(b.value) - Number(a.value));
     const top = sorted[0];
     const unit = top.unit === 'hours' ? 'hour' : 'day';
-    return { unit, value: Number.isFinite(top.value) ? top.value : 7 };
+    return { unit, value: Number.isFinite(top.value) ? top.value : 1 };
   }
 
   const on = list.find((r) => r.type === 'on_expiry');

@@ -447,7 +447,14 @@
     html.dark .subscription-table-sort-menu button { color:#e5e7eb; }
     html.dark .subscription-table-sort-menu button:hover { background:#273449; color:#fff; }
     html.dark .subscription-excel-table td.cell-pending-edit { background:#493919 !important; color:#fde68a; }
-    html.dark .subscription-table-cell-editor { background:#111827; color:#f9fafb; border-color:#818cf8; }
+    html.dark .subscription-table-cell-editor { background:#111827 !important; color:#f9fafb !important; border-color:#818cf8 !important; color-scheme:dark; }
+    html.dark select.subscription-table-cell-editor, html.dark select.subscription-table-cell-editor option, html.dark input.subscription-table-cell-editor, html.dark textarea.subscription-table-cell-editor { background-color:#111827 !important; color:#f9fafb !important; }
+    html.dark td.cell-editing { background:#172033 !important; }
+    .subscription-column-menu { position:fixed; z-index:10030; width:260px; max-height:420px; overflow:auto; background:#fff; border:1px solid #d1d5db; border-radius:10px; box-shadow:0 16px 38px rgba(15,23,42,.2); padding:10px; }
+    html.dark .subscription-column-menu { background:#111827; border-color:#374151; color:#f9fafb; }
+    .subscription-column-menu label { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:13px; }
+    .subscription-column-menu label:hover { background:#f3f4f6; }
+    html.dark .subscription-column-menu label:hover { background:#1f2937; }
 
     /* 模态框动画 */
     #subscriptionModal { transition: opacity 0.2s ease; opacity: 0; }
@@ -537,7 +544,7 @@
       </div>
 
       <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-3">
-        <div class="relative sm:col-span-2 xl:col-span-6">
+        <div class="relative sm:col-span-2 xl:col-span-4">
           <input type="text" id="searchKeyword" placeholder="搜索名称、账号、账号序号、类型、使用人或备注..."
             class="w-full pl-10 pr-9 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 text-sm">
           <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
@@ -565,6 +572,11 @@
             <option value="disabled">已停用</option>
           </select>
         </div>
+        <div class="xl:col-span-2">
+          <select id="customTypeFilter" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white text-sm">
+            <option value="">全部订阅类型</option>
+          </select>
+        </div>
         <div class="sm:col-span-2 xl:col-span-2">
           <select id="categoryFilter" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white text-sm">
             <option value="">全部分类</option>
@@ -589,6 +601,7 @@
             </select>
             <button type="button" id="saveTableTemplateBtn" class="px-3 py-2 text-sm border border-indigo-200 text-indigo-700 rounded-lg bg-white hover:bg-indigo-50"><i class="fas fa-bookmark mr-1"></i>保存模板</button>
             <button type="button" id="deleteTableTemplateBtn" disabled class="px-3 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"><i class="fas fa-trash-alt mr-1"></i>删除模板</button>
+            <button type="button" id="toggleTableColumnsBtn" class="px-3 py-2 text-sm border border-gray-200 text-gray-700 rounded-lg bg-white hover:bg-gray-50"><i class="fas fa-columns mr-1"></i>显示/隐藏列</button>
             <button type="button" id="resetTableLayoutBtn" class="px-3 py-2 text-sm border rounded-lg bg-white"><i class="fas fa-table mr-1"></i>重置Layout</button>
           </div>
         </div>
@@ -965,12 +978,12 @@
           <div class="flex items-center justify-between mb-3">
             <label class="block text-sm font-semibold text-gray-700">
               <i class="fas fa-bell text-indigo-500 mr-1"></i> 提醒规则
-              <span class="text-xs font-normal text-gray-500 ml-2">（支持多条规则；新订阅默认 7/3/1 天 + 当天）</span>
+              <span class="text-xs font-normal text-gray-500 ml-2">（支持多条规则；新订阅默认到期前 1 天 + 到期当天）</span>
             </label>
             <div class="flex items-center space-x-2">
               <button type="button" id="reminderRulesPresetBtn"
                 class="text-xs px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 text-gray-700">
-                <i class="fas fa-magic"></i> 应用预设(7/3/1/当天)
+                <i class="fas fa-magic"></i> 应用预设(1天/当天)
               </button>
               <button type="button" id="reminderRulesAddBtn"
                 class="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700">
@@ -984,12 +997,12 @@
           <p class="mt-2 text-xs text-gray-500 leading-relaxed">
             <strong class="text-gray-600">触发语义（精确匹配）：</strong>
             「到期前 N 天」仅在剩余天数<strong>正好等于 N</strong> 时发送一次，不会在第 N-1…1 天自动连发。
-            若希望 7/3/1 天都提醒，请添加多条规则（可用上方预设）。
+            若需要更多提前提醒，请添加多条规则（可用上方预设后继续调整）。
             类型：到期前 = 精确日/小时；到期当天；到期后 = 每 X 小时重复直到续费/手动确认。
           </p>
           <!-- 兜底字段：旧调度器路径需要这两个值；当 reminderRules 为空时仍生效 -->
           <input type="hidden" id="reminderUnit" value="day">
-          <input type="hidden" id="reminderValue" value="7">
+          <input type="hidden" id="reminderValue" value="1">
           <div class="error-message text-red-500" data-for="reminderValue"></div>
           <p id="reminderHint" class="hidden"></p>
         </div>
@@ -1120,6 +1133,7 @@
           <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="subscriptionMode"><strong class="text-sm">订阅模式</strong></span><select id="bulkSubscriptionMode" class="w-full border rounded-md px-3 py-2 text-sm"><option value="cycle">循环订阅</option><option value="reset">到期重置</option></select></label>
           <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="isActive"><strong class="text-sm">启用状态</strong></span><select id="bulkIsActive" class="w-full border rounded-md px-3 py-2 text-sm"><option value="true">启用</option><option value="false">停用</option></select></label>
           <label class="border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="autoRenew"><strong class="text-sm">自动续订</strong></span><select id="bulkAutoRenew" class="w-full border rounded-md px-3 py-2 text-sm"><option value="true">开启</option><option value="false">关闭</option></select></label>
+          <label class="border rounded-lg p-3 md:col-span-2"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="reminderRules"><strong class="text-sm">提醒规则</strong></span><input id="bulkReminderRules" type="text" class="w-full border rounded-md px-3 py-2 text-sm" value="提前1天 · 到期当天" placeholder="例如：提前1天 · 到期当天"><span class="block mt-1 text-xs text-gray-500">支持：提前1天、提前3/1天、12小时、到期当天、到期后每24小时</span></label>
         </div>
         <label id="bulkNotesArea" class="block border rounded-lg p-3"><span class="flex items-center gap-2 mb-2"><input type="checkbox" class="bulk-field-enable" data-field="notes"><strong class="text-sm">备注</strong></span><textarea id="bulkNotes" rows="3" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="批量替换或追加备注"></textarea><span class="mt-2 inline-flex items-center text-xs text-gray-600"><input id="bulkAppendNotes" type="checkbox" class="mr-2">追加到原备注（不勾选则替换）</span></label>
         <div class="rounded-lg border border-red-200 bg-red-50 p-4">
@@ -1898,6 +1912,22 @@ const lunarBiz = {
       }
     }
 
+    function populateSubscriptionTypeFilter(subscriptions) {
+      const select = document.getElementById('customTypeFilter');
+      if (!select) return;
+      const previousValue = select.value;
+      const types = Array.from(new Set((subscriptions || []).map((item) => String(item.customType || '').trim()).filter(Boolean)))
+        .sort((a, b) => a.localeCompare(b, 'zh-CN'));
+      select.innerHTML = '<option value="">全部订阅类型</option>';
+      types.forEach((type) => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        select.appendChild(option);
+      });
+      if (previousValue && types.some((item) => item.toLowerCase() === previousValue.toLowerCase())) select.value = previousValue;
+    }
+
     function formatReminderRulesSummary(rules) {
       const list = Array.isArray(rules) ? rules.filter(function (r) { return r && r.isEnabled !== false; }) : [];
       if (list.length === 0) return '';
@@ -1950,11 +1980,11 @@ const lunarBiz = {
         unit = maxHour != null && (maxDay == null || maxHour / 24 > maxDay) ? 'hour' : 'day';
         value = unit === 'hour'
           ? (maxHour != null ? maxHour : 0)
-          : (maxDay != null ? maxDay : (enabled.some(function (r) { return r.type === 'on_expiry'; }) ? 0 : 7));
+          : (maxDay != null ? maxDay : (enabled.some(function (r) { return r.type === 'on_expiry'; }) ? 0 : 1));
         return { unit: unit, value: value, displayText: summary };
       }
 
-      var fallbackDays = subscription.reminderDays !== undefined ? subscription.reminderDays : 7;
+      var fallbackDays = subscription.reminderDays !== undefined ? subscription.reminderDays : 1;
       unit = subscription.reminderUnit || '';
       value = subscription.reminderValue;
 
@@ -2237,6 +2267,8 @@ const lunarBiz = {
       const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
       const categorySelect = document.getElementById('categoryFilter');
       const selectedCategory = categorySelect ? categorySelect.value.trim().toLowerCase() : '';
+      const customTypeSelect = document.getElementById('customTypeFilter');
+      const selectedCustomType = customTypeSelect ? customTypeSelect.value.trim().toLowerCase() : '';
       const modeSelect = document.getElementById('modeFilter');
       const selectedMode = modeSelect ? modeSelect.value : '';
       const statusSelect = document.getElementById('statusFilter');
@@ -2248,6 +2280,10 @@ const lunarBiz = {
         filtered = filtered.filter(subscription =>
           normalizeCategoryTokens(subscription.category).some(token => token.toLowerCase() === selectedCategory)
         );
+      }
+
+      if (selectedCustomType) {
+        filtered = filtered.filter(subscription => String(subscription.customType || '').trim().toLowerCase() === selectedCustomType);
       }
 
       if (selectedMode) {
@@ -2308,7 +2344,7 @@ const lunarBiz = {
       if (filtered.length === 0) {
         lastFilteredSubscriptions = [];
         updateSubscriptionPagination(0);
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500"><div>没有符合条件的订阅</div><button onclick="document.getElementById(\'searchKeyword\').value=\'\';document.getElementById(\'clearSearch\').style.display=\'none\';document.getElementById(\'categoryFilter\').value=\'\';document.getElementById(\'modeFilter\').value=\'\';document.getElementById(\'statusFilter\').value=\'\';subscriptionCurrentPage=1;renderSubscriptionTable();" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800"><i class="fas fa-undo mr-1"></i>清除筛选条件</button></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500"><div>没有符合条件的订阅</div><button onclick="document.getElementById(\'searchKeyword\').value=\'\';document.getElementById(\'clearSearch\').style.display=\'none\';document.getElementById(\'categoryFilter\').value=\'\';document.getElementById(\'customTypeFilter\').value=\'\';document.getElementById(\'modeFilter\').value=\'\';document.getElementById(\'statusFilter\').value=\'\';subscriptionCurrentPage=1;renderSubscriptionTable();" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800"><i class="fas fa-undo mr-1"></i>清除筛选条件</button></td></tr>';
         renderSubscriptionExcelTable([]);
         renderSubscriptionCards([]);
         updateSelectionUI();
@@ -2619,6 +2655,11 @@ const lunarBiz = {
       categorySelect.addEventListener('change', () => resetSubscriptionPageAndRender());
     }
 
+    const customTypeSelect = document.getElementById('customTypeFilter');
+    if (customTypeSelect) {
+      customTypeSelect.addEventListener('change', () => resetSubscriptionPageAndRender());
+    }
+
     const modeSelect = document.getElementById('modeFilter');
     if (modeSelect) {
       modeSelect.addEventListener('change', () => resetSubscriptionPageAndRender());
@@ -2721,6 +2762,7 @@ const lunarBiz = {
         const validSubscriptionIds = new Set(subscriptionsCache.map((item) => String(item.id)));
         Array.from(selectedSubscriptionIds).forEach((id) => { if (!validSubscriptionIds.has(id)) selectedSubscriptionIds.delete(id); });
         populateCategoryFilter(subscriptionsCache);
+        populateSubscriptionTypeFilter(subscriptionsCache);
         await loadAccountOptions();
         refreshAccountSerialOptions();
         renderSubscriptionTable();
@@ -3394,7 +3436,7 @@ const lunarBiz = {
       const today = getTodayDateStringInTimezone(globalTimezone);
       document.getElementById('startDate').value = today;
       document.getElementById('category').value = '';
-      document.getElementById('reminderValue').value = '7';
+      document.getElementById('reminderValue').value = '1';
       document.getElementById('reminderUnit').value = 'day';
       document.getElementById('isActive').checked = true;
       document.getElementById('autoRenew').checked = true;
@@ -4585,12 +4627,12 @@ const lunarBiz = {
         showLunar.dataset.bound = 'true';
         showLunar.addEventListener('change', toggleLunarDisplay);
       }
-      if (startDate && !startDate.dataset.bound) {
-        startDate.dataset.bound = 'true';
+      if (startDate && !startDate.dataset.lunarDisplayBound) {
+        startDate.dataset.lunarDisplayBound = 'true';
         startDate.addEventListener('change', () => updateLunarDisplay('startDate', 'startDateLunar'));
       }
-      if (expiryDate && !expiryDate.dataset.bound) {
-        expiryDate.dataset.bound = 'true';
+      if (expiryDate && !expiryDate.dataset.lunarDisplayBound) {
+        expiryDate.dataset.lunarDisplayBound = 'true';
         expiryDate.addEventListener('change', () => updateLunarDisplay('expiryDate', 'expiryDateLunar'));
       }
       if (cancelBtn && !cancelBtn.dataset.bound) {
@@ -4603,9 +4645,13 @@ const lunarBiz = {
 
       ['startDate', 'periodValue'].forEach(id => {
         const element = document.getElementById(id);
-        if (element && !element.dataset.bound) {
-          element.dataset.bound = 'true';
+        if (element && !element.dataset.autoExpiryBound) {
+          element.dataset.autoExpiryBound = 'true';
           element.addEventListener('change', calculateExpiryDate);
+          element.addEventListener('input', () => {
+            clearTimeout(element.__autoExpiryTimer);
+            element.__autoExpiryTimer = setTimeout(calculateExpiryDate, 120);
+          });
         }
       });
       // 初始化日期选择器
@@ -4636,78 +4682,63 @@ const lunarBiz = {
   const debugLog = (...args) => {
     if (window.DEBUG_LOGS === true) console.log(...args);
   };
-    // 3. 新增修改， calculateExpiryDate 函数，支持农历周期推算     
-	function calculateExpiryDate() {
-    if (isEditingLoading) return;
 
-	  const startDate = document.getElementById('startDate').value;
-	  const periodValue = parseInt(document.getElementById('periodValue').value);
-	  const periodUnit = document.getElementById('periodUnit').value;
-	  const useLunar = document.getElementById('useLunar').checked;
+  function formatYmdLocal(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+  }
 
-      if (periodUnit === 'single') {
-        syncPeriodUnitState();
-        updateLunarDisplay('startDate', 'startDateLunar');
-        updateLunarDisplay('expiryDate', 'expiryDateLunar');
-        return;
+  function calculateSubscriptionExpiryValue(startDate, periodValue, periodUnit, useLunar = false, endOfMonth = false) {
+    const startText = String(startDate || '').trim();
+    const amount = Math.max(1, parseInt(periodValue, 10) || 1);
+    const unit = String(periodUnit || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startText) || !unit) return '';
+    if (unit === 'single') return startText;
+    const parts = startText.split('-').map(Number);
+    const startDateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    if (Number.isNaN(startDateObj.getTime())) return '';
+
+    if (useLunar) {
+      try {
+        const lunar = lunarCalendar.solar2lunar(parts[0], parts[1], parts[2]);
+        const nextLunar = addLunarPeriod(lunar, amount, unit);
+        const solar = lunar2solar(nextLunar);
+        return formatYmdLocal(new Date(solar.year, solar.month - 1, solar.day));
+      } catch (error) {
+        console.warn('[到期日期] 农历自动计算失败:', error);
+        return '';
       }
+    }
 
-	  if (!startDate || !periodValue || !periodUnit) {
-		return;
-	  }
+    let expiry = new Date(startDateObj.getFullYear(), startDateObj.getMonth(), startDateObj.getDate());
+    if (unit === 'day') {
+      expiry.setDate(expiry.getDate() + amount);
+    } else if (unit === 'month') {
+      if (endOfMonth) expiry = new Date(startDateObj.getFullYear(), startDateObj.getMonth() + amount + 1, 0);
+      else expiry.setMonth(expiry.getMonth() + amount);
+    } else if (unit === 'year') {
+      expiry.setFullYear(expiry.getFullYear() + amount);
+    } else {
+      return '';
+    }
+    return formatYmdLocal(expiry);
+  }
+  window.calculateSubscriptionExpiryValue = calculateSubscriptionExpiryValue;
 
-	  if (useLunar) {
-		// 农历推算
-		const start = new Date(startDate);
-		const lunar = lunarCalendar.solar2lunar(start.getFullYear(), start.getMonth() + 1, start.getDate());
-		let nextLunar = addLunarPeriod(lunar, periodValue, periodUnit);
-		const solar = lunar2solar(nextLunar);
-		
-		// 使用与公历相同的方式创建日期  
-		const expiry = new Date(startDate); // 从原始日期开始  
-		expiry.setFullYear(solar.year);  
-		expiry.setMonth(solar.month - 1);  
-		expiry.setDate(solar.day);  
-		document.getElementById('expiryDate').value = expiry.getFullYear() + '-' + String(expiry.getMonth() + 1).padStart(2, '0') + '-' + String(expiry.getDate()).padStart(2, '0');
-		debugLog('start:', start);
-		debugLog('nextLunar:', nextLunar);
-		debugLog('expiry:', expiry);
-		debugLog('expiryDate:', document.getElementById('expiryDate').value);
-		
-		debugLog('solar from lunar2solar:', solar);  
-		debugLog('solar.year:', solar.year, 'solar.month:', solar.month, 'solar.day:', solar.day);
-		debugLog('expiry.getTime():', expiry.getTime());  
-		debugLog('expiry.toString():', expiry.toString());
-		
-		
-	  } else {
-		// 公历推算（支持「每月最后一天」）
-		const start = new Date(startDate);
-		const endOfMonthEl = document.getElementById('endOfMonth');
-		const endOfMonth = endOfMonthEl && endOfMonthEl.checked;
-		let expiry = new Date(start);
-		if (periodUnit === 'day') {
-		  expiry.setDate(start.getDate() + periodValue);
-		} else if (periodUnit === 'month') {
-		  if (endOfMonth) {
-		    expiry = new Date(start.getFullYear(), start.getMonth() + periodValue + 1, 0);
-		  } else {
-		    expiry.setMonth(start.getMonth() + periodValue);
-		  }
-		} else if (periodUnit === 'year') {
-		  expiry.setFullYear(start.getFullYear() + periodValue);
-		}
-		document.getElementById('expiryDate').value = expiry.getFullYear() + '-' + String(expiry.getMonth() + 1).padStart(2, '0') + '-' + String(expiry.getDate()).padStart(2, '0');
-		debugLog('start:', start);
-		debugLog('expiry:', expiry);
-		debugLog('expiryDate:', document.getElementById('expiryDate').value);
-	  }
+  function calculateExpiryDate() {
+    if (isEditingLoading) return;
+    const startDate = document.getElementById('startDate').value;
+    const periodValue = document.getElementById('periodValue').value;
+    const periodUnit = document.getElementById('periodUnit').value;
+    const useLunar = document.getElementById('useLunar').checked;
+    const endOfMonthEl = document.getElementById('endOfMonth');
+    const expiry = calculateSubscriptionExpiryValue(startDate, periodValue, periodUnit, useLunar, !!(endOfMonthEl && endOfMonthEl.checked));
+    if (expiry) document.getElementById('expiryDate').value = expiry;
+    syncPeriodUnitState();
+    updateLunarDisplay('startDate', 'startDateLunar');
+    updateLunarDisplay('expiryDate', 'expiryDateLunar');
+  }
 
-	  // 更新农历显示
-	  updateLunarDisplay('startDate', 'startDateLunar');
-	  updateLunarDisplay('expiryDate', 'expiryDateLunar');
-	}
-    
     document.getElementById('closeModal').addEventListener('click', () => {
       document.getElementById('subscriptionModal').classList.add('hidden');
       document.body.classList.remove('overflow-hidden');
@@ -4894,7 +4925,7 @@ const lunarBiz = {
             } else if (subscription.reminderDays !== undefined) {
               reminderValue = subscription.reminderDays;
             } else {
-              reminderValue = 7;
+              reminderValue = 1;
             }
           }
           document.getElementById('reminderUnit').value = reminderUnit;
@@ -5121,7 +5152,7 @@ const lunarBiz = {
     // ───────────────────────────────────────────────────────
     // 多提醒规则编辑器（内嵌在订阅表单中）
     //   - 数据形态：[{ id, type, value, unit, repeatInterval?, repeatUntil?, isEnabled }]
-    //   - 新建订阅时默认渲染 4 条预设（7/3/1/0 天）
+    //   - 新建订阅时默认渲染 2 条预设（到期前 1 天 + 到期当天）
     //   - 编辑订阅时通过 /api/subscriptions/:id/reminders 拉取
     //   - 表单提交时自动收集并附加在 reminderRules 字段
     // ───────────────────────────────────────────────────────
@@ -5149,8 +5180,6 @@ const lunarBiz = {
 
       function defaultPresets() {
         return [
-          { id: uuid(), type: 'before_expiry', value: 7, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: true },
-          { id: uuid(), type: 'before_expiry', value: 3, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: true },
           { id: uuid(), type: 'before_expiry', value: 1, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: true },
           { id: uuid(), type: 'on_expiry', value: 0, unit: 'days', repeatInterval: null, repeatUntil: 'renewed', isEnabled: true }
         ];
@@ -5249,7 +5278,7 @@ const lunarBiz = {
         rules = (Array.isArray(input) ? input : []).map(r => ({
           id: r.id || uuid(),
           type: r.type || 'before_expiry',
-          value: typeof r.value === 'number' ? r.value : 7,
+          value: typeof r.value === 'number' ? r.value : 1,
           unit: r.unit || 'days',
           repeatInterval: r.repeatInterval == null ? null : Number(r.repeatInterval),
           repeatUntil: r.repeatUntil || 'renewed',
@@ -5281,7 +5310,7 @@ const lunarBiz = {
           rules.push({
             id: uuid(),
             type: 'before_expiry',
-            value: 7,
+            value: 1,
             unit: 'days',
             repeatInterval: null,
             repeatUntil: 'renewed',
@@ -6197,16 +6226,51 @@ const lunarBiz = {
         modalOpen('bulkUpdateModal');
       }
 
+      function parseBulkReminderRules(text) {
+        const raw = String(text || '').trim();
+        if (!raw) return [];
+        const parts = raw.split(/[·，,；;、\n]+/).map((v) => v.trim()).filter(Boolean);
+        const now = new Date().toISOString();
+        const rules = [];
+        parts.forEach((token) => {
+          const compact = token.replace(/\s+/g, '');
+          if (/^(到期当天|到期當天|当天|當天|0天)$/.test(compact)) {
+            rules.push({ type:'on_expiry', value:0, unit:'days', repeatInterval:null, repeatUntil:'renewed', isEnabled:true, createdAt:now });
+            return;
+          }
+          let match = compact.match(/^提前(\d+(?:\/\d+)*)(天|日|小时|小時|時|时)$/);
+          if (match) {
+            const unit = /小时|小時|時|时/.test(match[2]) ? 'hours' : 'days';
+            match[1].split('/').forEach((value) => rules.push({ type:'before_expiry', value:Number(value), unit, repeatInterval:null, repeatUntil:'renewed', isEnabled:true, createdAt:now }));
+            return;
+          }
+          match = compact.match(/^到期(?:后|後)每(\d+)(小时|小時|時|时)$/);
+          if (match) {
+            rules.push({ type:'after_expiry', value:0, unit:'hours', repeatInterval:Number(match[1]), repeatUntil:'renewed', isEnabled:true, createdAt:now });
+            return;
+          }
+          match = compact.match(/^(\d+)(天|日|小时|小時|時|时)$/);
+          if (match) {
+            const unit = /小时|小時|時|时/.test(match[2]) ? 'hours' : 'days';
+            rules.push({ type:'before_expiry', value:Number(match[1]), unit, repeatInterval:null, repeatUntil:'renewed', isEnabled:true, createdAt:now });
+            return;
+          }
+          throw new Error(`无法识别提醒规则“${token}”`);
+        });
+        return rules;
+      }
+
       function getBulkFieldValue(field) {
         const ids = {
           customType:'bulkCustomType', category:'bulkCategory', memberLevel:'bulkMemberLevel', users:'bulkUsers',
           points:'bulkPoints', amount:'bulkAmount', currency:'bulkCurrency', subscriptionMode:'bulkSubscriptionMode',
-          isActive:'bulkIsActive', autoRenew:'bulkAutoRenew', notes:'bulkNotes'
+          isActive:'bulkIsActive', autoRenew:'bulkAutoRenew', reminderRules:'bulkReminderRules', notes:'bulkNotes'
         };
         const el = document.getElementById(ids[field]);
         if (!el) return '';
         if (field === 'points' || field === 'amount') return el.value === '' ? null : Number(el.value);
         if (field === 'isActive' || field === 'autoRenew') return el.value === 'true';
+        if (field === 'reminderRules') return parseBulkReminderRules(el.value);
         return el.value;
       }
 
@@ -6269,9 +6333,14 @@ const lunarBiz = {
         }
 
         const changes = {};
-        document.querySelectorAll('.bulk-field-enable:checked').forEach((box) => {
-          changes[box.dataset.field] = getBulkFieldValue(box.dataset.field);
-        });
+        try {
+          document.querySelectorAll('.bulk-field-enable:checked').forEach((box) => {
+            changes[box.dataset.field] = getBulkFieldValue(box.dataset.field);
+          });
+        } catch (error) {
+          showToast('批量修改内容格式错误：' + (error?.message || '请检查输入内容'), 'warning');
+          return;
+        }
         const fields = Object.keys(changes);
         if (!fields.length) { showToast('请至少勾选一个要修改的字段', 'warning'); return; }
         if (!confirm(`即将批量修改 ${ids.length} 条订阅，共修改 ${fields.length} 个字段。\n\n未勾选的字段不会改变。是否确认执行？`)) return;
@@ -6369,14 +6438,14 @@ const lunarBiz = {
 (function(){
   const COLUMN_DEFS = [
     {id:'select',label:'选择',editable:false,type:'select'},
-    {id:'name',label:'订阅名称',editable:true,type:'text'},
-    {id:'account',label:'账号',editable:true,type:'text'},
-    {id:'accountSerial',label:'账号序号',editable:true,type:'text'},
-    {id:'memberLevel',label:'会员级别',editable:true,type:'text'},
+    {id:'name',label:'订阅名称',editable:true,type:'menu',menuGroup:'subscriptionNames'},
+    {id:'account',label:'账号',editable:true,type:'accountMenu'},
+    {id:'accountSerial',label:'账号序号',editable:true,type:'accountSerialMenu'},
+    {id:'memberLevel',label:'会员级别',editable:true,type:'menu',menuGroup:'memberLevels'},
     {id:'points',label:'积分',editable:true,type:'number'},
-    {id:'users',label:'使用人',editable:true,type:'text'},
-    {id:'customType',label:'订阅类型',editable:true,type:'text'},
-    {id:'category',label:'分类标签',editable:true,type:'text'},
+    {id:'users',label:'使用人',editable:true,type:'menu',menuGroup:'users'},
+    {id:'customType',label:'订阅类型',editable:true,type:'menu',menuGroup:'subscriptionTypes'},
+    {id:'category',label:'分类标签',editable:true,type:'menu',menuGroup:'categories'},
     {id:'amount',label:'费用',editable:true,type:'decimal'},
     {id:'currency',label:'币种',editable:true,type:'select',options:[['CNY','CNY'],['USD','USD'],['HKD','HKD'],['TWD','TWD'],['JPY','JPY'],['EUR','EUR'],['GBP','GBP'],['KRW','KRW'],['TRY','TRY']]},
     {id:'subscriptionMode',label:'订阅模式',editable:true,type:'select',options:[['cycle','循环订阅'],['reset','到期重置']]},
@@ -6414,7 +6483,7 @@ const lunarBiz = {
   let isSelectingCells = false;
 
   function clone(value){ return JSON.parse(JSON.stringify(value)); }
-  function defaultLayout(){ return { order:[...COLUMN_IDS], widths:{...DEFAULT_WIDTHS}, sort:{column:'expiryDate',direction:'asc'} }; }
+  function defaultLayout(){ return { order:[...COLUMN_IDS], widths:{...DEFAULT_WIDTHS}, hidden:[], sort:{column:'expiryDate',direction:'asc'} }; }
   function normalizeLayout(raw){
     const base=defaultLayout();
     if(!raw || typeof raw!=='object') return base;
@@ -6425,7 +6494,8 @@ const lunarBiz = {
     if(raw.widths && typeof raw.widths==='object') COLUMN_IDS.forEach((id)=>{ const n=Number(raw.widths[id]); if(Number.isFinite(n)) widths[id]=Math.max(id==='select'?44:70,Math.min(800,n)); });
     const sortColumn=raw.sort && COLUMN_IDS.includes(raw.sort.column) ? raw.sort.column : 'expiryDate';
     const direction=raw.sort && ['asc','desc','none'].includes(raw.sort.direction) ? raw.sort.direction : 'asc';
-    return {order,widths,sort:{column:sortColumn,direction}};
+    const hidden=Array.isArray(raw.hidden) ? [...new Set(raw.hidden.filter((id)=>COLUMN_IDS.includes(id) && !['select','actions'].includes(id)))] : [];
+    return {order,widths,hidden,sort:{column:sortColumn,direction}};
   }
   function loadLayout(){
     try {
@@ -6569,11 +6639,24 @@ const lunarBiz = {
     const w=Math.max(col==='select'?44:70,Math.min(800,Math.round(width)));
     tableLayout.widths[col]=w;
     table.querySelectorAll(`thead th[data-col="${col}"], tbody td[data-col="${col}"]`).forEach((el)=>{ el.style.width=w+'px'; el.style.minWidth=w+'px'; el.style.maxWidth=w+'px'; });
-    const total=tableLayout.order.reduce((sum,id)=>sum+(Number(tableLayout.widths[id])||DEFAULT_WIDTHS[id]||100),0);
+    const total=tableLayout.order.filter((id)=>!(tableLayout.hidden||[]).includes(id)).reduce((sum,id)=>sum+(Number(tableLayout.widths[id])||DEFAULT_WIDTHS[id]||100),0);
     table.style.width=total+'px'; table.style.minWidth=total+'px';
     if(save) saveLayout();
   }
-  function applyWidths(){ tableLayout.order.forEach((id)=>setColumnWidth(id,tableLayout.widths[id]||DEFAULT_WIDTHS[id],false)); }
+  function applyColumnVisibility(){
+    const hidden = new Set(tableLayout.hidden || []);
+    document.querySelectorAll('.subscription-excel-table [data-col]').forEach((el) => {
+      el.style.display = hidden.has(el.dataset.col) ? 'none' : '';
+    });
+  }
+  function applyWidths(){
+    tableLayout.order.filter((id)=>!(tableLayout.hidden||[]).includes(id)).forEach((id)=>setColumnWidth(id,tableLayout.widths[id]||DEFAULT_WIDTHS[id],false));
+    const table=document.querySelector('.subscription-excel-table');
+    if(table){
+      const total=tableLayout.order.filter((id)=>!(tableLayout.hidden||[]).includes(id)).reduce((sum,id)=>sum+(Number(tableLayout.widths[id])||DEFAULT_WIDTHS[id]||100),0);
+      table.style.width=total+'px'; table.style.minWidth=total+'px';
+    }
+  }
   function applyPendingVisuals(){
     document.querySelectorAll('#subscriptionsExcelBody tr[data-subscription-id]').forEach((tr)=>{
       const id=tr.dataset.subscriptionId, sub=findSubscription(id); if(!sub) return;
@@ -6596,14 +6679,14 @@ const lunarBiz = {
     });
   }
   function enhanceTableNow(){
-    ensureHeaderMetadata(); decorateBodyRows(); applyColumnOrder(); applyWidths(); applyPendingVisuals(); paintSelectedRange(); updateSortIcons(); updateEditActionButtons();
+    ensureHeaderMetadata(); decorateBodyRows(); applyColumnOrder(); applyColumnVisibility(); applyWidths(); applyPendingVisuals(); paintSelectedRange(); updateSortIcons(); updateEditActionButtons();
   }
   function queueEnhance(){ if(renderEnhanceQueued) return; renderEnhanceQueued=true; requestAnimationFrame(()=>{renderEnhanceQueued=false;enhanceTableNow();}); }
   window.applySubscriptionTableEnhancements=queueEnhance;
 
 
   function editableColumnOrder(){
-    return tableLayout.order.filter((id)=>DEF_BY_ID[id] && DEF_BY_ID[id].editable);
+    return tableLayout.order.filter((id)=>DEF_BY_ID[id] && DEF_BY_ID[id].editable && !(tableLayout.hidden||[]).includes(id));
   }
   function visibleTableRows(){
     return [...document.querySelectorAll('#subscriptionsExcelBody tr[data-subscription-id]')];
@@ -6710,7 +6793,26 @@ const lunarBiz = {
     if(def.id==='name' && !value) return {ok:false,error:'订阅名称不能为空'};
     return {ok:true,value};
   }
-  function setPendingCellValue(sub,col,display){
+  function effectiveStoredValue(sub,col){
+    const display=effectiveDisplayValue(sub,col);
+    const def=DEF_BY_ID[col];
+    if(!def) return display;
+    if(def.type==='select') return enumStoredValue(def,display);
+    if(def.type==='boolean') { const bool=normalizeBoolInput(display); return bool===null?false:bool; }
+    return display;
+  }
+  function autoStageExpiryForRow(sub,changedCol){
+    if(!['startDate','periodValue','periodUnit'].includes(changedCol) || typeof window.calculateSubscriptionExpiryValue!=='function') return;
+    const next=window.calculateSubscriptionExpiryValue(
+      effectiveStoredValue(sub,'startDate'),
+      effectiveStoredValue(sub,'periodValue'),
+      effectiveStoredValue(sub,'periodUnit'),
+      effectiveStoredValue(sub,'useLunar')===true,
+      effectiveStoredValue(sub,'endOfMonth')===true
+    );
+    if(next) setPendingCellValue(sub,'expiryDate',next,false);
+  }
+  function setPendingCellValue(sub,col,display,autoExpiry=true){
     const id=String(sub.id);
     const original=String(baseDisplayValue(sub,col));
     if(String(display)===original){
@@ -6721,6 +6823,16 @@ const lunarBiz = {
     } else {
       if(!pendingEdits[id]) pendingEdits[id]={};
       pendingEdits[id][col]=String(display);
+    }
+    if(autoExpiry) autoStageExpiryForRow(sub,col);
+    if(autoExpiry && (col==='account' || col==='accountSerial')){
+      try {
+        const match=(accountsCache||[]).find((item)=>col==='account' ? String(item.account||'')===String(display) : String(item.accountSerial||'')===String(display));
+        if(match){
+          if(col==='account' && match.accountSerial!=null) setPendingCellValue(sub,'accountSerial',String(match.accountSerial),false);
+          if(col==='accountSerial' && match.account!=null) setPendingCellValue(sub,'account',String(match.account),false);
+        }
+      } catch(_) {}
     }
   }
   function pasteMatrixIntoSelection(matrix){
@@ -6759,6 +6871,27 @@ const lunarBiz = {
 
   // 供“下载Excel模板”读取当前表头顺序 / 宽度。
   window.getSubscriptionTableLayout=function(){ return clone(tableLayout); };
+
+  function openColumnVisibilityMenu(button){
+    let menu=document.getElementById('subscriptionColumnVisibilityMenu');
+    if(!menu){
+      menu=document.createElement('div'); menu.id='subscriptionColumnVisibilityMenu'; menu.className='subscription-column-menu hidden'; document.body.appendChild(menu);
+    }
+    const hidden=new Set(tableLayout.hidden||[]);
+    const configurable=COLUMN_DEFS.filter((def)=>!['select','actions'].includes(def.id));
+    menu.innerHTML='<div class="flex items-center justify-between px-2 pb-2 mb-1 border-b"><strong class="text-sm">显示 / 隐藏列</strong><button type="button" data-column-action="show-all" class="text-xs text-indigo-600">全部显示</button></div>'+configurable.map((def)=>`<label><input type="checkbox" data-column-id="${def.id}" ${hidden.has(def.id)?'':'checked'}><span>${def.label}</span></label>`).join('');
+    const rect=button.getBoundingClientRect();
+    menu.style.left=Math.min(window.innerWidth-275,Math.max(8,rect.left))+'px';
+    menu.style.top=Math.min(window.innerHeight-430,rect.bottom+6)+'px';
+    menu.classList.remove('hidden');
+  }
+  function closeColumnVisibilityMenu(){ document.getElementById('subscriptionColumnVisibilityMenu')?.classList.add('hidden'); }
+  function setColumnVisibility(col,visible){
+    if(!DEF_BY_ID[col]||['select','actions'].includes(col)) return;
+    const hidden=new Set(tableLayout.hidden||[]);
+    if(visible) hidden.delete(col); else hidden.add(col);
+    tableLayout.hidden=[...hidden]; saveLayout(); enhanceTableNow();
+  }
 
   function openSortMenu(btn){
     activeSortColumn=btn.dataset.col;
@@ -6826,9 +6959,22 @@ const lunarBiz = {
     if(def.type==='date') return dateOnly(sub[def.id]);
     return baseDisplayValue(sub,def.id);
   }
+  function tableMenuValues(def){
+    if(def.type==='menu'){
+      try { return Array.isArray(menuOptionsCache?.[def.menuGroup]) ? menuOptionsCache[def.menuGroup] : []; } catch(_) { return []; }
+    }
+    if(def.type==='accountMenu'){
+      try { return (accountsCache||[]).map((item)=>String(item.account||'').trim()).filter(Boolean); } catch(_) { return []; }
+    }
+    if(def.type==='accountSerialMenu'){
+      try { return (accountsCache||[]).map((item)=>String(item.accountSerial||'').trim()).filter(Boolean); } catch(_) { return []; }
+    }
+    if(def.type==='reminder') return ['提前1天 · 到期当天','提前1天','到期当天','提前3/1天 · 到期当天','12小时 · 到期当天'];
+    return [];
+  }
   function beginCellEdit(td){
     const tr=td.closest('tr[data-subscription-id]'); const def=DEF_BY_ID[td.dataset.col]; if(!tr||!def||!def.editable||td.classList.contains('cell-editing')) return;
-    if(activeEditorCell && activeEditorCell!==td) commitActiveEditor();
+    if(activeEditorCell && activeEditorCell!==td && !commitActiveEditor()) return;
     const sub=findSubscription(tr.dataset.subscriptionId); if(!sub) return;
     const initial=editorInitialValue(sub,def); td.dataset.editorInitial=initial; td.classList.add('cell-editing'); td.textContent=''; activeEditorDirty=false; updateEditActionButtons();
     let editor;
@@ -6842,7 +6988,14 @@ const lunarBiz = {
     } else {
       editor=document.createElement('input'); editor.className='subscription-table-cell-editor'; editor.type=def.type==='date'?'date':(['number','decimal'].includes(def.type)?'number':'text');
       if(def.type==='number') editor.step='1'; if(def.type==='decimal') editor.step='0.01';
-      if(def.type==='reminder') editor.placeholder='例如：7天、3天、到期当天';
+      const menuValues=tableMenuValues(def);
+      if(menuValues.length){
+        const listId='tableCellOptions_'+def.id+'_'+String(sub.id).replace(/[^a-zA-Z0-9_-]/g,'_');
+        const datalist=document.createElement('datalist'); datalist.id=listId;
+        [...new Set(menuValues)].forEach((value)=>{ const opt=document.createElement('option'); opt.value=value; datalist.appendChild(opt); });
+        td.appendChild(datalist); editor.setAttribute('list',listId);
+      }
+      if(def.type==='reminder') editor.placeholder='例如：提前1天 · 到期当天';
       editor.value=initial;
     }
     editor.dataset.tableCellEditor='1'; td.appendChild(editor); activeEditorCell=td; editor.focus(); if(editor.select&&def.type!=='select'&&def.type!=='boolean') editor.select();
@@ -6884,7 +7037,7 @@ const lunarBiz = {
       let repeat=compact.match(/^到期(?:后|後)每(\d+)(小时|小時|時|时)$/);
       if(repeat){ rules.push({type:'after_expiry',value:0,unit:'hours',repeatInterval:Number(repeat[1]),repeatUntil:'renewed',isEnabled:true,createdAt:now}); continue; }
       let m=compact.match(/^(?:到期)?(前|后|後)?(\d+)(天|日|小时|小時|時|时)$/);
-      if(!m) throw new Error(`无法识别提醒规则“${token}”，可填写：7天、12小时、到期当天、提前 7/3/1 天`);
+      if(!m) throw new Error(`无法识别提醒规则“${token}”，可填写：1天、12小时、到期当天、提前 3/1 天`);
       const direction=m[1]||'前'; const value=Number(m[2]); const unit=/小时|小時|時|时/.test(m[3])?'hours':'days';
       rules.push({type:(direction==='后'||direction==='後')?'after_expiry':'before_expiry',value,unit,repeatInterval:null,repeatUntil:'renewed',isEnabled:true,createdAt:now});
     }
@@ -6948,8 +7101,9 @@ const lunarBiz = {
   function refreshTemplateSelect(selectedId=''){
     const select=document.getElementById('tableTemplateSelect'); if(!select) return; const list=loadTemplates(); select.innerHTML='';
     const base=document.createElement('option'); base.value=''; base.textContent='显示模板'; select.appendChild(base);
+    const defaultOpt=document.createElement('option'); defaultOpt.value='__default__'; defaultOpt.textContent='默认模板'; select.appendChild(defaultOpt);
     list.forEach((item)=>{ const opt=document.createElement('option'); opt.value=item.id; opt.textContent=item.name; select.appendChild(opt); });
-    select.value=selectedId&&list.some((x)=>x.id===selectedId)?selectedId:''; const del=document.getElementById('deleteTableTemplateBtn'); if(del) del.disabled=!select.value;
+    select.value=selectedId==='__default__'?'__default__':(selectedId&&list.some((x)=>x.id===selectedId)?selectedId:''); const del=document.getElementById('deleteTableTemplateBtn'); if(del) del.disabled=!select.value||select.value==='__default__';
   }
   function saveCurrentTemplate(){
     const name=prompt('请输入显示模板名称（最多保存 5 个）'); if(name===null) return; const clean=name.trim(); if(!clean){showToast('模板名称不能为空','warning');return;}
@@ -6960,13 +7114,14 @@ const lunarBiz = {
   }
   function loadSelectedTemplate(id){
     if(!id){ document.getElementById('deleteTableTemplateBtn').disabled=true; return; }
+    if(id==='__default__'){ tableLayout=defaultLayout(); saveLayout(); const del=document.getElementById('deleteTableTemplateBtn'); if(del)del.disabled=true; try{subscriptionCurrentPage=1;renderSubscriptionTable();}catch(_){queueEnhance();} showToast('已应用默认模板','success'); return; }
     const item=loadTemplates().find((x)=>x.id===id); if(!item) return; tableLayout=normalizeLayout(item.layout); saveLayout(); const del=document.getElementById('deleteTableTemplateBtn'); if(del)del.disabled=false; try{subscriptionCurrentPage=1;renderSubscriptionTable();}catch(_){queueEnhance();} showToast(`已应用模板“${item.name}”`,'success');
   }
   function deleteSelectedTemplate(){
-    const select=document.getElementById('tableTemplateSelect'); const id=select&&select.value; if(!id)return; const list=loadTemplates(); const item=list.find((x)=>x.id===id); if(!item)return; if(!confirm(`确定删除显示模板“${item.name}”吗？`))return; saveTemplates(list.filter((x)=>x.id!==id)); refreshTemplateSelect(''); showToast('显示模板已删除','success');
+    const select=document.getElementById('tableTemplateSelect'); const id=select&&select.value; if(!id||id==='__default__')return; const list=loadTemplates(); const item=list.find((x)=>x.id===id); if(!item)return; if(!confirm(`确定删除显示模板“${item.name}”吗？`))return; saveTemplates(list.filter((x)=>x.id!==id)); refreshTemplateSelect(''); showToast('显示模板已删除','success');
   }
   function resetLayout(){
-    tableLayout=defaultLayout(); saveLayout(); const select=document.getElementById('tableTemplateSelect'); if(select)select.value=''; const del=document.getElementById('deleteTableTemplateBtn'); if(del)del.disabled=true; try{subscriptionCurrentPage=1;renderSubscriptionTable();}catch(_){enhanceTableNow();} showToast('已恢复默认表格 Layout','success');
+    tableLayout=defaultLayout(); saveLayout(); const select=document.getElementById('tableTemplateSelect'); if(select)select.value='__default__'; const del=document.getElementById('deleteTableTemplateBtn'); if(del)del.disabled=true; try{subscriptionCurrentPage=1;renderSubscriptionTable();}catch(_){enhanceTableNow();} showToast('已恢复默认表格 Layout','success');
   }
 
   document.addEventListener('input',(e)=>{
@@ -7014,6 +7169,9 @@ const lunarBiz = {
     const sortChoice=e.target.closest('#subscriptionTableSortMenu button[data-dir]'); if(sortChoice&&activeSortColumn){const col=activeSortColumn,dir=sortChoice.dataset.dir;closeSortMenu();setSort(col,dir);return;}
     if(!e.target.closest('#subscriptionTableSortMenu')) closeSortMenu();
     if(e.target.closest('#resetTableLayoutBtn')) resetLayout();
+    const columnsBtn=e.target.closest('#toggleTableColumnsBtn'); if(columnsBtn){e.preventDefault();e.stopPropagation();openColumnVisibilityMenu(columnsBtn);return;}
+    const showAll=e.target.closest('#subscriptionColumnVisibilityMenu [data-column-action="show-all"]'); if(showAll){tableLayout.hidden=[];saveLayout();enhanceTableNow();openColumnVisibilityMenu(document.getElementById('toggleTableColumnsBtn'));return;}
+    if(!e.target.closest('#subscriptionColumnVisibilityMenu')&&!e.target.closest('#toggleTableColumnsBtn')) closeColumnVisibilityMenu();
     if(e.target.closest('#saveTableTemplateBtn')) saveCurrentTemplate();
     if(e.target.closest('#deleteTableTemplateBtn')) deleteSelectedTemplate();
     if(e.target.closest('#saveTableEditsBtn')) saveAllEdits();
@@ -7022,7 +7180,10 @@ const lunarBiz = {
       if(confirm('确定重新执行分类？当前分类结果将重新生成。')){ try{renderSubscriptionTable();}catch(_){} if(typeof showToast==='function')showToast('已重新执行分类刷新','success'); }
     }
   });
-  document.addEventListener('change',(e)=>{ if(e.target&&e.target.id==='tableTemplateSelect') loadSelectedTemplate(e.target.value); });
+  document.addEventListener('change',(e)=>{
+    if(e.target&&e.target.matches('#subscriptionColumnVisibilityMenu input[data-column-id]')){ setColumnVisibility(e.target.dataset.columnId,e.target.checked); openColumnVisibilityMenu(document.getElementById('toggleTableColumnsBtn')); return; }
+    if(e.target&&e.target.id==='tableTemplateSelect') loadSelectedTemplate(e.target.value);
+  });
   document.addEventListener('dblclick',(e)=>{
     const td=e.target.closest('#subscriptionsExcelBody td[data-col]'); if(td){ e.preventDefault(); beginCellEdit(td); return; }
     const th=e.target.closest('.subscription-excel-table thead th[data-col]'); if(th&&!e.target.closest('.subscription-table-sort-btn,.subscription-table-resize-grip')){ const col=th.dataset.col; const current=tableLayout.sort&&tableLayout.sort.column===col?tableLayout.sort.direction:'none'; setSort(col,current==='asc'?'desc':'asc'); }

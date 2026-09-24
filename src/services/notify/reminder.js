@@ -16,7 +16,7 @@ function formatLunarExpiryText(expiry, timezone) {
 }
 
 function resolveReminderSetting(subscription) {
-  const defaultDays = subscription && subscription.reminderDays !== undefined ? Number(subscription.reminderDays) : 7;
+  const defaultDays = subscription && subscription.reminderDays !== undefined ? Number(subscription.reminderDays) : 1;
   let unit = subscription && subscription.reminderUnit === 'hour' ? 'hour' : 'day';
 
   let value;
@@ -34,7 +34,7 @@ function resolveReminderSetting(subscription) {
     } else if (!isNaN(defaultDays)) {
       value = Number(defaultDays);
     } else {
-      value = 7;
+      value = 1;
     }
   }
 

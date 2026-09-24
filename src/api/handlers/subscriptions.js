@@ -546,7 +546,9 @@ async function handleSubscriptions(request, env, path) {
     for (const [key, value] of Object.entries(changes)) {
       if (allowedFields.has(key)) patch[key] = value;
     }
-    if (Object.keys(patch).length === 0) {
+    const hasReminderRulesPatch = Object.prototype.hasOwnProperty.call(changes, 'reminderRules');
+    const reminderRulesPatch = hasReminderRulesPatch && Array.isArray(changes.reminderRules) ? changes.reminderRules : [];
+    if (Object.keys(patch).length === 0 && !hasReminderRulesPatch) {
       return new Response(JSON.stringify({ success: false, message: '没有允许批量修改的字段' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -570,7 +572,21 @@ async function handleSubscriptions(request, env, path) {
         const newNotes = String(mergedPatch.notes || '').trim();
         mergedPatch.notes = [oldNotes, newNotes].filter(Boolean).join('\n');
       }
-      const result = await patchSubscriptionFields(id, mergedPatch, env);
+      let result = { success: true };
+      if (Object.keys(mergedPatch).length > 0) {
+        result = await patchSubscriptionFields(id, mergedPatch, env);
+      }
+      if (result.success && hasReminderRulesPatch) {
+        try {
+          const remindersRepo = await import('../../data/reminders.repo.js');
+          const normalizedRules = reminderRulesPatch.map(remindersRepo.normalizeRule);
+          await remindersRepo.replaceForSubscription(env, id, normalizedRules);
+          const { syncLegacyReminderFields } = await import('../../data/subscriptions.js');
+          await syncLegacyReminderFields(env, id, normalizedRules);
+        } catch (error) {
+          result = { success: false, message: '提醒规则保存失败：' + (error && error.message ? error.message : '未知错误') };
+        }
+      }
       if (result.success) {
         updated += 1;
         results.push({ id, success: true });

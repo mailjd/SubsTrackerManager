@@ -138,22 +138,37 @@ export async function checkExpiringSubscriptions(env) {
       let daysDiff = getDaysBetween(now.utc, expiryDate, timezone);
       let hoursDiff = (expiryDate.getTime() - now.utc.getTime()) / MS_PER_HOUR;
 
-      // 自动续订：已过期 + autoRenew=true → 推进到期日并写支付记录
-      if (subscription.autoRenew && subscription.periodUnit !== 'single' && daysDiff < 0) {
-        const renewed = autoRenew(subscription, now.utc, timezone, config);
+      // 生命周期自动推进：
+      // 1) 循环订阅（cycle）到期后，不依赖 autoRenew 开关，也会把开始/到期日期推进到当前有效周期；
+      //    autoRenew=false 时只推进周期日期，不伪造支付记录。
+      // 2) reset 模式仍仅在 autoRenew=true 时自动续订。
+      const subscriptionMode = subscription.subscriptionMode || 'cycle';
+      const shouldAdvanceCycle = subscriptionMode === 'cycle' && subscription.periodUnit !== 'single' && daysDiff < 0;
+      const shouldAutoRenewReset = subscriptionMode === 'reset' && subscription.autoRenew && subscription.periodUnit !== 'single' && daysDiff < 0;
+      if (shouldAdvanceCycle || shouldAutoRenewReset) {
+        const renewed = autoRenew(subscription, now.utc, timezone, config, {
+          recordPayment: subscription.autoRenew !== false
+        });
         if (renewed) {
           updatedSubsToSave.push(renewed.next);
           autoRenewedCount++;
-          // 续订后重算 diff
+          // 推进后重算 diff
           expiryDate = new Date(renewed.next.expiryDate);
           daysDiff = getDaysBetween(now.utc, expiryDate, timezone);
           hoursDiff = (expiryDate.getTime() - now.utc.getTime()) / MS_PER_HOUR;
-          // 用续订后的对象作后续判断
-          subscription.expiryDate = renewed.next.expiryDate;
-          subscription.startDate = renewed.next.startDate;
-          subscription.lastPaymentDate = renewed.next.lastPaymentDate;
-          subscription.paymentHistory = renewed.next.paymentHistory;
+          Object.assign(subscription, renewed.next);
         }
+      }
+
+      // 非自动推进的订阅真正过期后，会员级别自动降为 Free。
+      if (daysDiff < 0 && String(subscription.memberLevel || '') !== 'Free') {
+        const expiredNext = {
+          ...subscription,
+          memberLevel: 'Free',
+          updatedAt: now.utc.toISOString()
+        };
+        updatedSubsToSave.push(expiredNext);
+        Object.assign(subscription, expiredNext);
       }
 
       // 加载规则；老订阅没有规则时，用稳定 id 的 legacy 规则（避免每 tick 新 UUID 打穿 dedupe）
@@ -181,13 +196,16 @@ export async function checkExpiringSubscriptions(env) {
       }
     }
 
-    // 持久化自动续订结果
+    // 持久化生命周期更新。按订阅 ID 去重，确保同一轮调度最多写一次同一记录。
     if (updatedSubsToSave.length > 0) {
-      await subRepo.saveMany(env, updatedSubsToSave);
-      await Promise.all(updatedSubsToSave.map((sub) =>
-        recordSubscriptionChange(env, 'auto_renew', sub, { source: 'scheduler' })
-      ));
-      console.log(`[定时任务] 已自动续订 ${updatedSubsToSave.length} 个订阅`);
+      const uniqueUpdatedSubs = Array.from(new Map(updatedSubsToSave.map((sub) => [String(sub.id), sub])).values());
+      await subRepo.saveMany(env, uniqueUpdatedSubs);
+      await Promise.all(uniqueUpdatedSubs.map((sub) => {
+        const expired = String(sub.memberLevel || '') === 'Free' && getDaysBetween(now.utc, new Date(sub.expiryDate), timezone) < 0;
+        const action = expired ? 'expire_to_free' : ((sub.subscriptionMode || 'cycle') === 'cycle' ? 'cycle_rollover' : 'auto_renew');
+        return recordSubscriptionChange(env, action, sub, { source: 'scheduler' });
+      }));
+      console.log(`[定时任务] 已自动处理 ${uniqueUpdatedSubs.length} 个订阅生命周期更新`);
     }
 
     // 不在通知时段 → 写日志后返回
@@ -358,13 +376,15 @@ export async function checkExpiringSubscriptions(env) {
  * @param {Date} now UTC 时刻
  * @param {string} timezone
  * @param {any} config
+ * @param {{ recordPayment?: boolean }} [options]
  * @returns {{ next: any } | null}
  */
-function autoRenew(sub, now, timezone, config) {
+function autoRenew(sub, now, timezone, config, options = {}) {
   if (sub.periodUnit === 'single') return null;
   const mode = sub.subscriptionMode || 'cycle';
   const tz = timezone || 'UTC';
   let expiryDate = new Date(sub.expiryDate);
+  let cycleStartDate = new Date(sub.expiryDate);
   let periodsAdded = 0;
   const nowMidnight = getTimezoneMidnightTimestamp(now, tz);
 
@@ -386,6 +406,7 @@ function autoRenew(sub, now, timezone, config) {
     let lunar = lunarCalendar.solar2lunar(parts.year, parts.month, parts.day);
     while (getTimezoneMidnightTimestamp(expiryDate, tz) <= nowMidnight) {
       if (!lunar) break;
+      cycleStartDate = new Date(expiryDate);
       lunar = lunarBiz.addLunarPeriod(lunar, sub.periodValue, sub.periodUnit);
       const solar = lunarBiz.lunar2solar(lunar);
       if (!solar) break;
@@ -400,6 +421,7 @@ function autoRenew(sub, now, timezone, config) {
         const p = getTimezoneDateParts(now, tz);
         expiryDate = atTimezoneMidnight(p.year, p.month, p.day);
       }
+      cycleStartDate = new Date(expiryDate);
       expiryDate = addCalendarPeriodInTimezone(
         expiryDate,
         sub.periodValue || 1,
@@ -414,8 +436,9 @@ function autoRenew(sub, now, timezone, config) {
 
   if (periodsAdded === 0) return null;
 
-  const newStartDate = mode === 'reset' ? new Date(now) : new Date(sub.expiryDate);
+  const newStartDate = mode === 'reset' ? new Date(now) : cycleStartDate;
   const newExpiryDate = expiryDate;
+  const recordPayment = options.recordPayment !== false;
 
   const paymentRecord = {
     id: Date.now().toString(),
@@ -430,7 +453,7 @@ function autoRenew(sub, now, timezone, config) {
   };
 
   const paymentHistoryLimit = Number(config.PAYMENT_HISTORY_LIMIT) || 100;
-  const ph = [...(sub.paymentHistory || []), paymentRecord];
+  const ph = recordPayment ? [...(sub.paymentHistory || []), paymentRecord] : [...(sub.paymentHistory || [])];
   const trimmed = ph.length > paymentHistoryLimit ? ph.slice(-paymentHistoryLimit) : ph;
 
   return {
@@ -438,8 +461,8 @@ function autoRenew(sub, now, timezone, config) {
       ...sub,
       startDate: newStartDate.toISOString(),
       expiryDate: newExpiryDate.toISOString(),
-      lastPaymentDate: now.toISOString(),
-      paymentHistory: trimmed
+      ...(recordPayment ? { lastPaymentDate: now.toISOString(), paymentHistory: trimmed } : {}),
+      updatedAt: now.toISOString()
     }
   };
 }

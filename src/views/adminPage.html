@@ -465,6 +465,18 @@
     html.dark .subscription-header-filter-value:hover { background:#273449; }
     html.dark .subscription-header-filter-tools button { border-color:#475569; }
     html.dark .subscription-excel-table td.cell-pending-edit { background:#493919 !important; color:#fde68a; }
+    /* v3.3.13：订阅生命周期状态与过期 Free 会员级别。 */
+    .subscription-status-text { font-weight:700; white-space:nowrap; }
+    .subscription-status-active { color:#16a34a; }
+    .subscription-status-soon { color:#ea580c; }
+    .subscription-status-expired { color:#dc2626; }
+    .subscription-status-disabled { color:#6b7280; }
+    .subscription-member-free { color:#16a34a !important; font-weight:700; }
+    html.dark .subscription-status-active, html.dark .subscription-member-free { color:#4ade80 !important; }
+    html.dark .subscription-status-soon { color:#fb923c; }
+    html.dark .subscription-status-expired { color:#f87171; }
+    html.dark .subscription-status-disabled { color:#9ca3af; }
+
     /* v3.3.12：深色模式下，单击/拖选单元格的“选中态”也保持深色，避免未进入编辑模式时爆白。 */
     html.dark .subscription-excel-table td.cell-grid-selected {
       background:#253247 !important;
@@ -601,7 +613,7 @@
         <div class="xl:col-span-2">
           <select id="statusFilter" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white text-sm">
             <option value="">全部状态</option>
-            <option value="active">正常</option>
+            <option value="active">生效</option>
             <option value="soon">即将到期</option>
             <option value="expired">已过期</option>
             <option value="disabled">已停用</option>
@@ -728,6 +740,7 @@
               <th class="excel-account-col" data-col="account" draggable="true">账号</th>
               <th class="excel-serial-col" data-col="accountSerial" draggable="true">账号序号</th>
               <th data-col="memberLevel" draggable="true">会员级别</th>
+              <th data-col="status" draggable="true">状态</th>
               <th data-col="points" draggable="true">积分</th>
               <th class="excel-users-col" data-col="users" draggable="true">使用人</th>
               <th data-col="customType" draggable="true">订阅类型</th>
@@ -744,6 +757,7 @@
               <th data-col="reminder" draggable="true">提醒规则</th>
               <th data-col="isActive" draggable="true">启用订阅</th>
               <th data-col="autoRenew" draggable="true">自动续订</th>
+              <th data-col="updatedAt" draggable="true">最后修改时间</th>
               <th class="excel-notes-col" data-col="notes" draggable="true">备注</th>
               <th class="excel-actions-col" data-col="actions" draggable="true">操作</th>
             </tr>
@@ -2195,7 +2209,7 @@ const lunarBiz = {
       const tbody = document.getElementById('subscriptionsExcelBody');
       if (!tbody) return;
       if (!Array.isArray(items) || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="23" class="py-10 text-center text-gray-500">没有符合条件的订阅</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="25" class="py-10 text-center text-gray-500">没有符合条件的订阅</td></tr>';
         return;
       }
 
@@ -2210,12 +2224,18 @@ const lunarBiz = {
           : Number(subscription.amount).toFixed(2);
         const rowClass = selectedSubscriptionIds.has(id) ? 'excel-row-selected' : '';
         const modeText = subscription.subscriptionMode === 'reset' ? '到期重置' : '循环订阅';
+        const lifecycle = getSubscriptionLifecycleState(subscription);
+        const effectiveMemberLevel = getEffectiveMemberLevel(subscription);
+        const statusClass = lifecycle.key === 'expired' ? 'subscription-status-expired' : lifecycle.key === 'soon' ? 'subscription-status-soon' : lifecycle.key === 'disabled' ? 'subscription-status-disabled' : 'subscription-status-active';
+        const memberLevelClass = lifecycle.key === 'expired' ? 'subscription-member-free' : '';
+        const updatedAtText = getLastModifiedDisplay(subscription);
         return `<tr class="${rowClass}">
           <td class="excel-select-col"><input type="checkbox" class="subscription-select form-checkbox h-4 w-4 text-indigo-600" data-id="${escapeHtml(id)}" ${selectedSubscriptionIds.has(id) ? 'checked' : ''}></td>
           <td class="excel-name-col">${escapeHtml(excelText(subscription.name))}</td>
           <td class="excel-account-col">${escapeHtml(excelText(subscription.account))}</td>
           <td class="excel-serial-col">${escapeHtml(excelText(subscription.accountSerial))}</td>
-          <td>${escapeHtml(excelText(subscription.memberLevel))}</td>
+          <td class="${memberLevelClass}">${escapeHtml(effectiveMemberLevel)}</td>
+          <td class="excel-center-col"><span class="subscription-status-text ${statusClass}">${escapeHtml(lifecycle.text)}</span></td>
           <td class="excel-number-col">${escapeHtml(excelText(subscription.points))}</td>
           <td class="excel-users-col">${escapeHtml(excelText(subscription.users))}</td>
           <td>${escapeHtml(excelText(subscription.customType))}</td>
@@ -2232,6 +2252,7 @@ const lunarBiz = {
           <td>${escapeHtml(reminderText)}</td>
           <td class="excel-center-col">${excelBool(subscription.isActive, true)}</td>
           <td class="excel-center-col">${excelBool(subscription.autoRenew, true)}</td>
+          <td class="excel-date-col">${escapeHtml(updatedAtText)}</td>
           <td class="excel-notes-col">${escapeHtml(excelText(subscription.notes))}</td>
           <td class="excel-actions-col">
             <div class="flex flex-wrap gap-1">
@@ -2260,20 +2281,23 @@ const lunarBiz = {
         const amount = subscription.amount !== null && subscription.amount !== undefined
           ? `${getCurrencySymbol(subscription.currency || 'CNY')}${Number(subscription.amount).toFixed(2)}`
           : '未设置';
-        const activeText = subscription.isActive === false ? '已停用' : '启用中';
+        const lifecycle = getSubscriptionLifecycleState(subscription);
+        const effectiveMemberLevel = getEffectiveMemberLevel(subscription);
+        const activeText = lifecycle.text;
+        const activeClass = lifecycle.key === 'expired' ? 'bg-red-50 text-red-700' : lifecycle.key === 'soon' ? 'bg-orange-50 text-orange-700' : lifecycle.key === 'disabled' ? 'bg-gray-100 text-gray-600' : 'bg-green-50 text-green-700';
         return `<div class="subscription-card ${selectedSubscriptionIds.has(id) ? 'selected' : ''}">
           <div class="flex items-start justify-between gap-3">
             <label class="inline-flex items-center gap-2 min-w-0 cursor-pointer">
               <input type="checkbox" class="subscription-select form-checkbox h-4 w-4 text-indigo-600" data-id="${escapeHtml(id)}" ${selectedSubscriptionIds.has(id) ? 'checked' : ''}>
               <span class="font-semibold text-gray-900 truncate">${escapeHtml(subscription.name || '未命名订阅')}</span>
             </label>
-            <span class="px-2 py-1 rounded-full text-xs ${subscription.isActive === false ? 'bg-gray-100 text-gray-600' : 'bg-green-50 text-green-700'}">${activeText}</span>
+            <span class="px-2 py-1 rounded-full text-xs ${activeClass}">${activeText}</span>
           </div>
           <div class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
             <div><span class="text-gray-400 text-xs block">账号</span><span class="text-gray-700 break-all">${escapeHtml(subscription.account || '—')}</span></div>
             <div><span class="text-gray-400 text-xs block">账号序号</span><span class="text-gray-700">${escapeHtml(subscription.accountSerial || '—')}</span></div>
             <div><span class="text-gray-400 text-xs block">订阅类型</span><span class="text-gray-700">${escapeHtml(subscription.customType || '—')}</span></div>
-            <div><span class="text-gray-400 text-xs block">会员级别</span><span class="text-gray-700">${escapeHtml(subscription.memberLevel || '—')}</span></div>
+            <div><span class="text-gray-400 text-xs block">会员级别</span><span class="${lifecycle.key === 'expired' ? 'text-green-600 font-semibold' : 'text-gray-700'}">${escapeHtml(effectiveMemberLevel || '—')}</span></div>
             <div><span class="text-gray-400 text-xs block">费用</span><span class="text-gray-700">${escapeHtml(amount)}</span></div>
             <div><span class="text-gray-400 text-xs block">到期日期</span><span class="text-gray-700">${escapeHtml(expiry || '—')}</span></div>
           </div>
@@ -2288,6 +2312,31 @@ const lunarBiz = {
           </div>
         </div>`;
       }).join('');
+    }
+
+    function getSubscriptionLifecycleState(subscription) {
+      if (!subscription || subscription.isActive === false) {
+        return { key: 'disabled', text: '已停用', daysDiff: null };
+      }
+      const todayKey = getTodayDateStringInTimezone(globalTimezone);
+      const expiryKey = formatDateInputInTimezone(subscription.expiryDate, globalTimezone);
+      const today = createUtcCalendarDate(todayKey);
+      const expiry = createUtcCalendarDate(expiryKey);
+      if (!today || !expiry) return { key: 'active', text: '生效', daysDiff: null };
+      const daysDiff = Math.round((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff < 0) return { key: 'expired', text: '已过期', daysDiff };
+      if (daysDiff <= 2) return { key: 'soon', text: '即将到期', daysDiff };
+      return { key: 'active', text: '生效', daysDiff };
+    }
+
+    function getEffectiveMemberLevel(subscription) {
+      const lifecycle = getSubscriptionLifecycleState(subscription);
+      return lifecycle.key === 'expired' ? 'Free' : String(subscription?.memberLevel || '');
+    }
+
+    function getLastModifiedDisplay(subscription) {
+      const value = subscription?.updatedAt || subscription?.createdAt || '';
+      return value ? formatDateTimeInTimezone(value, globalTimezone) : '';
     }
 
     function renderSubscriptionTable() {
@@ -2351,29 +2400,9 @@ const lunarBiz = {
       const currentTimestamp = currentTime.getTime();
       const currentDateInTimezone = createUtcCalendarDate(getTodayDateStringInTimezone(globalTimezone));
 
-      // 状态筛选需要先算 daysDiff / soon，故在此处过滤
+      // 状态规则固定：周期内=生效；到期前 2 天（含到期当天）=即将到期；到期日之后=已过期。
       if (selectedStatus) {
-        filtered = filtered.filter(subscription => {
-          const expiryDate = new Date(subscription.expiryDate);
-          const expiryDateKey = formatDateInputInTimezone(subscription.expiryDate, globalTimezone);
-          const expiryDateInTimezone = createUtcCalendarDate(expiryDateKey);
-          const daysDiff = currentDateInTimezone && expiryDateInTimezone
-            ? Math.round((expiryDateInTimezone.getTime() - currentDateInTimezone.getTime()) / (1000 * 60 * 60 * 24))
-            : 0;
-          const diffMs = expiryDate.getTime() - currentTimestamp;
-          const diffHours = diffMs / (1000 * 60 * 60);
-          const reminder = getReminderSettings(subscription);
-          const isSoon = reminder.unit === 'hour'
-            ? diffHours >= 0 && diffHours <= reminder.value
-            : daysDiff >= 0 && daysDiff <= reminder.value;
-
-          if (selectedStatus === 'disabled') return subscription.isActive === false;
-          if (subscription.isActive === false) return false;
-          if (selectedStatus === 'expired') return daysDiff < 0 || diffMs < 0;
-          if (selectedStatus === 'soon') return isSoon && !(daysDiff < 0 || diffMs < 0);
-          if (selectedStatus === 'active') return !(daysDiff < 0 || diffMs < 0) && !isSoon;
-          return true;
-        });
+        filtered = filtered.filter(subscription => getSubscriptionLifecycleState(subscription).key === selectedStatus);
       }
 
       // v3.3.11：表头下拉菜单的 Excel 风格多值筛选，与顶部筛选条件叠加生效。
@@ -2419,20 +2448,16 @@ const lunarBiz = {
         const diffMs = expiryDate.getTime() - currentTimestamp;
         const diffHours = diffMs / (1000 * 60 * 60);
 
-        const reminder = getReminderSettings(subscription);
-        const isSoon = reminder.unit === 'hour'
-          ? diffHours >= 0 && diffHours <= reminder.value
-          : daysDiff >= 0 && daysDiff <= reminder.value;
-
+        const lifecycle = getSubscriptionLifecycleState(subscription);
         let statusHtml = '';
-        if (!subscription.isActive) {
+        if (lifecycle.key === 'disabled') {
           statusHtml = '<span class="px-2 py-1 text-xs font-medium rounded-full text-white bg-gray-500"><i class="fas fa-pause-circle mr-1"></i>已停用</span>';
-        } else if (daysDiff < 0 || diffMs < 0) {
+        } else if (lifecycle.key === 'expired') {
           statusHtml = '<span class="px-2 py-1 text-xs font-medium rounded-full text-white bg-red-500"><i class="fas fa-exclamation-circle mr-1"></i>已过期</span>';
-        } else if (isSoon) {
-          statusHtml = '<span class="px-2 py-1 text-xs font-medium rounded-full text-white bg-yellow-500"><i class="fas fa-exclamation-triangle mr-1"></i>即将到期</span>';
+        } else if (lifecycle.key === 'soon') {
+          statusHtml = '<span class="px-2 py-1 text-xs font-medium rounded-full text-white bg-orange-500"><i class="fas fa-exclamation-triangle mr-1"></i>即将到期</span>';
         } else {
-          statusHtml = '<span class="px-2 py-1 text-xs font-medium rounded-full text-white bg-green-500"><i class="fas fa-check-circle mr-1"></i>正常</span>';
+          statusHtml = '<span class="px-2 py-1 text-xs font-medium rounded-full text-white bg-green-500"><i class="fas fa-check-circle mr-1"></i>生效</span>';
         }
 
         let periodText = '';
@@ -2504,8 +2529,9 @@ const lunarBiz = {
         // 构造HTML字符串 (减少了函数调用)
         const nameHtml = createHoverText(subscription.name, 20, 'text-sm font-medium text-gray-900');
         const typeHtml = createHoverText(subscription.customType || '其他', 15, 'text-sm text-gray-900');
-        const memberLevelHtml = subscription.memberLevel
-          ? '<div class="text-xs text-amber-700 mt-1"><i class="fas fa-crown mr-1"></i>会员: ' + escapeHtml(subscription.memberLevel) + '</div>'
+        const effectiveMemberLevel = getEffectiveMemberLevel(subscription);
+        const memberLevelHtml = effectiveMemberLevel
+          ? '<div class="text-xs ' + (lifecycle.key === 'expired' ? 'text-green-600 font-semibold' : 'text-amber-700') + ' mt-1"><i class="fas fa-crown mr-1"></i>会员: ' + escapeHtml(effectiveMemberLevel) + '</div>'
           : '';
         const pointsHtml = subscription.points !== null && subscription.points !== undefined && Number.isFinite(Number(subscription.points))
           ? '<div class="text-xs text-emerald-700 mt-1"><i class="fas fa-star mr-1"></i>积分: ' + escapeHtml(String(subscription.points)) + '</div>'
@@ -2543,19 +2569,12 @@ const lunarBiz = {
         const lunarHtml = lunarExpiryText ? createHoverText('农历: ' + lunarExpiryText, 25, 'text-xs text-blue-600 mt-1') : '';
 
         let daysLeftText = '';
-        if (diffMs < 0) {
-          const absDays = Math.abs(daysDiff);
-          if (absDays >= 1) {
-            daysLeftText = '已过期' + absDays + '天';
-          } else {
-            const absHours = Math.ceil(Math.abs(diffHours));
-            daysLeftText = '已过期' + absHours + '小时';
-          }
+        if (daysDiff < 0) {
+          daysLeftText = '已过期' + Math.abs(daysDiff) + '天';
         } else if (daysDiff >= 1) {
           daysLeftText = '还剩' + daysDiff + '天';
         } else {
-          const hoursLeft = Math.max(0, Math.ceil(diffHours));
-          daysLeftText = hoursLeft > 0 ? '约 ' + hoursLeft + ' 小时后到期' : '即将到期';
+          daysLeftText = '今天到期';
         }
 
         const startDateText = subscription.startDate
@@ -6485,6 +6504,7 @@ const lunarBiz = {
     {id:'account',label:'账号',editable:true,type:'accountMenu'},
     {id:'accountSerial',label:'账号序号',editable:true,type:'accountSerialMenu'},
     {id:'memberLevel',label:'会员级别',editable:true,type:'menu',menuGroup:'memberLevels'},
+    {id:'status',label:'状态',editable:false,type:'status'},
     {id:'points',label:'积分',editable:true,type:'number'},
     {id:'users',label:'使用人',editable:true,type:'menu',menuGroup:'users'},
     {id:'customType',label:'订阅类型',editable:true,type:'menu',menuGroup:'subscriptionTypes'},
@@ -6501,15 +6521,16 @@ const lunarBiz = {
     {id:'reminder',label:'提醒规则',editable:true,type:'reminder'},
     {id:'isActive',label:'启用订阅',editable:true,type:'boolean'},
     {id:'autoRenew',label:'自动续订',editable:true,type:'boolean'},
+    {id:'updatedAt',label:'最后修改时间',editable:false,type:'datetime'},
     {id:'notes',label:'备注',editable:true,type:'textarea'},
     {id:'actions',label:'操作',editable:false,type:'actions'}
   ];
   const COLUMN_IDS = COLUMN_DEFS.map((c)=>c.id);
   const DEF_BY_ID = Object.fromEntries(COLUMN_DEFS.map((c)=>[c.id,c]));
   const DEFAULT_WIDTHS = {
-    select:60,name:180,account:180,accountSerial:135,memberLevel:110,points:90,users:220,customType:125,category:170,
+    select:60,name:180,account:180,accountSerial:135,memberLevel:110,status:105,points:90,users:220,customType:125,category:170,
     amount:90,currency:80,subscriptionMode:120,startDate:120,periodValue:92,periodUnit:92,expiryDate:120,useLunar:100,
-    endOfMonth:120,reminder:180,isActive:95,autoRenew:95,notes:260,actions:230
+    endOfMonth:120,reminder:180,isActive:95,autoRenew:95,updatedAt:175,notes:260,actions:230
   };
   const LAYOUT_KEY = 'subscriptionTableLayoutV2';
   const LEGACY_LAYOUT_KEY = 'subscriptionTableLayoutV1';
@@ -6533,7 +6554,19 @@ const lunarBiz = {
     if(!raw || typeof raw!=='object') return base;
     const seen=new Set();
     const order=Array.isArray(raw.order) ? raw.order.filter((id)=>COLUMN_IDS.includes(id) && !seen.has(id) && seen.add(id)) : [];
-    COLUMN_IDS.forEach((id)=>{ if(!seen.has(id)) order.push(id); });
+    if(!seen.has('status')) {
+      const memberIndex=order.indexOf('memberLevel');
+      order.splice(memberIndex>=0?memberIndex+1:Math.min(5,order.length),0,'status');
+      seen.add('status');
+    }
+    if(!seen.has('updatedAt')) {
+      const notesIndex=order.indexOf('notes');
+      const actionsIndex=order.indexOf('actions');
+      const insertAt=notesIndex>=0?notesIndex:(actionsIndex>=0?actionsIndex:order.length);
+      order.splice(insertAt,0,'updatedAt');
+      seen.add('updatedAt');
+    }
+    COLUMN_IDS.forEach((id)=>{ if(!seen.has(id)){ order.push(id); seen.add(id); } });
     const widths={...DEFAULT_WIDTHS};
     if(raw.widths && typeof raw.widths==='object') COLUMN_IDS.forEach((id)=>{ const n=Number(raw.widths[id]); if(Number.isFinite(n)) widths[id]=Math.max(id==='select'?44:70,Math.min(800,n)); });
     const sortColumn=raw.sort && COLUMN_IDS.includes(raw.sort.column) ? raw.sort.column : 'expiryDate';
@@ -6614,6 +6647,9 @@ const lunarBiz = {
     if(!sub) return '';
     switch(col){
       case 'select': try { return selectedSubscriptionIds.has(String(sub.id))?'已选择':'未选择'; } catch(_) { return ''; }
+      case 'memberLevel': return getEffectiveMemberLevel(sub);
+      case 'status': return getSubscriptionLifecycleState(sub).text;
+      case 'updatedAt': return getLastModifiedDisplay(sub);
       case 'amount': return sub.amount===null||sub.amount===undefined||sub.amount===''?'':Number(sub.amount).toFixed(2);
       case 'currency': return String(sub.currency||'CNY');
       case 'subscriptionMode': return sub.subscriptionMode==='reset'?'到期重置':'循环订阅';
@@ -6668,6 +6704,8 @@ const lunarBiz = {
     const id=String(sub && sub.id || '');
     if(hasPending(id,col)) return pendingValue(id,col);
     if(col==='startDate'||col==='expiryDate') return dateOnly(sub[col]);
+    if(col==='updatedAt') return Date.parse(sub.updatedAt||sub.createdAt||'')||0;
+    if(col==='status') { const key=getSubscriptionLifecycleState(sub).key; return ({active:1,soon:2,expired:3,disabled:4})[key]||0; }
     if(['amount','points','periodValue'].includes(col)) return sub[col]===null||sub[col]===undefined?'':Number(sub[col]);
     if(['useLunar','endOfMonth','isActive','autoRenew'].includes(col)) return sub[col] ? 1 : 0;
     if(col==='select'){ try { return selectedSubscriptionIds.has(id)?1:0; } catch(_) { return 0; } }

@@ -240,15 +240,17 @@ async function createSubscription(subscription, env, options = {}) {
     const normalizedStartDate = startDate ? startDate.toISOString() : null;
     const normalizedExpiryDate = expiryDate.toISOString();
     const endOfMonthFlag = !!subscription.endOfMonth && !useLunar;
+    const isExpiredAtCreation = getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight;
+    const createdAtIso = now.utc.toISOString();
 
-    const initialPaymentDate = normalizedStartDate || now.utc.toISOString();
+    const initialPaymentDate = normalizedStartDate || createdAtIso;
     const newSubscription = {
       id: Date.now().toString(),
       name: subscription.name,
       subscriptionMode: subscription.subscriptionMode || 'cycle',
       customType: subscription.customType || '',
       category: subscription.category ? subscription.category.trim() : '',
-      memberLevel: typeof subscription.memberLevel === 'string' ? subscription.memberLevel.trim() : '',
+      memberLevel: isExpiredAtCreation ? 'Free' : (typeof subscription.memberLevel === 'string' ? subscription.memberLevel.trim() : ''),
       points:
         subscription.points !== undefined && subscription.points !== null && subscription.points !== '' && Number.isFinite(Number(subscription.points))
           ? Math.max(0, Number(subscription.points))
@@ -290,7 +292,8 @@ async function createSubscription(subscription, env, options = {}) {
       isActive: subscription.isActive !== false,
       autoRenew: isSinglePeriod ? false : subscription.autoRenew !== false,
       useLunar: useLunar,
-      createdAt: new Date().toISOString()
+      createdAt: createdAtIso,
+      updatedAt: createdAtIso
     };
 
     if (newSubscription.account || newSubscription.accountSerial) {
@@ -389,6 +392,8 @@ async function updateSubscription(id, subscription, env) {
       }
     }
 
+    const isExpiredAfterUpdate = getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight;
+
     const reminderSource = {
       reminderUnit:
         subscription.reminderUnit !== undefined ? subscription.reminderUnit : existing.reminderUnit,
@@ -439,8 +444,9 @@ async function updateSubscription(id, subscription, env) {
         subscription.category !== undefined
           ? subscription.category.trim()
           : existing.category || '',
-      memberLevel:
-        subscription.memberLevel !== undefined
+      memberLevel: isExpiredAfterUpdate
+        ? 'Free'
+        : subscription.memberLevel !== undefined
           ? String(subscription.memberLevel || '').trim()
           : existing.memberLevel || '',
       points:
@@ -639,7 +645,8 @@ async function manualRenewSubscription(id, env, options = {}) {
       startDate: newStartDate.toISOString(),
       expiryDate: newExpiryDate.toISOString(),
       lastPaymentDate: paymentDate.toISOString(),
-      paymentHistory: trimmedPaymentHistory
+      paymentHistory: trimmedPaymentHistory,
+      updatedAt: now.utc.toISOString()
     };
 
     await subRepo.save(env, updated);
@@ -702,7 +709,8 @@ async function deletePaymentRecord(subscriptionId, paymentId, env) {
       ...subscription,
       expiryDate: newExpiryDate,
       paymentHistory,
-      lastPaymentDate: newLastPaymentDate
+      lastPaymentDate: newLastPaymentDate,
+      updatedAt: new Date().toISOString()
     };
 
     await subRepo.save(env, updated);
@@ -760,7 +768,8 @@ async function updatePaymentRecord(subscriptionId, paymentId, paymentData, env) 
     const updated = {
       ...subscription,
       paymentHistory,
-      lastPaymentDate: newLastPaymentDate
+      lastPaymentDate: newLastPaymentDate,
+      updatedAt: new Date().toISOString()
     };
 
     await subRepo.save(env, updated);

@@ -7302,6 +7302,15 @@ const lunarBiz = {
     if(!payload.expiryDate) throw new Error('到期日期不能为空');
     return payload;
   }
+  function buildTableChanges(sub,edits){
+    // 表格保存只提交本次真正变更的字段，由服务端基于数据库现值合并。
+    // 避免浏览器里的旧整条记录覆盖服务器新数据，也避免提醒规则同步时把刚保存的字段回滚。
+    const changes={};
+    Object.entries(edits||{}).forEach(([col,value])=>applyEditToPayload(changes,col,String(value)));
+    if(Object.prototype.hasOwnProperty.call(changes,'name') && !String(changes.name||'').trim()) throw new Error('订阅名称不能为空');
+    if(Object.prototype.hasOwnProperty.call(changes,'expiryDate') && !String(changes.expiryDate||'').trim()) throw new Error('到期日期不能为空');
+    return changes;
+  }
   async function saveAllEdits(){
     if(activeEditorCell && !commitActiveEditor()) return;
     const ids=Object.keys(pendingEdits); if(!ids.length){ updateEditActionButtons(); return; }
@@ -7311,11 +7320,16 @@ const lunarBiz = {
     for(const id of ids){
       const sub=findSubscription(id); if(!sub){ failed++; failedMessages.push(`${id}：找不到订阅记录`); continue; }
       try{
-        const payload=buildUpdatePayload(sub,pendingEdits[id]);
-        const response=await apiFetch('/api/subscriptions/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
+        const changes=buildTableChanges(sub,pendingEdits[id]);
+        const response=await apiFetch('/api/subscriptions/'+encodeURIComponent(id)+'/table-edit',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({changes}),cache:'no-store'});
         const result=await response.json();
-        if(!response.ok||!result.success) throw new Error(result.message||'保存失败');
-        if(!result.subscription || String(result.subscription.id||'')!==String(id)) throw new Error('服务器未返回已保存的订阅记录');
+        if(!response.ok||!result.success||result.saved!==true||result.storageVerified!==true) throw new Error(result.message||'服务器未确认数据已实际持久化');
+        if(!result.subscription || String(result.subscription.id||'')!==String(id)) throw new Error('服务器未返回已持久化的订阅记录');
+        const requestedFields=Object.keys(changes).filter((key)=>key!=='reminderRules');
+        const savedFields=new Set(Array.isArray(result.savedFields)?result.savedFields:[]);
+        const missing=requestedFields.filter((key)=>!savedFields.has(key));
+        if(missing.length) throw new Error('服务器未确认保存字段：'+missing.join('、'));
+        // 使用服务器已校验的持久化快照更新本地缓存；只有确认成功后才清除暂存修改。
         recordRecentWrite(result.subscription);
         const cacheIndex=(subscriptionsCache||[]).findIndex((item)=>String(item.id)===String(id));
         if(cacheIndex>=0) subscriptionsCache[cacheIndex]={...subscriptionsCache[cacheIndex],...result.subscription};

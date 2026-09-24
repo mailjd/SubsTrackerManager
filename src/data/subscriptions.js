@@ -31,7 +31,9 @@ import { validatePair, syncFromSubscription } from './accounts.repo.js';
 import {
   mirrorCurrentSubscription,
   recordSubscriptionChange,
-  recordSubscriptionDelete
+  recordSubscriptionDelete,
+  getCurrentSubscriptionSnapshot,
+  listCurrentSubscriptionSnapshots
 } from './subscription-history.repo.js';
 
 /**
@@ -119,10 +121,36 @@ function buildTimezoneDate(year, month, day, timezone) {
  * @param {any} env
  * @returns {Promise<Array<any>>}
  */
+function subscriptionUpdatedAtMs(subscription) {
+  const value = subscription && (subscription.updatedAt || subscription.createdAt);
+  const ts = Date.parse(value || '');
+  return Number.isFinite(ts) ? ts : 0;
+}
+
+function chooseNewerSubscriptionSnapshot(kvValue, d1Value) {
+  if (!kvValue) return d1Value || null;
+  if (!d1Value) return kvValue;
+  const kvTs = subscriptionUpdatedAtMs(kvValue);
+  const d1Ts = subscriptionUpdatedAtMs(d1Value);
+  // 同时间戳优先 D1：表格编辑先写 KV 后镜像 D1，D1 是已完成整条保存流程的确认快照。
+  return d1Ts >= kvTs && d1Ts > 0 ? { ...kvValue, ...d1Value } : kvValue;
+}
+
 async function getAllSubscriptions(env) {
   try {
     const { listForSubscription, formatRulesSummary, legacyFieldToRule } = await import('./reminders.repo.js');
-    const subs = await subRepo.listAll(env);
+    let subs = await subRepo.listAll(env);
+    // Cloudflare KV 为最终一致性。部署在多个边缘节点时，刚保存后重新 GET 可能短暂读到旧值。
+    // 若已绑定 D1，用较新的 current 快照覆盖同 ID 的 KV 旧快照，保证表格保存后刷新仍读取已持久化值。
+    try {
+      const d1Rows = await listCurrentSubscriptionSnapshots(env);
+      if (d1Rows.length) {
+        const d1ById = new Map(d1Rows.map((item) => [String(item.id || ''), item]));
+        subs = subs.map((item) => chooseNewerSubscriptionSnapshot(item, d1ById.get(String(item.id || ''))));
+      }
+    } catch (error) {
+      console.warn('[subscriptions] D1 当前快照协调失败，继续使用 KV:', error?.message || error);
+    }
     return Promise.all(
       subs.map(async (sub) => {
         let rules = await listForSubscription(env, sub.id);
@@ -149,11 +177,16 @@ async function getAllSubscriptions(env) {
  * @param {string} subId
  * @param {Array<any>} rules
  */
-async function syncLegacyReminderFields(env, subId, rules) {
+async function syncLegacyReminderFields(env, subId, rules, baseSubscription = null) {
   try {
     const { deriveLegacyFromRules } = await import('./reminders.repo.js');
-    const existing = await subRepo.getById(env, subId);
-    if (!existing) return;
+    // 表格保存会在同一个请求里先写订阅本体、再写提醒规则。
+    // Cloudflare KV 属于最终一致性存储；若这里立刻重新读取，可能拿到写入前旧值，
+    // 再次 save 时会把刚刚的表格修改覆盖掉。允许调用方传入刚保存的对象，避免“成功但实际被旧值覆盖”。
+    const existing = baseSubscription && String(baseSubscription.id || '') === String(subId)
+      ? baseSubscription
+      : await subRepo.getById(env, subId);
+    if (!existing) return null;
     const legacy = deriveLegacyFromRules(rules);
     const synced = {
       ...existing,
@@ -165,8 +198,10 @@ async function syncLegacyReminderFields(env, subId, rules) {
     };
     await subRepo.save(env, synced);
     await mirrorCurrentSubscription(env, synced);
+    return synced;
   } catch (error) {
     console.error('[subscriptions] 同步 legacy 提醒字段失败:', error);
+    return null;
   }
 }
 
@@ -177,7 +212,10 @@ async function syncLegacyReminderFields(env, subId, rules) {
  * @param {any} env
  */
 async function getSubscription(id, env) {
-  return subRepo.getById(env, id);
+  const kvValue = await subRepo.getById(env, id);
+  let d1Value = null;
+  try { d1Value = await getCurrentSubscriptionSnapshot(env, id); } catch (_) {}
+  return chooseNewerSubscriptionSnapshot(kvValue, d1Value);
 }
 
 /**
@@ -335,7 +373,7 @@ async function createSubscription(subscription, env, options = {}) {
  */
 async function updateSubscription(id, subscription, env) {
   try {
-    const existing = await subRepo.getById(env, id);
+    const existing = await getSubscription(id, env);
     if (!existing) {
       return { success: false, message: '订阅不存在' };
     }

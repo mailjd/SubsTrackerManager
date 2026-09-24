@@ -8,7 +8,8 @@ import {
   deletePaymentRecord,
   updatePaymentRecord,
   toggleSubscriptionStatus,
-  patchSubscriptionFields
+  patchSubscriptionFields,
+  syncLegacyReminderFields
 } from '../../data/subscriptions.js';
 import { getConfig } from '../../data/config.js';
 import { sendNotificationToAllChannels } from '../../services/notify/index.js';
@@ -16,7 +17,7 @@ import { lunarCalendar } from '../../core/lunar.js';
 import { formatTimeInTimezone, formatTimezoneDisplay, getTimezoneDateParts } from '../../core/time.js';
 import { formatAmount } from '../../core/currency-format.js';
 import { extractTagsFromSubscriptions } from '../utils.js';
-import { hasD1, listSubscriptionHistory, syncCurrentSubscriptions } from '../../data/subscription-history.repo.js';
+import { hasD1, listSubscriptionHistory, syncCurrentSubscriptions, getCurrentSubscriptionSnapshot } from '../../data/subscription-history.repo.js';
 import {
   SUBSCRIPTION_IMPORT_TEMPLATE_BASE64,
   SUBSCRIPTION_IMPORT_TEMPLATE_FILENAME,
@@ -283,6 +284,22 @@ async function testSingleSubscriptionNotification(id, env) {
     console.error('[手动测试] 发送失败:', error);
     return { success: false, message: '发送时发生错误: ' + error.message };
   }
+}
+
+function persistenceComparable(value) {
+  if (value === undefined) return '__undefined__';
+  if (value === null) return '__null__';
+  if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '__nan__';
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (Array.isArray(value) || (value && typeof value === 'object')) {
+    try { return JSON.stringify(value); } catch (_) { return String(value); }
+  }
+  return String(value);
+}
+
+function verifyFields(snapshot, expected, fields) {
+  if (!snapshot) return false;
+  return fields.every((field) => persistenceComparable(snapshot[field]) === persistenceComparable(expected[field]));
 }
 
 async function handleSubscriptions(request, env, path) {
@@ -651,6 +668,152 @@ async function handleSubscriptions(request, env, path) {
     const parts = path.split('/');
     const id = parts[2];
 
+    // 表格模式专用字段级保存。
+    // 旧实现由前端拼出整条 subscription 后 PUT；在提醒规则与 Cloudflare KV 最终一致性同时存在时，
+    // 同一请求后续重新读取旧对象可能覆盖刚写入的单格修改。这里改为服务端读取最新对象、只合并本次修改字段，
+    // 并在同一请求中完成提醒规则同步，成功响应代表写入流程已经 await 完成。
+    if (parts[3] === 'table-edit' && method === 'PATCH') {
+      let payload;
+      try {
+        payload = await request.json();
+      } catch {
+        return new Response(JSON.stringify({ success: false, message: '请求体不是合法 JSON' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      }
+
+      const changes = payload && changesObject(payload.changes) ? payload.changes : null;
+      if (!changes) {
+        return new Response(JSON.stringify({ success: false, message: '没有待保存的表格修改' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      }
+
+      const existing = await getSubscription(id, env);
+      if (!existing) {
+        return new Response(JSON.stringify({ success: false, message: '订阅不存在' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      }
+
+      const allowedFields = new Set([
+        'name', 'account', 'accountSerial', 'memberLevel', 'points', 'users', 'customType', 'category',
+        'amount', 'currency', 'subscriptionMode', 'startDate', 'periodValue', 'periodUnit', 'expiryDate',
+        'useLunar', 'endOfMonth', 'isActive', 'autoRenew', 'notes',
+        'reminderUnit', 'reminderValue', 'reminderDays', 'reminderHours'
+      ]);
+      const businessChanges = {};
+      for (const [key, value] of Object.entries(changes)) {
+        if (allowedFields.has(key)) businessChanges[key] = value;
+      }
+
+      const hasReminderRules = Object.prototype.hasOwnProperty.call(changes, 'reminderRules');
+      const incomingReminderRules = hasReminderRules && Array.isArray(changes.reminderRules)
+        ? changes.reminderRules
+        : [];
+
+      if (Object.keys(businessChanges).length === 0 && !hasReminderRules) {
+        return new Response(JSON.stringify({ success: false, message: '没有允许保存的表格字段' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      }
+
+      let savedSubscription = existing;
+      if (Object.keys(businessChanges).length > 0) {
+        // 用服务端刚读取的现有记录合并，而不是相信浏览器里可能已经过期的整条对象。
+        const mergedInput = { ...existing, ...businessChanges };
+        const result = await updateSubscription(id, mergedInput, env);
+        if (!result.success || !result.subscription) {
+          return new Response(JSON.stringify({ success: false, message: result.message || '表格修改保存失败' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+          });
+        }
+        savedSubscription = result.subscription;
+      }
+
+      if (hasReminderRules) {
+        try {
+          const remindersRepo = await import('../../data/reminders.repo.js');
+          const normalizedRules = incomingReminderRules.map(remindersRepo.normalizeRule);
+          await remindersRepo.replaceForSubscription(env, id, normalizedRules);
+          // 直接把本请求刚保存的对象传入，禁止立即从 KV 回读旧快照再覆盖业务字段。
+          const synced = await syncLegacyReminderFields(env, id, normalizedRules, savedSubscription);
+          if (!synced) throw new Error('提醒规则 legacy 字段同步失败');
+          // 响应里带回本次刚保存的完整提醒规则，避免 KV 边缘缓存短暂读到旧 reminder_rules 时，
+          // 前端又把刚编辑的提醒显示回旧值。recent-write overlay 也会保留这份确认快照。
+          savedSubscription = {
+            ...synced,
+            reminderRules: normalizedRules,
+            reminderRulesSummary: remindersRepo.formatRulesSummary(normalizedRules)
+          };
+        } catch (error) {
+          return new Response(JSON.stringify({
+            success: false,
+            message: '提醒规则保存失败：' + (error && error.message ? error.message : '未知错误')
+          }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+          });
+        }
+      }
+
+      // 严格持久化校验：不能仅因为 put()/D1 batch 没抛异常就向前端报告“保存成功”。
+      // KV 在跨边缘节点场景可能短暂读到旧缓存，因此：
+      // - KV 命中本次字段 => 已验证；
+      // - 若绑定 D1，则 D1 current 快照命中本次字段也视为强持久化验证通过。
+      // GET 列表会以 updatedAt 较新的 D1 快照覆盖 KV 的旧边缘快照。
+      const verifyFieldsList = Object.keys(businessChanges);
+      let kvSnapshot = null;
+      let d1Snapshot = null;
+      try {
+        const subRepo = await import('../../data/subscriptions.repo.js');
+        kvSnapshot = await subRepo.getById(env, id);
+      } catch (error) {
+        console.warn('[table-edit] KV 回读校验失败:', error?.message || error);
+      }
+      if (hasD1(env)) {
+        try { d1Snapshot = await getCurrentSubscriptionSnapshot(env, id); }
+        catch (error) { console.warn('[table-edit] D1 回读校验失败:', error?.message || error); }
+      }
+      const kvVerified = verifyFields(kvSnapshot, savedSubscription, verifyFieldsList);
+      const d1Verified = hasD1(env) ? verifyFields(d1Snapshot, savedSubscription, verifyFieldsList) : false;
+      const storageVerified = verifyFieldsList.length === 0 ? !!(d1Verified || kvVerified || hasReminderRules) : !!(kvVerified || d1Verified);
+
+      if (!storageVerified) {
+        console.error('[table-edit] 保存流程返回成功但持久化回读不一致', { id, fields: verifyFieldsList, kvVerified, d1Verified });
+        return new Response(JSON.stringify({
+          success: false,
+          saved: false,
+          storageVerified: false,
+          message: '服务器未能确认修改已持久化，请重试；本次暂存修改不会被清除',
+          verification: { kv: kvVerified, d1: d1Verified }
+        }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        saved: true,
+        storageVerified: true,
+        verification: { kv: kvVerified, d1: d1Verified },
+        savedFields: [
+          ...Object.keys(businessChanges),
+          ...(hasReminderRules ? ['reminderRules'] : [])
+        ],
+        subscription: sanitizeSubscription(savedSubscription)
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+      });
+    }
+
     if (parts[3] === 'toggle-status' && method === 'POST') {
       const body = await request.json();
       const result = await toggleSubscriptionStatus(id, body.isActive, env);
@@ -743,7 +906,9 @@ async function handleSubscriptions(request, env, path) {
           const { syncLegacyReminderFields } = await import('../../data/subscriptions.js');
           const rules = subscription.reminderRules.map(remindersRepo.normalizeRule);
           await remindersRepo.replaceForSubscription(env, id, rules);
-          await syncLegacyReminderFields(env, id, rules);
+          // 使用本请求刚写入的订阅对象，避免 KV 最终一致性导致立即回读旧值并覆盖本次更新。
+          const synced = await syncLegacyReminderFields(env, id, rules, result.subscription);
+          if (synced) result.subscription = synced;
         } catch (err) {
           console.error('[subscriptions] 更新提醒规则失败（订阅本体已更新）:', err);
         }

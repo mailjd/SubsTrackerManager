@@ -262,6 +262,66 @@ export async function ensureD1Seed(env) {
   }
 }
 
+
+/**
+ * 读取 D1 中的订阅当前快照。用于需要强一致回读的编辑流程。
+ * D1 未绑定或记录不存在时返回 null。
+ * @param {any} env
+ * @param {string} subscriptionId
+ */
+export async function getCurrentSubscriptionSnapshot(env, subscriptionId) {
+  if (!hasD1(env) || !subscriptionId) return null;
+  try {
+    await ensureD1Schema(env);
+    const row = await env.SUBSCRIPTIONS_DB.prepare(`
+      SELECT data_json, updated_at
+      FROM subscriptions_current
+      WHERE id = ?
+      LIMIT 1
+    `).bind(String(subscriptionId)).first();
+    if (!row || !row.data_json) return null;
+    const parsed = JSON.parse(String(row.data_json));
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (!parsed.updatedAt && row.updated_at) parsed.updatedAt = String(row.updated_at);
+    return parsed;
+  } catch (error) {
+    console.error('[d1] 读取订阅当前快照失败:', error);
+    return null;
+  }
+}
+
+/**
+ * 批量读取 D1 当前快照。只用于与 KV 当前列表做“较新版本覆盖”，
+ * 不单独把 D1-only 记录重新加入列表，避免已删除记录被误恢复。
+ * @param {any} env
+ * @returns {Promise<any[]>}
+ */
+export async function listCurrentSubscriptionSnapshots(env) {
+  if (!hasD1(env)) return [];
+  try {
+    await ensureD1Schema(env);
+    const result = await env.SUBSCRIPTIONS_DB.prepare(`
+      SELECT id, data_json, updated_at
+      FROM subscriptions_current
+    `).all();
+    const out = [];
+    for (const row of result.results || []) {
+      if (!row || !row.data_json) continue;
+      try {
+        const parsed = JSON.parse(String(row.data_json));
+        if (!parsed || typeof parsed !== 'object') continue;
+        if (!parsed.id && row.id) parsed.id = String(row.id);
+        if (!parsed.updatedAt && row.updated_at) parsed.updatedAt = String(row.updated_at);
+        out.push(parsed);
+      } catch (_) {}
+    }
+    return out;
+  } catch (error) {
+    console.error('[d1] 批量读取订阅当前快照失败:', error);
+    return [];
+  }
+}
+
 /**
  * 查询指定订阅的历史记录。
  * @param {any} env

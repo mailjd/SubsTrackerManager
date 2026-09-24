@@ -2449,6 +2449,9 @@ const lunarBiz = {
         const diffHours = diffMs / (1000 * 60 * 60);
 
         const lifecycle = getSubscriptionLifecycleState(subscription);
+        // v3.3.14：生命周期状态与提醒规则彼此独立。状态改为固定 2 天阈值后，
+        // 原列表渲染仍需要 reminder.displayText，因此这里必须保留提醒设置对象。
+        const reminder = getReminderSettings(subscription);
         let statusHtml = '';
         if (lifecycle.key === 'disabled') {
           statusHtml = '<span class="px-2 py-1 text-xs font-medium rounded-full text-white bg-gray-500"><i class="fas fa-pause-circle mr-1"></i>已停用</span>';

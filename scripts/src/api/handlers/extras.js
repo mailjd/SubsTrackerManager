@@ -1,0 +1,343 @@
+// @ts-check
+/**
+ * 提醒规则 / 通知日志 / 调度日志 路由
+ *
+ * 接口表（路径前缀 /api）：
+ *   GET    /subscriptions/:id/reminders           列出某订阅的提醒规则
+ *   POST   /subscriptions/:id/reminders           新增一条规则
+ *   PUT    /subscriptions/:id/reminders/:ruleId   更新一条规则
+ *   DELETE /subscriptions/:id/reminders/:ruleId   删除一条规则
+ *
+ *   GET    /notification-logs?subId=&channel=&status=&since=&limit=
+ *                                                 查询通知日志
+ *   GET    /scheduler-logs?limit=N                查询调度执行日志
+ *
+ * 鉴权：与既有客户端约定一致——需要登录（cookie token），由 router.js 在 routes 之前
+ * 统一校验。本文件被 router.js 调用，不再单独校验。
+ *
+ */
+
+import * as remindersRepo from '../../data/reminders.repo.js';
+import * as notifyLogsRepo from '../../data/notification-logs.repo.js';
+import * as schedLogsRepo from '../../data/scheduler-logs.repo.js';
+import { getCategories, addCategory } from '../../data/categories.js';
+import { getMenuOptions, addMenuOption, removeMenuOption, resetMenuOptions, isValidMenuGroup } from '../../data/menu-options.js';
+import { getNextFireTime } from '../../services/notify/reminder-engine.js';
+
+export const VERSION = '3.3.16';
+
+
+
+const TABLE_TEMPLATE_KEYS = {
+  subscription: 'ui:subscription_table_templates:v1',
+  database: 'ui:database_table_templates:v1'
+};
+
+function normalizeTableTemplates(input) {
+  if (!Array.isArray(input)) return [];
+  const seenNames = new Set();
+  const out = [];
+  for (const raw of input) {
+    if (!raw || typeof raw !== 'object') continue;
+    const name = String(raw.name || '').trim();
+    if (!name) continue;
+    const nameKey = name.toLowerCase();
+    if (seenNames.has(nameKey)) continue;
+    seenNames.add(nameKey);
+    out.push({
+      id: String(raw.id || ('tpl_' + Date.now().toString(36) + '_' + out.length)),
+      name,
+      layout: raw.layout && typeof raw.layout === 'object' ? raw.layout : {},
+      updatedAt: raw.updatedAt ? String(raw.updatedAt) : new Date().toISOString()
+    });
+    if (out.length >= 5) break;
+  }
+  return out;
+}
+
+async function readTableTemplates(env, scope) {
+  const key = TABLE_TEMPLATE_KEYS[scope];
+  if (!key || !env?.SUBSCRIPTIONS_KV) return [];
+  try {
+    const raw = await env.SUBSCRIPTIONS_KV.get(key);
+    return raw ? normalizeTableTemplates(JSON.parse(raw)) : [];
+  } catch (error) {
+    console.error('[ui-preferences] 读取显示模板失败:', scope, error);
+    return [];
+  }
+}
+
+async function writeTableTemplates(env, scope, templates) {
+  const key = TABLE_TEMPLATE_KEYS[scope];
+  if (!key || !env?.SUBSCRIPTIONS_KV) throw new Error('模板存储不可用');
+  const normalized = normalizeTableTemplates(templates);
+  await env.SUBSCRIPTIONS_KV.put(key, JSON.stringify(normalized));
+  return normalized;
+}
+
+/** 标准 JSON 响应 */
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+/**
+ * 规则变更后同步订阅上的 legacy 提醒字段，保证列表展示一致。
+ *
+ * @param {{ SUBSCRIPTIONS_KV: KVNamespace }} env
+ * @param {string} subId
+ * @param {import('../../data/reminders.repo.js').ReminderRule[]} [rules]
+ */
+async function syncLegacyAfterRulesChange(env, subId, rules) {
+  try {
+    const { syncLegacyReminderFields } = await import('../../data/subscriptions.js');
+    const list = rules || (await remindersRepo.listForSubscription(env, subId));
+    await syncLegacyReminderFields(env, subId, list);
+  } catch (err) {
+    console.error('[reminders] 同步 legacy 字段失败:', err);
+  }
+}
+
+/**
+ * 处理提醒规则 / 通知日志 / 调度日志相关的 新 API。
+ * 返回 null 表示路径不匹配，由调用方继续转给下一组路由。
+ *
+ * @param {Request} request
+ * @param {{ SUBSCRIPTIONS_KV: KVNamespace }} env
+ * @param {string} path 已剥离 /api 前缀的路径
+ */
+export async function handleExtraRoutes(request, env, path) {
+  const method = request.method;
+
+
+
+  // /ui-preferences/table-templates/:scope
+  // 显示模板持久化到绑定的 KV，而不是只放在浏览器 localStorage。
+  // 这样正常发布/升级工具后，只要仍使用同一个 KV namespace，模板不会丢失。
+  const templateMatch = path.match(/^\/ui-preferences\/table-templates\/(subscription|database)\/?$/);
+  if (templateMatch) {
+    const scope = templateMatch[1];
+    if (method === 'GET') {
+      const templates = await readTableTemplates(env, scope);
+      return new Response(JSON.stringify({ success: true, scope, templates }), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+      });
+    }
+    if (method === 'PUT') {
+      let body;
+      try { body = await request.json(); }
+      catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
+      if (!body || !Array.isArray(body.templates)) return json({ success: false, message: 'templates 必须为数组' }, 400);
+      try {
+        const templates = await writeTableTemplates(env, scope, body.templates);
+        return new Response(JSON.stringify({ success: true, scope, templates }), {
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      } catch (error) {
+        return json({ success: false, message: error && error.message ? error.message : '显示模板保存失败' }, 500);
+      }
+    }
+    return json({ success: false, message: '不支持的请求方法' }, 405);
+  }
+
+  // /subscriptions/:id/reminders[/:ruleId]
+  const remMatch = path.match(/^\/subscriptions\/([^/]+)\/reminders(?:\/([^/]+))?\/?$/);
+  if (remMatch) {
+    const [, subId, ruleId] = remMatch;
+    return handleReminderRoute(request, env, method, subId, ruleId);
+  }
+
+  // /subscriptions/:id/next-reminder
+  const nrMatch = path.match(/^\/subscriptions\/([^/]+)\/next-reminder\/?$/);
+  if (nrMatch && method === 'GET') {
+    const [, subId] = nrMatch;
+    const { getSubscription } = await import('../../data/subscriptions.js');
+    const sub = await getSubscription(subId, env);
+    if (!sub) return json({ success: false, message: '订阅不存在' }, 404);
+    const rules = await remindersRepo.listForSubscription(env, subId);
+    const nowIso = new Date().toISOString();
+    const times = rules
+      .map((r) => ({ ruleId: r.id, type: r.type, value: r.value, unit: r.unit, nextFireTime: getNextFireTime(r, sub.expiryDate, nowIso) }))
+      .filter((t) => t.nextFireTime !== null)
+      .sort((a, b) => new Date(a.nextFireTime).getTime() - new Date(b.nextFireTime).getTime());
+    return json({ success: true, nextReminder: times[0] || null, allUpcoming: times });
+  }
+
+  // /notification-logs
+  if (path === '/notification-logs' && method === 'GET') {
+    return handleNotifyLogsList(request, env);
+  }
+
+  // /scheduler-logs
+  if (path === '/scheduler-logs' && method === 'GET') {
+    return handleSchedLogsList(request, env);
+  }
+
+  // /version
+  if (path === '/version' && method === 'GET') {
+    return json({ success: true, version: VERSION });
+  }
+
+  // /menu-options：订阅名称 / 订阅类型 / 分类标签 / 会员级别 / 使用人的 D1 可配置菜单
+  if (path === '/menu-options') {
+    if (method === 'GET') {
+      return json({ success: true, menus: await getMenuOptions(env) });
+    }
+    if (method === 'POST' || method === 'DELETE') {
+      let body;
+      try { body = await request.json(); } catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
+      const group = String((body && body.group) || '').trim();
+      const name = String((body && body.name) || '').trim();
+      if (!isValidMenuGroup(group)) return json({ success: false, message: '无效的菜单分组' }, 400);
+      if (!name) return json({ success: false, message: '菜单项不能为空' }, 400);
+      try {
+        const menus = method === 'POST'
+          ? await addMenuOption(env, group, name)
+          : await removeMenuOption(env, group, name);
+        return json({ success: true, menus });
+      } catch (error) {
+        return json({ success: false, message: error && error.message ? error.message : '菜单更新失败' }, 400);
+      }
+    }
+  }
+
+  if (path === '/menu-options/reset' && method === 'POST') {
+    let body = {};
+    try { body = await request.json(); } catch { /* 允许空请求体 */ }
+    const group = body && body.group ? String(body.group).trim() : null;
+    if (group && !isValidMenuGroup(group)) return json({ success: false, message: '无效的菜单分组' }, 400);
+    try {
+      return json({ success: true, menus: await resetMenuOptions(env, group) });
+    } catch (error) {
+      return json({ success: false, message: error && error.message ? error.message : '恢复默认菜单失败' }, 400);
+    }
+  }
+
+  // /categories 为旧版兼容接口；新下拉菜单不再自动合并这里的数据。
+  if (path === '/categories') {
+    if (method === 'GET') {
+      return json({ success: true, categories: await getCategories(env) });
+    }
+    if (method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
+      const name = body && body.name;
+      if (!name || !name.trim()) return json({ success: false, message: '分类名不能为空' }, 400);
+      await addCategory(env, name);
+      return json({ success: true });
+    }
+  }
+
+  return null;
+}
+
+/**
+ * @param {Request} request
+ * @param {{ SUBSCRIPTIONS_KV: KVNamespace }} env
+ * @param {string} method
+ * @param {string} subId
+ * @param {string} [ruleId]
+ */
+async function handleReminderRoute(request, env, method, subId, ruleId) {
+  // GET /subscriptions/:id/reminders
+  if (method === 'GET' && !ruleId) {
+    const list = await remindersRepo.listForSubscription(env, subId);
+    return json({ success: true, rules: list });
+  }
+
+  // POST /subscriptions/:id/reminders
+  if (method === 'POST' && !ruleId) {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return json({ success: false, message: '请求体不是合法 JSON' }, 400);
+    }
+    if (body && body.preset === true) {
+      // 一次性应用智能预设（覆盖现有规则）
+      const presets = remindersRepo.defaultPresetRules();
+      await remindersRepo.replaceForSubscription(env, subId, presets);
+      await syncLegacyAfterRulesChange(env, subId);
+      return json({ success: true, rules: presets });
+    }
+    const rule = await remindersRepo.addRule(env, subId, body || {});
+    await syncLegacyAfterRulesChange(env, subId);
+    return json({ success: true, rule });
+  }
+
+  // PUT /subscriptions/:id/reminders（不带 ruleId）→ 整体替换规则列表
+  if (method === 'PUT' && !ruleId) {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return json({ success: false, message: '请求体不是合法 JSON' }, 400);
+    }
+    const rules = Array.isArray(body && body.rules) ? body.rules : [];
+    await remindersRepo.replaceForSubscription(env, subId, rules);
+    const saved = await remindersRepo.listForSubscription(env, subId);
+    await syncLegacyAfterRulesChange(env, subId, saved);
+    return json({ success: true, rules: saved });
+  }
+
+  // PUT /subscriptions/:id/reminders/:ruleId
+  if (method === 'PUT' && ruleId) {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return json({ success: false, message: '请求体不是合法 JSON' }, 400);
+    }
+    const updated = await remindersRepo.updateRule(env, subId, ruleId, body || {});
+    if (!updated) return json({ success: false, message: '规则不存在' }, 404);
+    await syncLegacyAfterRulesChange(env, subId);
+    return json({ success: true, rule: updated });
+  }
+
+  // DELETE /subscriptions/:id/reminders/:ruleId
+  if (method === 'DELETE' && ruleId) {
+    const ok = await remindersRepo.deleteRule(env, subId, ruleId);
+    if (!ok) return json({ success: false, message: '规则不存在' }, 404);
+    await syncLegacyAfterRulesChange(env, subId);
+    return json({ success: true });
+  }
+
+  return json({ success: false, message: 'Method Not Allowed' }, 405);
+}
+
+/**
+ * GET /api/notification-logs?subId=&channel=&status=&since=&limit=
+ *
+ * @param {Request} request
+ * @param {{ SUBSCRIPTIONS_KV: KVNamespace }} env
+ */
+async function handleNotifyLogsList(request, env) {
+  const url = new URL(request.url);
+  const filter = {
+    subId: url.searchParams.get('subId') || undefined,
+    channel: url.searchParams.get('channel') || undefined,
+    status:
+      /** @type {'success'|'failed'|undefined} */
+      (url.searchParams.get('status') || undefined),
+    since: url.searchParams.get('since') || undefined,
+    until: url.searchParams.get('until') || undefined,
+    limit: Number(url.searchParams.get('limit') || 100)
+  };
+  const logs = await notifyLogsRepo.query(env, filter);
+  return json({ success: true, logs });
+}
+
+/**
+ * GET /api/scheduler-logs?limit=N
+ *
+ * @param {Request} request
+ * @param {{ SUBSCRIPTIONS_KV: KVNamespace }} env
+ */
+async function handleSchedLogsList(request, env) {
+  const url = new URL(request.url);
+  const limit = Number(url.searchParams.get('limit') || 20);
+  const logs = await schedLogsRepo.getRecent(env, limit);
+  return json({ success: true, logs });
+}

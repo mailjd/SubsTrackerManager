@@ -2817,10 +2817,10 @@ const lunarBiz = {
           tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>加载中...</td></tr>';
         }
 
-        const response = await apiFetch('/api/subscriptions');
+        const response = await apiFetch('/api/subscriptions', { cache: 'no-store' });
         const data = await response.json();
 
-        subscriptionsCache = Array.isArray(data) ? data : [];
+        subscriptionsCache = typeof window.applySubscriptionRecentWriteOverlay === 'function' ? window.applySubscriptionRecentWriteOverlay(Array.isArray(data) ? data : []) : (Array.isArray(data) ? data : []);
         const validSubscriptionIds = new Set(subscriptionsCache.map((item) => String(item.id)));
         Array.from(selectedSubscriptionIds).forEach((id) => { if (!validSubscriptionIds.has(id)) selectedSubscriptionIds.delete(id); });
         populateCategoryFilter(subscriptionsCache);
@@ -6538,8 +6538,11 @@ const lunarBiz = {
   const LAYOUT_KEY = 'subscriptionTableLayoutV2';
   const LEGACY_LAYOUT_KEY = 'subscriptionTableLayoutV1';
   const TEMPLATE_KEY = 'subscriptionTableTemplatesV1';
+  const TEMPLATE_API = '/api/ui-preferences/table-templates/subscription';
   const EDIT_KEY = 'subscriptionTablePendingEditsV1';
   const HEADER_FILTER_KEY = 'subscriptionTableHeaderFiltersV1';
+  const RECENT_WRITE_KEY = 'subscriptionTableRecentWritesV1';
+  const RECENT_WRITE_TTL = 2 * 60 * 1000;
   let activeSortColumn = null;
   let activeEditorCell = null;
   let dragColumnId = null;
@@ -6611,6 +6614,46 @@ const lunarBiz = {
     else localStorage.removeItem(HEADER_FILTER_KEY);
   }
   function hasHeaderFilter(col){ return Object.prototype.hasOwnProperty.call(headerFilters,col); }
+
+  function loadRecentWrites(){
+    try {
+      const parsed=JSON.parse(localStorage.getItem(RECENT_WRITE_KEY)||'{}');
+      return parsed && typeof parsed==='object' && !Array.isArray(parsed) ? parsed : {};
+    } catch(_) { return {}; }
+  }
+  function saveRecentWrites(map){
+    try {
+      const keys=Object.keys(map||{});
+      if(keys.length) localStorage.setItem(RECENT_WRITE_KEY,JSON.stringify(map));
+      else localStorage.removeItem(RECENT_WRITE_KEY);
+    } catch(_) {}
+  }
+  function recordRecentWrite(subscription){
+    if(!subscription || !subscription.id) return;
+    const map=loadRecentWrites();
+    map[String(subscription.id)]={savedAt:Date.now(),subscription:clone(subscription)};
+    saveRecentWrites(map);
+  }
+  function applyRecentWriteOverlay(items){
+    const list=Array.isArray(items)?items:[];
+    const map=loadRecentWrites();
+    let changed=false;
+    const now=Date.now();
+    const out=list.map((serverItem)=>{
+      const id=String(serverItem&&serverItem.id||'');
+      const entry=map[id];
+      if(!entry || !entry.subscription) return serverItem;
+      if(now-Number(entry.savedAt||0)>RECENT_WRITE_TTL){ delete map[id]; changed=true; return serverItem; }
+      const localItem=entry.subscription;
+      const serverTs=Date.parse(serverItem&&serverItem.updatedAt||'')||0;
+      const localTs=Date.parse(localItem&&localItem.updatedAt||'')||0;
+      if(serverTs>=localTs && localTs>0){ delete map[id]; changed=true; return serverItem; }
+      return {...serverItem,...localItem};
+    });
+    if(changed) saveRecentWrites(map);
+    return out;
+  }
+  window.applySubscriptionRecentWriteOverlay=applyRecentWriteOverlay;
 
   function loadPendingEdits(){
     try { const parsed=JSON.parse(sessionStorage.getItem(EDIT_KEY)||'{}'); return parsed && typeof parsed==='object' ? parsed : {}; }
@@ -7269,14 +7312,18 @@ const lunarBiz = {
       const sub=findSubscription(id); if(!sub){ failed++; failedMessages.push(`${id}：找不到订阅记录`); continue; }
       try{
         const payload=buildUpdatePayload(sub,pendingEdits[id]);
-        const response=await apiFetch('/api/subscriptions/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        const response=await apiFetch('/api/subscriptions/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
         const result=await response.json();
         if(!response.ok||!result.success) throw new Error(result.message||'保存失败');
+        if(!result.subscription || String(result.subscription.id||'')!==String(id)) throw new Error('服务器未返回已保存的订阅记录');
+        recordRecentWrite(result.subscription);
+        const cacheIndex=(subscriptionsCache||[]).findIndex((item)=>String(item.id)===String(id));
+        if(cacheIndex>=0) subscriptionsCache[cacheIndex]={...subscriptionsCache[cacheIndex],...result.subscription};
         delete pendingEdits[id]; success++;
       }catch(error){ failed++; failedMessages.push(`${sub.name||id}：${error&&error.message?error.message:'保存失败'}`); }
     }
     savePendingEdits();
-    if(success){ showToast(`已保存 ${success} 条订阅的单格修改${failed?`，${failed} 条失败`:''}`,failed?'warning':'success'); try{await loadSubscriptions(false);}catch(_){} }
+    if(success){ showToast(`已保存 ${success} 条订阅的单格修改${failed?`，${failed} 条失败`:''}`,failed?'warning':'success'); try{renderSubscriptionTable();}catch(_){queueEnhance();} }
     else if(failed) showToast('单格修改保存失败：'+failedMessages.slice(0,2).join('；'),'error');
     if(failedMessages.length>2) console.warn('[表格单格编辑] 部分失败:',failedMessages);
     if(btn){btn.innerHTML=old;btn.disabled=pendingCount()===0;} if(cancel) cancel.disabled=pendingCount()===0; queueEnhance();
@@ -7288,8 +7335,47 @@ const lunarBiz = {
     showToast('已还原编辑前内容，并清除全部暂存修改','info');
   }
 
-  function loadTemplates(){ try{ const list=JSON.parse(localStorage.getItem(TEMPLATE_KEY)||'[]'); return Array.isArray(list)?list.slice(0,5):[]; }catch(_){return [];} }
-  function saveTemplates(list){ localStorage.setItem(TEMPLATE_KEY,JSON.stringify(list.slice(0,5))); }
+  function normalizeTemplateList(list){
+    const out=[]; const seen=new Set();
+    (Array.isArray(list)?list:[]).forEach((raw)=>{
+      if(!raw||typeof raw!=='object'||out.length>=5)return;
+      const name=String(raw.name||'').trim(); if(!name)return;
+      const key=name.toLowerCase(); if(seen.has(key))return; seen.add(key);
+      out.push({id:String(raw.id||('tpl_'+Date.now().toString(36)+'_'+out.length)),name,layout:raw.layout&&typeof raw.layout==='object'?raw.layout:{},updatedAt:String(raw.updatedAt||'')||new Date().toISOString()});
+    });
+    return out;
+  }
+  function loadTemplates(){ try{ return normalizeTemplateList(JSON.parse(localStorage.getItem(TEMPLATE_KEY)||'[]')); }catch(_){return [];} }
+  function saveTemplatesLocal(list){ const safe=normalizeTemplateList(list); localStorage.setItem(TEMPLATE_KEY,JSON.stringify(safe)); return safe; }
+  async function persistTemplatesToServer(list){
+    const response=await apiFetch(TEMPLATE_API,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({templates:normalizeTemplateList(list)}),cache:'no-store'});
+    const data=await response.json(); if(!response.ok||!data.success) throw new Error(data.message||'显示模板云端保存失败'); return normalizeTemplateList(data.templates||list);
+  }
+  function saveTemplates(list){
+    const safe=saveTemplatesLocal(list);
+    persistTemplatesToServer(safe).then((serverList)=>saveTemplatesLocal(serverList)).catch((error)=>console.warn('[显示模板] 云端同步失败，已保留本地副本:',error));
+    return safe;
+  }
+  function mergeTemplateLists(localList,remoteList){
+    const byName=new Map();
+    [...normalizeTemplateList(remoteList),...normalizeTemplateList(localList)].forEach((item)=>{
+      const key=item.name.toLowerCase(), prev=byName.get(key);
+      if(!prev){byName.set(key,item);return;}
+      const prevTs=Date.parse(prev.updatedAt||'')||0, nextTs=Date.parse(item.updatedAt||'')||0;
+      if(nextTs>prevTs) byName.set(key,item);
+    });
+    return normalizeTemplateList([...byName.values()].sort((a,b)=>(Date.parse(b.updatedAt||'')||0)-(Date.parse(a.updatedAt||'')||0)));
+  }
+  async function syncTemplatesWithServer(){
+    const local=loadTemplates();
+    try{
+      const response=await apiFetch(TEMPLATE_API,{cache:'no-store'}); const data=await response.json();
+      if(!response.ok||!data.success) throw new Error(data.message||'读取显示模板失败');
+      const remote=normalizeTemplateList(data.templates||[]); const merged=mergeTemplateLists(local,remote);
+      saveTemplatesLocal(merged); refreshTemplateSelect('');
+      if(JSON.stringify(merged)!==JSON.stringify(remote)) await persistTemplatesToServer(merged);
+    }catch(error){ console.warn('[显示模板] 云端读取失败，继续使用本地模板:',error); refreshTemplateSelect(''); }
+  }
   function refreshTemplateSelect(selectedId=''){
     const select=document.getElementById('tableTemplateSelect'); if(!select) return; const list=loadTemplates(); select.innerHTML='';
     const base=document.createElement('option'); base.value=''; base.textContent='显示模板'; select.appendChild(base);
@@ -7413,7 +7499,7 @@ const lunarBiz = {
   document.addEventListener('focusout',(e)=>{ if(activeEditorCell&&e.target&&e.target.dataset&&e.target.dataset.tableCellEditor==='1') setTimeout(()=>{ if(activeEditorCell&&!activeEditorCell.contains(document.activeElement)) commitActiveEditor(); },0); });
 
   document.addEventListener('DOMContentLoaded',()=>{
-    refreshTemplateSelect(''); updateEditActionButtons();
+    refreshTemplateSelect(''); syncTemplatesWithServer(); updateEditActionButtons();
     const tbody=document.getElementById('subscriptionsExcelBody'); if(tbody){ new MutationObserver(()=>queueEnhance()).observe(tbody,{childList:true,subtree:false}); }
     setTimeout(enhanceTableNow,100);
   });

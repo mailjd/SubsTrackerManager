@@ -24,7 +24,56 @@ import { getCategories, addCategory } from '../../data/categories.js';
 import { getMenuOptions, addMenuOption, removeMenuOption, resetMenuOptions, isValidMenuGroup } from '../../data/menu-options.js';
 import { getNextFireTime } from '../../services/notify/reminder-engine.js';
 
-export const VERSION = '3.3.14';
+export const VERSION = '3.3.15';
+
+
+
+const TABLE_TEMPLATE_KEYS = {
+  subscription: 'ui:subscription_table_templates:v1',
+  database: 'ui:database_table_templates:v1'
+};
+
+function normalizeTableTemplates(input) {
+  if (!Array.isArray(input)) return [];
+  const seenNames = new Set();
+  const out = [];
+  for (const raw of input) {
+    if (!raw || typeof raw !== 'object') continue;
+    const name = String(raw.name || '').trim();
+    if (!name) continue;
+    const nameKey = name.toLowerCase();
+    if (seenNames.has(nameKey)) continue;
+    seenNames.add(nameKey);
+    out.push({
+      id: String(raw.id || ('tpl_' + Date.now().toString(36) + '_' + out.length)),
+      name,
+      layout: raw.layout && typeof raw.layout === 'object' ? raw.layout : {},
+      updatedAt: raw.updatedAt ? String(raw.updatedAt) : new Date().toISOString()
+    });
+    if (out.length >= 5) break;
+  }
+  return out;
+}
+
+async function readTableTemplates(env, scope) {
+  const key = TABLE_TEMPLATE_KEYS[scope];
+  if (!key || !env?.SUBSCRIPTIONS_KV) return [];
+  try {
+    const raw = await env.SUBSCRIPTIONS_KV.get(key);
+    return raw ? normalizeTableTemplates(JSON.parse(raw)) : [];
+  } catch (error) {
+    console.error('[ui-preferences] 读取显示模板失败:', scope, error);
+    return [];
+  }
+}
+
+async function writeTableTemplates(env, scope, templates) {
+  const key = TABLE_TEMPLATE_KEYS[scope];
+  if (!key || !env?.SUBSCRIPTIONS_KV) throw new Error('模板存储不可用');
+  const normalized = normalizeTableTemplates(templates);
+  await env.SUBSCRIPTIONS_KV.put(key, JSON.stringify(normalized));
+  return normalized;
+}
 
 /** 标准 JSON 响应 */
 function json(data, status = 200) {
@@ -61,6 +110,37 @@ async function syncLegacyAfterRulesChange(env, subId, rules) {
  */
 export async function handleExtraRoutes(request, env, path) {
   const method = request.method;
+
+
+
+  // /ui-preferences/table-templates/:scope
+  // 显示模板持久化到绑定的 KV，而不是只放在浏览器 localStorage。
+  // 这样正常发布/升级工具后，只要仍使用同一个 KV namespace，模板不会丢失。
+  const templateMatch = path.match(/^\/ui-preferences\/table-templates\/(subscription|database)\/?$/);
+  if (templateMatch) {
+    const scope = templateMatch[1];
+    if (method === 'GET') {
+      const templates = await readTableTemplates(env, scope);
+      return new Response(JSON.stringify({ success: true, scope, templates }), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+      });
+    }
+    if (method === 'PUT') {
+      let body;
+      try { body = await request.json(); }
+      catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
+      if (!body || !Array.isArray(body.templates)) return json({ success: false, message: 'templates 必须为数组' }, 400);
+      try {
+        const templates = await writeTableTemplates(env, scope, body.templates);
+        return new Response(JSON.stringify({ success: true, scope, templates }), {
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      } catch (error) {
+        return json({ success: false, message: error && error.message ? error.message : '显示模板保存失败' }, 500);
+      }
+    }
+    return json({ success: false, message: '不支持的请求方法' }, 405);
+  }
 
   // /subscriptions/:id/reminders[/:ruleId]
   const remMatch = path.match(/^\/subscriptions\/([^/]+)\/reminders(?:\/([^/]+))?\/?$/);

@@ -613,7 +613,7 @@ async function handleSubscriptions(request, env, path) {
     if (method === 'GET') {
       const subscriptions = await getAllSubscriptions(env);
       const safeSubscriptions = subscriptions.map(sanitizeSubscription);
-      return new Response(JSON.stringify(safeSubscriptions), { headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify(safeSubscriptions), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
     }
 
     if (method === 'POST') {

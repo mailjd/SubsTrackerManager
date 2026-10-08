@@ -1,0 +1,415 @@
+{
+  "total": 67,
+  "unchanged": 62,
+  "changed": [
+    "src/data/subscription-workflow.js",
+    "src/data/upgrade-reconcile.js",
+    "src/api/handlers/auth.js",
+    "src/api/handlers/subscriptions.js",
+    "src/core/superadmin.js"
+  ],
+  "files": [
+    {
+      "file": "src/data/account-database-backups.repo.js",
+      "original": "06a79da50e5d4fa03f6c73e0a9b7a92438cc94b209c06fa2d8e014301f6adc3c",
+      "current": "06a79da50e5d4fa03f6c73e0a9b7a92438cc94b209c06fa2d8e014301f6adc3c",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/account-import-template.js",
+      "original": "e368a3031c1707f76f674693b1df7ddc1a6d0c87f341b9389e28245f92d9c559",
+      "current": "e368a3031c1707f76f674693b1df7ddc1a6d0c87f341b9389e28245f92d9c559",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/accounts.repo.js",
+      "original": "dea59951566426bfd833e6f1c80fe44f009056bb3702196b9b0a77e88f9c5740",
+      "current": "dea59951566426bfd833e6f1c80fe44f009056bb3702196b9b0a77e88f9c5740",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/categories.js",
+      "original": "d59325487983bde89c34475d54321e497d1058e127ee163f848864d9ff51d179",
+      "current": "d59325487983bde89c34475d54321e497d1058e127ee163f848864d9ff51d179",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/config.js",
+      "original": "eb8f8883ba7320a635467252b1f84fb2a9064487f2b91edaf4bd1402b97526d9",
+      "current": "eb8f8883ba7320a635467252b1f84fb2a9064487f2b91edaf4bd1402b97526d9",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/d1-schema.js",
+      "original": "939b7eeb68cad27dacf4bf5527f042dcda0f1c007276257c7f32a03c35728ea9",
+      "current": "939b7eeb68cad27dacf4bf5527f042dcda0f1c007276257c7f32a03c35728ea9",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/kv.js",
+      "original": "3bd2ae84740a92d197602ee0c94706938e03aff11a3120e53eac7e8b06c9c1d1",
+      "current": "3bd2ae84740a92d197602ee0c94706938e03aff11a3120e53eac7e8b06c9c1d1",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/menu-options.js",
+      "original": "1ce2527498baf406c216837614d908041a0fa341653b43a40718380b98cafebc",
+      "current": "1ce2527498baf406c216837614d908041a0fa341653b43a40718380b98cafebc",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/migrate.js",
+      "original": "ef6a6a23a0daddb6f03ceb14c436f86c1826106b8204dae41521c45f983a1e62",
+      "current": "ef6a6a23a0daddb6f03ceb14c436f86c1826106b8204dae41521c45f983a1e62",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/notification-logs.repo.js",
+      "original": "38a7d13a7d177a5c363f46840d18f6cfc34514ba616e2e3ed034e7f67bdf7e88",
+      "current": "38a7d13a7d177a5c363f46840d18f6cfc34514ba616e2e3ed034e7f67bdf7e88",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/reminders.repo.js",
+      "original": "31b92281eb86820045104dcb4d3f96b8d496d8a0fa72f30b92088415bbacb9c0",
+      "current": "31b92281eb86820045104dcb4d3f96b8d496d8a0fa72f30b92088415bbacb9c0",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/scheduler-logs.repo.js",
+      "original": "5d93ccd2a7bd113bf71fc5161b069487bdbcc404b98698e3706a364c41e75c02",
+      "current": "5d93ccd2a7bd113bf71fc5161b069487bdbcc404b98698e3706a364c41e75c02",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/subscription-history.repo.js",
+      "original": "785d48fcfad0b6e3d0ed3a5e1c212f1ba404ee113507c2157303bf05d813eaee",
+      "current": "785d48fcfad0b6e3d0ed3a5e1c212f1ba404ee113507c2157303bf05d813eaee",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/subscription-import-template.js",
+      "original": "fe96cad943d8bf40c6a2c79246ab3363276331051f3e5d909191cfc080eb8419",
+      "current": "fe96cad943d8bf40c6a2c79246ab3363276331051f3e5d909191cfc080eb8419",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/subscription-ledger.js",
+      "original": "3cecc8b891f6fce67c9bf0884aaf1b5a1e43750cd357f2738c169cefa0b61443",
+      "current": "3cecc8b891f6fce67c9bf0884aaf1b5a1e43750cd357f2738c169cefa0b61443",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/subscription-workflow.js",
+      "original": "43c75ca2652140457b4afd3e1d66a1d9d1485f2cdded1858b5e540f731010a05",
+      "current": "ae34865213279556637ec607d5db4af6a3b04652a9d0a3c4e903b04f0ccf50e5",
+      "unchanged": false
+    },
+    {
+      "file": "src/data/subscriptions.js",
+      "original": "5fe6671a76467f07ba65f671daea80d3c215c72054f3e7bc7393cba81c008e54",
+      "current": "5fe6671a76467f07ba65f671daea80d3c215c72054f3e7bc7393cba81c008e54",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/subscriptions.repo.js",
+      "original": "498b34e59c326a950274734c7e27f2efec344124c471493bba8d375849a80e52",
+      "current": "498b34e59c326a950274734c7e27f2efec344124c471493bba8d375849a80e52",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/table-edit-contract.js",
+      "original": "2e36babc552ee1dbcc7bc908048c78ca49fa82e7995d9bfe483d332fffbecdf6",
+      "current": "2e36babc552ee1dbcc7bc908048c78ca49fa82e7995d9bfe483d332fffbecdf6",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/upgrade-gate.js",
+      "original": "4f8104f122b7ea94438f9e41c50f6c9b533532241ca3fd9277332ba1d29d9590",
+      "current": "4f8104f122b7ea94438f9e41c50f6c9b533532241ca3fd9277332ba1d29d9590",
+      "unchanged": true
+    },
+    {
+      "file": "src/data/upgrade-reconcile.js",
+      "original": "8db707c910357c54856cb83d65b7195b247a0d7dde6e3e2161f25c4bd1bf6b67",
+      "current": "3b989f4011dbb4ab57d955439a1bf87e2d5cc2da1ad5fbdc4eec2a2920e80ef8",
+      "unchanged": false
+    },
+    {
+      "file": "src/api/admin.js",
+      "original": "7ac9fc830987447a15ebf43121081bee0d99e53f92bf962f6a5cbb9a99091325",
+      "current": "7ac9fc830987447a15ebf43121081bee0d99e53f92bf962f6a5cbb9a99091325",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/debug.js",
+      "original": "d735a81e3e9cd6fafb39cb68a130b77106349a825a53af4d08092fcbed83340b",
+      "current": "d735a81e3e9cd6fafb39cb68a130b77106349a825a53af4d08092fcbed83340b",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/handlers/accounts.js",
+      "original": "77511fede1950cac0604e7cba6d9117f39f003829bbb04e7039da7737465d136",
+      "current": "77511fede1950cac0604e7cba6d9117f39f003829bbb04e7039da7737465d136",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/handlers/auth.js",
+      "original": "0b0984bbdda98f084b49b6f15419f1c6f655f2ee966765fc913b263694d00c2e",
+      "current": "713a6116b7d9ab41573dbf2f859e86eca6f845ea9ea68d163e14c956be8bb5ed",
+      "unchanged": false
+    },
+    {
+      "file": "src/api/handlers/backup.js",
+      "original": "1fb85300316fe6b3ce55c06e601bb818f79fb597b122a7c0ace40b8e9e7af857",
+      "current": "1fb85300316fe6b3ce55c06e601bb818f79fb597b122a7c0ace40b8e9e7af857",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/handlers/config.js",
+      "original": "99f3dc91153751d407c6f9da02e42b7e0dde1e63c67049569e629755c6ed4d57",
+      "current": "99f3dc91153751d407c6f9da02e42b7e0dde1e63c67049569e629755c6ed4d57",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/handlers/dashboard.js",
+      "original": "75b9ca45c1d1bf3930cbbf29cb7215b36e4036ad893cd9328d5dd45157153008",
+      "current": "75b9ca45c1d1bf3930cbbf29cb7215b36e4036ad893cd9328d5dd45157153008",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/handlers/extras.js",
+      "original": "a5e3a57eb5ab4aa718ad298d764b9db102cf422d0a4f210aeb69ebeea388e84a",
+      "current": "a5e3a57eb5ab4aa718ad298d764b9db102cf422d0a4f210aeb69ebeea388e84a",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/handlers/notify.js",
+      "original": "cc57d7f9102794839861968524920dc41786162d99eb17b5041cafa9ae027028",
+      "current": "cc57d7f9102794839861968524920dc41786162d99eb17b5041cafa9ae027028",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/handlers/subscription-history.js",
+      "original": "d5be7de2df3a5f3fa07754492cbf5987946782ba1dcbae051f9c775b8f2fbf18",
+      "current": "d5be7de2df3a5f3fa07754492cbf5987946782ba1dcbae051f9c775b8f2fbf18",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/handlers/subscriptions.js",
+      "original": "549166c7d26afdf09362eb1e535413a53d6096b9b6c3faa1bd4bb165d3e1fc39",
+      "current": "58d0eb6a29f3cf1b84c729bd98eec19c32a191d58ebdff79cfb1f592e756f497",
+      "unchanged": false
+    },
+    {
+      "file": "src/api/handlers/test-notification.js",
+      "original": "a76b77b3f92f6e7a98f492cf7db20ac2cabf280d8d50527db89d3b3cf9d8ee59",
+      "current": "a76b77b3f92f6e7a98f492cf7db20ac2cabf280d8d50527db89d3b3cf9d8ee59",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/router.js",
+      "original": "a3aa85e939092041d365e0027c363353c0da156a9fae6bcd8a6a3b62ad2c63a1",
+      "current": "a3aa85e939092041d365e0027c363353c0da156a9fae6bcd8a6a3b62ad2c63a1",
+      "unchanged": true
+    },
+    {
+      "file": "src/api/utils.js",
+      "original": "3f82e587f58dee8c89b590e59afef9219c82f2a5dc49135aa4e693a08684150d",
+      "current": "3f82e587f58dee8c89b590e59afef9219c82f2a5dc49135aa4e693a08684150d",
+      "unchanged": true
+    },
+    {
+      "file": "src/core/auth.js",
+      "original": "49831c1365fc7dd1588a5699b34754948391b709b6781373ed6b85008cd95513",
+      "current": "49831c1365fc7dd1588a5699b34754948391b709b6781373ed6b85008cd95513",
+      "unchanged": true
+    },
+    {
+      "file": "src/core/credentials.js",
+      "original": "5584ddd5ab0bb9de7ecb1de93b435d4650a43a985e1df865f9a798db4ee186aa",
+      "current": "5584ddd5ab0bb9de7ecb1de93b435d4650a43a985e1df865f9a798db4ee186aa",
+      "unchanged": true
+    },
+    {
+      "file": "src/core/currency-format.js",
+      "original": "abcf08478bea9d125b4f95ae4fd50619fa02ed9d8586ee24517a1b9bb412ddca",
+      "current": "abcf08478bea9d125b4f95ae4fd50619fa02ed9d8586ee24517a1b9bb412ddca",
+      "unchanged": true
+    },
+    {
+      "file": "src/core/currency.js",
+      "original": "98f3b02da7d9edcf0e2c76a56746658b50c6205a3212b2d31d6b72fd472651ba",
+      "current": "98f3b02da7d9edcf0e2c76a56746658b50c6205a3212b2d31d6b72fd472651ba",
+      "unchanged": true
+    },
+    {
+      "file": "src/core/lunar.js",
+      "original": "4280543bb19febb3ba2b469c4a9c58688c522b2071072c6386a46e7aaddf6f78",
+      "current": "4280543bb19febb3ba2b469c4a9c58688c522b2071072c6386a46e7aaddf6f78",
+      "unchanged": true
+    },
+    {
+      "file": "src/core/superadmin.js",
+      "original": "eaca37154dfccb52f0bb3bfec3daca77a4a1bbd08f1542a8e9c406ad268048bf",
+      "current": "962cd7e19430329398ee22c26e4351d84e275c62a3ef3eb35139238a1da1bc10",
+      "unchanged": false
+    },
+    {
+      "file": "src/core/time.js",
+      "original": "157cc32d9f024b6e5200c97a25b270baf64405a8963e8dbb161298ec2e2b0d4d",
+      "current": "157cc32d9f024b6e5200c97a25b270baf64405a8963e8dbb161298ec2e2b0d4d",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/bark.js",
+      "original": "24f9f799f9fda1fb4ae42dfa811cf94622b6691b729ed1ce6174c6b67a98c509",
+      "current": "24f9f799f9fda1fb4ae42dfa811cf94622b6691b729ed1ce6174c6b67a98c509",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/channel.js",
+      "original": "be3a71393be381ef08139cea0688cdd8ac3be076f25eb9bce023c0d334431cbc",
+      "current": "be3a71393be381ef08139cea0688cdd8ac3be076f25eb9bce023c0d334431cbc",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/dispatch.js",
+      "original": "ccb12fed9f8d5766c90fadfb9cf959d32ebf0be683522faea3c411ff1db2ea37",
+      "current": "ccb12fed9f8d5766c90fadfb9cf959d32ebf0be683522faea3c411ff1db2ea37",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/email.js",
+      "original": "2f26fde03dfcf56ac8e48f723f49ec0c71654b040ed4eafe1396af21fc052c95",
+      "current": "2f26fde03dfcf56ac8e48f723f49ec0c71654b040ed4eafe1396af21fc052c95",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/gotify.js",
+      "original": "80b8ca5487967ea36315f38e4128d86951f3d2eaeb67f8d5b34615bdc8cfc113",
+      "current": "80b8ca5487967ea36315f38e4128d86951f3d2eaeb67f8d5b34615bdc8cfc113",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/index.js",
+      "original": "8585f0aadb7b5289c6c768c5a5e4abe6f0bfaebe626a312e5c09412aaa550712",
+      "current": "8585f0aadb7b5289c6c768c5a5e4abe6f0bfaebe626a312e5c09412aaa550712",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/notifyx.js",
+      "original": "5005774a59014ac87992c35cc2d0556f1493c1273d1e9fd6f9cd3960f7f40ef7",
+      "current": "5005774a59014ac87992c35cc2d0556f1493c1273d1e9fd6f9cd3960f7f40ef7",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/ntfy.js",
+      "original": "7d179fc7ce73ef64cdec12ee4213bf57e1eba0310bad8563acf8a68b7aac5f5f",
+      "current": "7d179fc7ce73ef64cdec12ee4213bf57e1eba0310bad8563acf8a68b7aac5f5f",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/pushplus.js",
+      "original": "823fb632336fc73712041e6743d55d44b78a4e701b378ccd1c1672e6865348d5",
+      "current": "823fb632336fc73712041e6743d55d44b78a4e701b378ccd1c1672e6865348d5",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/reminder-engine.js",
+      "original": "2b2d6d5108389852bc8538c532142cb4831a345663700e200291c0c632975883",
+      "current": "2b2d6d5108389852bc8538c532142cb4831a345663700e200291c0c632975883",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/reminder.js",
+      "original": "446669ae24c79629cf1bf405515d6e2d86944b8f3e0d000504eae7f5dddb2407",
+      "current": "446669ae24c79629cf1bf405515d6e2d86944b8f3e0d000504eae7f5dddb2407",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/serverchan.js",
+      "original": "e861d73d379f6118f1019bc146697d594a1190806389b6afa05834c8b41a19f5",
+      "current": "e861d73d379f6118f1019bc146697d594a1190806389b6afa05834c8b41a19f5",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/telegram.js",
+      "original": "a1c15f5ad60459aa014ef947b2eadf06e0d830ba1d1dea020a69e35f17c416d1",
+      "current": "a1c15f5ad60459aa014ef947b2eadf06e0d830ba1d1dea020a69e35f17c416d1",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/webhook.js",
+      "original": "f9b3291c62391abc2f4d69a45272303bc0da3fdb94050df468839de451c2bf46",
+      "current": "f9b3291c62391abc2f4d69a45272303bc0da3fdb94050df468839de451c2bf46",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/notify/wechat.js",
+      "original": "9b6bc4a3e475165db8238eba7a5ecfc11e0f9ea4373d751de33850e66acfc151",
+      "current": "9b6bc4a3e475165db8238eba7a5ecfc11e0f9ea4373d751de33850e66acfc151",
+      "unchanged": true
+    },
+    {
+      "file": "src/services/scheduler.js",
+      "original": "2cb7427f63ee209c3fca2edaecced6c8e25c4a5990fe05eeaffc84669a6f755d",
+      "current": "2cb7427f63ee209c3fca2edaecced6c8e25c4a5990fe05eeaffc84669a6f755d",
+      "unchanged": true
+    },
+    {
+      "file": "migrations/0001_subscription_history.sql",
+      "original": "e4b48b73f24b4b0144707096215a28a47ff353ad88c8f6a2a49b9c67fd260274",
+      "current": "e4b48b73f24b4b0144707096215a28a47ff353ad88c8f6a2a49b9c67fd260274",
+      "unchanged": true
+    },
+    {
+      "file": "migrations/0002_accounts_database.sql",
+      "original": "e1e7e44862cb46331c90e86013b91a4cf839f82ae1e6eaed2a22767a65d730a7",
+      "current": "e1e7e44862cb46331c90e86013b91a4cf839f82ae1e6eaed2a22767a65d730a7",
+      "unchanged": true
+    },
+    {
+      "file": "migrations/0003_menu_options_database.sql",
+      "original": "47d2f9ef589677560d8bf766630964f6dd904bcaf1df0a86c1df3c2d65e6b6de",
+      "current": "47d2f9ef589677560d8bf766630964f6dd904bcaf1df0a86c1df3c2d65e6b6de",
+      "unchanged": true
+    },
+    {
+      "file": "migrations/0004_account_profiles_credentials.sql",
+      "original": "252a17f38c85665c4eac45870823e98899e130ba5a059d5bc9ce110139a11a2f",
+      "current": "252a17f38c85665c4eac45870823e98899e130ba5a059d5bc9ce110139a11a2f",
+      "unchanged": true
+    },
+    {
+      "file": "migrations/0005_account_database_backups.sql",
+      "original": "fa68d68507929e5befc6fd696bf49c1d7352b63123bfab97c9a1fa49778c8943",
+      "current": "fa68d68507929e5befc6fd696bf49c1d7352b63123bfab97c9a1fa49778c8943",
+      "unchanged": true
+    },
+    {
+      "file": "migrations/0006_voice_supplier_duplicate_serial.sql",
+      "original": "52841e3b615170e250f38de997249c97119af2f7fe719b9232fe95b67de54fcf",
+      "current": "52841e3b615170e250f38de997249c97119af2f7fe719b9232fe95b67de54fcf",
+      "unchanged": true
+    },
+    {
+      "file": "migrations/0007_subscription_business_ledger.sql",
+      "original": "3d10b2d8dc09a11cc2bf16a78dd7c92bd757cf7c262f366bf3ee6a20ac463497",
+      "current": "3d10b2d8dc09a11cc2bf16a78dd7c92bd757cf7c262f366bf3ee6a20ac463497",
+      "unchanged": true
+    },
+    {
+      "file": "public/README.md",
+      "original": "53e1946e8b76a64a4cdf2e24ab40d00be95cecffc494ccf10bac922c1489812f",
+      "current": "53e1946e8b76a64a4cdf2e24ab40d00be95cecffc494ccf10bac922c1489812f",
+      "unchanged": true
+    },
+    {
+      "file": "public/js/lib/api-client.js",
+      "original": "585ce34b557f429344279d74d571fe14e25ba7966a9de01d68b6ab6adef6bd71",
+      "current": "585ce34b557f429344279d74d571fe14e25ba7966a9de01d68b6ab6adef6bd71",
+      "unchanged": true
+    }
+  ]
+}

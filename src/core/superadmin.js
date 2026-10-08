@@ -31,3 +31,37 @@ export async function verifySuperAdminPassword(password, env) {
   ]);
   return constantTimeEqual(actualHash, expectedHash);
 }
+
+/** Runtime-only independent SuperAdmin identity. Never reads credentials from KV,
+ * process.env, the ordinary admin configuration, or a hard-coded fallback.
+ * @param {any} env
+ * @returns {{ username: string, password: string } | null}
+ */
+export function getRuntimeSuperAdminCredentials(env) {
+  const username = typeof env?.SUBSTRACKER_SUPERADMIN_USERNAME === 'string'
+    ? env.SUBSTRACKER_SUPERADMIN_USERNAME.trim() : '';
+  const password = getRuntimeSuperAdminPassword(env);
+  // Do not trim a password: whitespace is part of the secret.
+  return username && password ? { username, password } : null;
+}
+
+/** Compatibility API expected by repositories with an independent runtime username.
+ * Missing/partial settings or invalid inputs always deny authentication.
+ * Both identity and secret are checked without logging either value.
+ * @param {any} env
+ * @param {unknown} username
+ * @param {unknown} password
+ * @returns {Promise<boolean>}
+ */
+export async function verifyRuntimeSuperAdminCredentials(env, username, password) {
+  const expected = getRuntimeSuperAdminCredentials(env);
+  if (!expected || typeof username !== 'string' || !username ||
+      typeof password !== 'string' || !password) return false;
+  const [actualUser, wantedUser, actualPassword, wantedPassword] = await Promise.all([
+    sha256Bytes(username), sha256Bytes(expected.username),
+    sha256Bytes(password), sha256Bytes(expected.password)
+  ]);
+  const userMatches = constantTimeEqual(actualUser, wantedUser);
+  const passwordMatches = constantTimeEqual(actualPassword, wantedPassword);
+  return userMatches && passwordMatches;
+}

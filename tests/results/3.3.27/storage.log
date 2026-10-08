@@ -1,0 +1,234 @@
+
+> subscription-manager@3.3.27 test:storage
+> node --test tests/storage/*.test.mjs
+
+TAP version 13
+# (node:3369) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: empty D1 returns valid logical SQL (application schema gate remains separate)
+ok 1 - empty D1 returns valid logical SQL (application schema gate remains separate)
+  ---
+  duration_ms: 20.333221
+  type: 'test'
+  ...
+# Subtest: data pages never call export API or any object URL and round-trip every row
+ok 2 - data pages never call export API or any object URL and round-trip every row
+  ---
+  duration_ms: 14.689016
+  type: 'test'
+  ...
+# Subtest: Unicode / apostrophe / newlines / NUL TEXT bytes preserved
+ok 3 - Unicode / apostrophe / newlines / NUL TEXT bytes preserved
+  ---
+  duration_ms: 2.230416
+  type: 'test'
+  ...
+# Subtest: NULL, empty text, empty BLOB and binary are distinct after restore
+ok 4 - NULL, empty text, empty BLOB and binary are distinct after restore
+  ---
+  duration_ms: 1.779268
+  type: 'test'
+  ...
+# Subtest: int64 extremes pass as SQL text without JSON number rounding
+ok 5 - int64 extremes pass as SQL text without JSON number rounding
+  ---
+  duration_ms: 1.858838
+  type: 'test'
+  ...
+# Subtest: finite and infinite REAL values preserve numeric values
+ok 6 - finite and infinite REAL values preserve numeric values
+  ---
+  duration_ms: 1.601851
+  type: 'test'
+  ...
+# Subtest: implicit rowid gaps and duplicate business rows preserved
+ok 7 - implicit rowid gaps and duplicate business rows preserved
+  ---
+  duration_ms: 1.717676
+  type: 'test'
+  ...
+# Subtest: AUTOINCREMENT high-water value survives deleted highest row
+ok 8 - AUTOINCREMENT high-water value survives deleted highest row
+  ---
+  duration_ms: 3.276371
+  type: 'test'
+  ...
+# Subtest: WITHOUT ROWID composite/collated primary key is ordered and preserved
+ok 9 - WITHOUT ROWID composite/collated primary key is ordered and preserved
+  ---
+  duration_ms: 2.787625
+  type: 'test'
+  ...
+# Subtest: STORED and VIRTUAL generated columns restored from table definition
+ok 10 - STORED and VIRTUAL generated columns restored from table definition
+  ---
+  duration_ms: 3.732247
+  type: 'test'
+  ...
+# Subtest: trigger creation after inserts does not duplicate audit rows; trigger still works
+ok 11 - trigger creation after inserts does not duplicate audit rows; trigger still works
+  ---
+  duration_ms: 6.203296
+  type: 'test'
+  ...
+# Subtest: indexes/views/constraints retained and external system table not queried
+ok 12 - indexes/views/constraints retained and external system table not queried
+  ---
+  duration_ms: 1.79392
+  type: 'test'
+  ...
+# Subtest: quoted SQL identifiers do not break schema/row serialization
+ok 13 - quoted SQL identifiers do not break schema/row serialization
+  ---
+  duration_ms: 1.359036
+  type: 'test'
+  ...
+# Subtest: large TEXT uses bounded chunks including NUL and multibyte characters
+ok 14 - large TEXT uses bounded chunks including NUL and multibyte characters
+  ---
+  duration_ms: 10.844901
+  type: 'test'
+  ...
+# Subtest: large binary uses chunks and exact BLOB type, not UTF-8 replacement
+ok 15 - large binary uses chunks and exact BLOB type, not UTF-8 replacement
+  ---
+  duration_ms: 30.866483
+  type: 'test'
+  ...
+# Subtest: large WITHOUT ROWID record retains composite identity
+ok 16 - large WITHOUT ROWID record retains composite identity
+  ---
+  duration_ms: 4.331128
+  type: 'test'
+  ...
+# Subtest: missing page entries fail instead of being accepted as complete
+ok 17 - missing page entries fail instead of being accepted as complete
+  ---
+  duration_ms: 1.373657
+  type: 'test'
+  ...
+# Subtest: repeating pages fail monotonic rowid verification
+ok 18 - repeating pages fail monotonic rowid verification
+  ---
+  duration_ms: 1.417033
+  type: 'test'
+  ...
+# Subtest: schema change during scan fails and returns no archive
+ok 19 - schema change during scan fails and returns no archive
+  ---
+  duration_ms: 1.046335
+  type: 'test'
+  ...
+# Subtest: row count changes during scan fail
+ok 20 - row count changes during scan fail
+  ---
+  duration_ms: 1.071803
+  type: 'test'
+  ...
+# Subtest: unsupported virtual/shadow tables rejected before returning partial backup
+ok 21 - unsupported virtual/shadow tables rejected before returning partial backup
+  ---
+  duration_ms: 0.582186
+  type: 'test'
+  ...
+# Subtest: incomplete xinfo refused, generated/hidden columns never silently omitted
+ok 22 - incomplete xinfo refused, generated/hidden columns never silently omitted
+  ---
+  duration_ms: 0.573993
+  type: 'test'
+  ...
+# Subtest: damaged large cell chunk fails before it can reach encryption
+ok 23 - damaged large cell chunk fails before it can reach encryption
+  ---
+  duration_ms: 1.746048
+  type: 'test'
+  ...
+# Subtest: backup size budget fails closed without changing storage backend
+ok 24 - backup size budget fails closed without changing storage backend
+  ---
+  duration_ms: 0.692592
+  type: 'test'
+  ...
+# Subtest: integer bounds and snapshot options checked before querying
+ok 25 - integer bounds and snapshot options checked before querying
+  ---
+  duration_ms: 0.557058
+  type: 'test'
+  ...
+# (node:3370) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: R2 local/inactive environment bindings rejected; never silently stripped
+ok 26 - R2 local/inactive environment bindings rejected; never silently stripped
+  ---
+  duration_ms: 1.024442
+  type: 'test'
+  ...
+# Subtest: online R2 binding rejected without delete/create/migrate side effects
+ok 27 - online R2 binding rejected without delete/create/migrate side effects
+  ---
+  duration_ms: 0.215624
+  type: 'test'
+  ...
+# Subtest: D1/KV/static assets/variables/secrets accepted without object storage
+ok 28 - D1/KV/static assets/variables/secrets accepted without object storage
+  ---
+  duration_ms: 0.258109
+  type: 'test'
+  ...
+# Subtest: additional storage/services rejected locally to avoid implicit additions
+ok 29 - additional storage/services rejected locally to avoid implicit additions
+  ---
+  duration_ms: 0.25281
+  type: 'test'
+  ...
+# Subtest: R2 and D1 import/export jobs rejected before transport
+ok 30 - R2 and D1 import/export jobs rejected before transport
+  ---
+  duration_ms: 0.780435
+  type: 'test'
+  ...
+# Subtest: redirect-style/absolute paths cannot send token to another storage host
+ok 31 - redirect-style/absolute paths cannot send token to another storage host
+  ---
+  duration_ms: 1.132304
+  type: 'test'
+  ...
+# Subtest: schema response with wrong shape or success false is rejected
+ok 32 - schema response with wrong shape or success false is rejected
+  ---
+  duration_ms: 17.867611
+  type: 'test'
+  ...
+# Subtest: D1 permission error stops backup, no silent fallback to bucket
+ok 33 - D1 permission error stops backup, no silent fallback to bucket
+  ---
+  duration_ms: 0.49855
+  type: 'test'
+  ...
+# Subtest: all shipped Wrangler configs parse and only declare KV/D1 for data storage
+ok 34 - all shipped Wrangler configs parse and only declare KV/D1 for data storage
+  ---
+  duration_ms: 1845.686672
+  type: 'test'
+  ...
+# Subtest: no direct S3/R2 SDK dependency is introduced
+ok 35 - no direct S3/R2 SDK dependency is introduced
+  ---
+  duration_ms: 0.817351
+  type: 'test'
+  ...
+# Subtest: split and GitHub release require storage regression, not a bypass
+ok 36 - split and GitHub release require storage regression, not a bypass
+  ---
+  duration_ms: 0.354523
+  type: 'test'
+  ...
+1..36
+# tests 36
+# suites 0
+# pass 36
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1927.070211

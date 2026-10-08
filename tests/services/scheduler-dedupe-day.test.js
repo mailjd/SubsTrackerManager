@@ -146,6 +146,7 @@ describe('日级去重与成功后占位', () => {
     await subRepo.save(env, {
       id: 'ae-1',
       name: 'After',
+      subscriptionMode: 'reset', // This case must remain expired; cycle mode intentionally advances dates.
       expiryDate: '2026-06-01T00:00:00.000Z',
       isActive: true,
       autoRenew: false

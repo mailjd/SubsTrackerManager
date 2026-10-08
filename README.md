@@ -1,3 +1,17 @@
+# SubsTracker v3.3.27｜Workers 契約與部署失敗修正
+
+**本次操作：[DEPLOY_REPAIR_3.3.27.md](DEPLOY_REPAIR_3.3.27.md)；實測與限制：[VERIFICATION_3.3.27.md](VERIFICATION_3.3.27.md)。**
+
+修正鎖定執行器的 KV cacheTtl 相容、SuperAdmin 舊介面缺失、建立訂閱後舊分類資料漏同步；原生 Workers 測試提前到 lint 之後。保留原 D1＋KV、密鑰與歷史，沒有 R2。
+
+提供 `npm run verify:release`：完整發布前检查，不發布；`npm run diagnose:checkout`：只讀列出倉庫額外／異動檔案，不刪除或排除舊檔。
+
+本機合成資料回歸已執行，但完整鎖定 Workers Vitest／型別／真正 Wrangler 打包尚未在此環境完成（依賴下載失敗），**不標示為線上驗收通過或保證部署成功**。現有控制台命令及備份密碼不變；本次必須更新程式，不是重試未改動的3.3.26。
+
+以下為歷史版本說明，遇到版本差異以3.3.27文件為準。
+
+---
+
 # SubsTracker v3.3.26｜SQLite 測試執行環境修正
 
 最新操作：[DEPLOY_REPAIR_3.3.26.md](DEPLOY_REPAIR_3.3.26.md)。修正 Cloudflare Python 缺少 `_sqlite3` 導致工作流測試無法啟動的問題；使用現有 Node 內建 SQLite 作真實磁碟核對，不跳過測試，不新增 R2 或其他儲存。

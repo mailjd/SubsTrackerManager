@@ -1,5 +1,5 @@
 import { generateJWT, verifyJWT } from '../../core/auth.js';
-import { hasSuperAdminPassword, verifySuperAdminPassword } from '../../core/superadmin.js';
+import { hasSuperAdminPassword, verifySuperAdminPassword, verifyRuntimeSuperAdminCredentials } from '../../core/superadmin.js';
 import { getConfig } from '../../data/config.js';
 import { getCookieValue } from '../utils.js';
 
@@ -51,9 +51,13 @@ async function handleLogin(request, env) {
   const password = typeof body?.password === 'string' ? body.password : '';
   const usernameMatches = username === config.ADMIN_USERNAME;
   const normalAdminLogin = usernameMatches && password === config.ADMIN_PASSWORD;
-  const superAdminLogin = usernameMatches
-    && hasSuperAdminPassword(env)
-    && await verifySuperAdminPassword(password, env);
+  // A configured independent username must be enforced; an empty/invalid explicit
+  // username fails closed instead of falling back to the ordinary admin username.
+  // Password-only legacy installations keep their original second-password login.
+  const hasIndependentIdentity = env?.SUBSTRACKER_SUPERADMIN_USERNAME !== undefined;
+  const superAdminLogin = hasIndependentIdentity
+    ? await verifyRuntimeSuperAdminCredentials(env, username, password)
+    : usernameMatches && hasSuperAdminPassword(env) && await verifySuperAdminPassword(password, env);
 
   if (normalAdminLogin || superAdminLogin) {
     await clearAttempts(env, ip);

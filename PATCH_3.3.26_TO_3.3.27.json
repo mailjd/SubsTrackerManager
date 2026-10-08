@@ -1,0 +1,343 @@
+{
+  "from": "3.3.26",
+  "to": "3.3.27",
+  "description": "Only changed/new release files. No deletions; original Wrangler config and extra repository files retained. Current full release manifest is also included.",
+  "files": [
+    {
+      "path": ".github/workflows/deploy.yml",
+      "action": "replace",
+      "beforeSha256": "d8d5f71410204499556a293019d4390d938931de24b0ac5b679903954e278c2e",
+      "afterSha256": "9710960ed8baf77c6509ca6e79f69c0161a8bfe7bae920af68411c118e10907f"
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "action": "replace",
+      "beforeSha256": "0e6662691a5c3527e5617524e73e6be0eea11d55f5ec698be269fdfade3a3548",
+      "afterSha256": "3e5f256b3ba5afc1d1aa4af5137b45ac05ee7ca11dc892ae9c7da526dcd7d8cd"
+    },
+    {
+      "path": ".gitignore",
+      "action": "replace",
+      "beforeSha256": "8324177f0a07e3d482cff5be9f04133075bcf4fc0827d7139a263c8350683e5d",
+      "afterSha256": "27444a959cd320f1b7ac7e0f59a935c2a3152235df46bd2488fe379cc6a590e6"
+    },
+    {
+      "path": "DEPLOY_REPAIR_3.3.27.md",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "04cc90df9a368b61845dbb0b7276cb18e3aa2b0f6ee9620829c177dc53ec523b"
+    },
+    {
+      "path": "README.md",
+      "action": "replace",
+      "beforeSha256": "3bf9daa4e89a731ce81d3e1e2a3ff2972bf02091ea686f9dcde7a7748fe2de8c",
+      "afterSha256": "2f69b34cd7c118c998fb22cdf900509e370edc1e39c6203b98f0e74baad8c291"
+    },
+    {
+      "path": "SAFE_UPGRADE_3.3.27.md",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "b23cc4a7b93aaf6d00f3e73def8c746febca1acacbf26d16cec0a60c44aab7f8"
+    },
+    {
+      "path": "VERIFICATION_3.3.27.md",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "6c88d690217edff4d866490a686041cd441f223fd0b26da5fc61c3d75d222220"
+    },
+    {
+      "path": "package-lock.json",
+      "action": "replace",
+      "beforeSha256": "e00d9d61c87e3e86140a560fcf0e9ec778031166fee3ec3728280d05ee10a0e5",
+      "afterSha256": "6933ab14796357e2eecdbdcf0115eb35ae267bd3762ad00f5098c292843f8475"
+    },
+    {
+      "path": "package.json",
+      "action": "replace",
+      "beforeSha256": "7bd08cfe9a42c771ae6f65cea783a14afe57657d251a14f9e66bf14e286bef85",
+      "afterSha256": "f75d4ab2f7e813d6b1080608e43ffca60bb0656e0ceca93b57caf222e434cfbd"
+    },
+    {
+      "path": "scripts/build.mjs",
+      "action": "replace",
+      "beforeSha256": "0b4d8549f21d9b32b033d209c4f9cb42c7406d2bc7101f4a88bb302cc51f4709",
+      "afterSha256": "73982ad2bb2525b6d3b7a98aacb85a6c1a84ece76b6f9826dc95d13a2088eb72"
+    },
+    {
+      "path": "scripts/check-checkout.mjs",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "715e89c8604367267733503aa8d3116c503671f21a8d4b3b895356a119c89d44"
+    },
+    {
+      "path": "scripts/upgrade/release-checks.mjs",
+      "action": "replace",
+      "beforeSha256": "a6d47101398146097171d7f57e6799bc5041be02af8dce946196c33ce8c024b9",
+      "afterSha256": "c3a769f81db549ee0af3a002c2181d2cbe9ca35a9769f4bcb838aa7087717784"
+    },
+    {
+      "path": "scripts/verify-release.mjs",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "1410d7cd6460746d8c0edc3ce3ff47b6e971bf6e012730c55c195fac90c71870"
+    },
+    {
+      "path": "src/api/handlers/auth.js",
+      "action": "replace",
+      "beforeSha256": "0b0984bbdda98f084b49b6f15419f1c6f655f2ee966765fc913b263694d00c2e",
+      "afterSha256": "713a6116b7d9ab41573dbf2f859e86eca6f845ea9ea68d163e14c956be8bb5ed"
+    },
+    {
+      "path": "src/api/handlers/subscriptions.js",
+      "action": "replace",
+      "beforeSha256": "549166c7d26afdf09362eb1e535413a53d6096b9b6c3faa1bd4bb165d3e1fc39",
+      "afterSha256": "58d0eb6a29f3cf1b84c729bd98eec19c32a191d58ebdff79cfb1f592e756f497"
+    },
+    {
+      "path": "src/core/superadmin.js",
+      "action": "replace",
+      "beforeSha256": "eaca37154dfccb52f0bb3bfec3daca77a4a1bbd08f1542a8e9c406ad268048bf",
+      "afterSha256": "962cd7e19430329398ee22c26e4351d84e275c62a3ef3eb35139238a1da1bc10"
+    },
+    {
+      "path": "src/data/subscription-workflow.js",
+      "action": "replace",
+      "beforeSha256": "43c75ca2652140457b4afd3e1d66a1d9d1485f2cdded1858b5e540f731010a05",
+      "afterSha256": "ae34865213279556637ec607d5db4af6a3b04652a9d0a3c4e903b04f0ccf50e5"
+    },
+    {
+      "path": "src/data/upgrade-reconcile.js",
+      "action": "replace",
+      "beforeSha256": "8db707c910357c54856cb83d65b7195b247a0d7dde6e3e2161f25c4bd1bf6b67",
+      "afterSha256": "3b989f4011dbb4ab57d955439a1bf87e2d5cc2da1ad5fbdc4eec2a2920e80ef8"
+    },
+    {
+      "path": "src/upgrade-release.js",
+      "action": "replace",
+      "beforeSha256": "8ce1b67695e6136c8b48c617c23158d7571afb4e3d273871e7b7c8afbd2c3c1e",
+      "afterSha256": "56969544deea1561f0afaf2254cc2869c9f0da9700ad4b67181864de36cc4e48"
+    },
+    {
+      "path": "src/version.js",
+      "action": "replace",
+      "beforeSha256": "0604bb900eb8641ddbfd441e3acb5a888e1f8cf4252a3d7b4d5d7b5a8ff188c7",
+      "afterSha256": "ed89a4078982990f42ad08645bb428011500461151ad0138891466cfbbfe622d"
+    },
+    {
+      "path": "src/views/adminPage.html",
+      "action": "replace",
+      "beforeSha256": "6c8cf047b33d3e5dcacd99d6a82fe7cf4945a231e57da0aab3a4dbbfede55164",
+      "afterSha256": "c48fc770e279d0bf009b9b600d49b0f0be93e1191d7e9475d6181dc954d35d87"
+    },
+    {
+      "path": "tests/core/superadmin-runtime-compat.test.js",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "3cfd481c04803889389d9e8e7739bc371f8c8a82c26a424d62e067245c86fc4a"
+    },
+    {
+      "path": "tests/data/kv-read-compat.test.js",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "d2b477bfa41332f1fa8977bf2e2eb143911e8de1f213a93acefc2d740dc76715"
+    },
+    {
+      "path": "tests/deploy/repair3324.test.mjs",
+      "action": "replace",
+      "beforeSha256": "cb7d500138650b1354be8988e3f1180c6075014f81bd67ce2a0239d373863912",
+      "afterSha256": "904a435e51cac23ba934834f6f17ee8f2a567a4e4f0d3c7d5a480ae8c225636c"
+    },
+    {
+      "path": "tests/deploy/split-runner.test.mjs",
+      "action": "replace",
+      "beforeSha256": "5b53f6ae824a3e6188d568bb4bc72ebc2981b6ddd9794cae34fa0fd61debe2cd",
+      "afterSha256": "470c6d45f4506a643ebe0843c095fac226605796d5d01961dcf75a9380e7d817"
+    },
+    {
+      "path": "tests/regression/local-server.mjs",
+      "action": "replace",
+      "beforeSha256": "9ed1796ce111c2fbf6b79f034c4c9a439edaeaad6e0a449b2fa5d665f43cc70e",
+      "afterSha256": "051ce3b8a1afdc62409422df946a4a30479e0a1d4cd88e90e8a083a832e913f0"
+    },
+    {
+      "path": "tests/results/3.3.27/api-results.json",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "513a4688609b4ea5fca41b73c2e6667b1674718e01f6d66a73163a7ae9ff7b3b"
+    },
+    {
+      "path": "tests/results/3.3.27/bundle.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "0861d17b02861a9f38a66aa23f8111b4859bfbff58620d0c368f9c5a31de3ab0"
+    },
+    {
+      "path": "tests/results/3.3.27/business-source-comparison.json",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "05a86bf63dd29f34955a99fbd872c71654c4c0f26ab05253254c215dcd901fae"
+    },
+    {
+      "path": "tests/results/3.3.27/check-status.json",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "3298dfc50356294f5e68722606340854ae3b2b27fead70faef2ecd9347cbee9a"
+    },
+    {
+      "path": "tests/results/3.3.27/context.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "a08d3eaa769a934797a346c6415763e708c9c3a4c90cac1c64f8da5b0d831a46"
+    },
+    {
+      "path": "tests/results/3.3.27/contract-after.tap",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "a35a95494cdbd0d50222e4b9a589e55dff77a9fd9f7820dc321d9d53d54c6a10"
+    },
+    {
+      "path": "tests/results/3.3.27/contract-before.tap",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "81e09bd6c8e161bebc03357db2d80c3303a088870945d0c8de675d3f5501eef6"
+    },
+    {
+      "path": "tests/results/3.3.27/contract.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "c5e8950bb0ddc2293bb410e324556565919e7f601f006c9050ebd4a03644e6c1"
+    },
+    {
+      "path": "tests/results/3.3.27/cross-version.exit",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "tests/results/3.3.27/cross-version.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "30fcc9b89ca940247ede8c9ec753c0527dd1694860303984fc0a5ce77f9be06f"
+    },
+    {
+      "path": "tests/results/3.3.27/deploy.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "cb1327ceef73d28ed3d658de66531e9d3e6dc15bd1f950d9764d17769954fcea"
+    },
+    {
+      "path": "tests/results/3.3.27/full-lint.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "b9c02bd7c253fca8794b64e2ba581277ee1965195293b4e60afd8a9f0ffbea91"
+    },
+    {
+      "path": "tests/results/3.3.27/full-workers.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "ec9d57cd1e7a2ece38609f25cae2e2ddefa6cb9ad735f25c45ab93bbcaca7abd"
+    },
+    {
+      "path": "tests/results/3.3.27/npm-ci.exit",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "tests/results/3.3.27/npm-ci.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "eacc4f186d20bc262848f917808a53c6fb4070745355c26cd6852848aec4d565"
+    },
+    {
+      "path": "tests/results/3.3.27/npm-registry-failure-excerpt.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "5d70397ff123c6567ef83ce68efb499bbaef85c189d5f5ece2580eb0a30eedb1"
+    },
+    {
+      "path": "tests/results/3.3.27/old-version-results.json",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "a5d22981710c7b4dfc2465a0235338416009b3927a08b9af8dd6bcc6d468764b"
+    },
+    {
+      "path": "tests/results/3.3.27/runtime.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "77812cef37845bf3739e2377a3c37dffe664f618e2f2b27cf601887fd0af356b"
+    },
+    {
+      "path": "tests/results/3.3.27/storage.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "dc372e73d9a871acf83804f1a724d442c61f3f05958d29add3282844b0dac7c0"
+    },
+    {
+      "path": "tests/results/3.3.27/syntax.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "773ec53ab8f54a34c7b38ff91376058e75b50462f31158f40924de01cb57d1a5"
+    },
+    {
+      "path": "tests/results/3.3.27/table-api.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "022e3e44521a596cc89e8d6d514d51a10242ceb8d4edb14c295a169ba47bfe3e"
+    },
+    {
+      "path": "tests/results/3.3.27/upgrade.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "d1e6128d9eaccf021f948041852e16377fde10c02ba2108951e90ff7f755d22d"
+    },
+    {
+      "path": "tests/results/3.3.27/verification-summary.json",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "0ba026b2aa104df815c6bd06962fa91566e50cac58577041c30635e640690731"
+    },
+    {
+      "path": "tests/results/3.3.27/workflow.log",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "e7329ce958ea4ebb7d7c94d027a43688f0910796572e3d46f978fbc8362c8f95"
+    },
+    {
+      "path": "tests/runtime/checkout-inventory.test.mjs",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "242e66880ac3944a3af53af37c7e44e39b1be49fcd6db73cc5324e579e9d167f"
+    },
+    {
+      "path": "tests/runtime/workers-business-contract.test.mjs",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "f7a85bbebd3c72cc50a1d19439203de6d1447ad14a14e86000db65b4a6b2390b"
+    },
+    {
+      "path": "tests/services/scheduler-after-expiry.test.js",
+      "action": "replace",
+      "beforeSha256": "5be2a1ddea0e74bba0f43945bb8ab6d2ac5b98405b9f14928817c1f897307662",
+      "afterSha256": "e6d4e45143749dac7c102e97f030cdf38bd17a6aa98a1d000af37a72df511115"
+    },
+    {
+      "path": "tests/services/scheduler-dedupe-day.test.js",
+      "action": "replace",
+      "beforeSha256": "86ea9b1ed9817d53cd803d8777f17b4fdb9daa8d0ecee54ec361b3c66a57b5d9",
+      "afterSha256": "f40c8c7fd527ff09ac16b6c989d4be580c744eeca0cae421f29a90030b5a9871"
+    },
+    {
+      "path": "tests/services/scheduler-mode-contract.test.js",
+      "action": "add",
+      "beforeSha256": null,
+      "afterSha256": "a852c79b0ed74ce2955bedc532b98c5f64d37f4baf5f12cc55a810b4531cab0f"
+    },
+    {
+      "path": "tests/upgrade/helpers.mjs",
+      "action": "replace",
+      "beforeSha256": "045d6c49455dd7c9951cd72f36eb55811d281508d27c28a24bb4ec8686a36440",
+      "afterSha256": "3c520b8c4498aa6f48d04113723f302b42c392964605ca06bf7eac8d375a8d6f"
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+[
+  {
+    "name": "runtime",
+    "command": [
+      "node",
+      "--test",
+      "tests/runtime/checkout-inventory.test.mjs",
+      "tests/runtime/sqlite-runtime.test.mjs",
+      "tests/runtime/workers-business-contract.test.mjs"
+    ],
+    "exitCode": 0,
+    "seconds": 13.7
+  },
+  {
+    "name": "storage",
+    "command": [
+      "npm",
+      "run",
+      "test:storage"
+    ],
+    "exitCode": 0,
+    "seconds": 2.08
+  },
+  {
+    "name": "deploy",
+    "command": [
+      "npm",
+      "run",
+      "test:deploy"
+    ],
+    "exitCode": 0,
+    "seconds": 98.33
+  },
+  {
+    "name": "upgrade",
+    "command": [
+      "npm",
+      "run",
+      "test:upgrade"
+    ],
+    "exitCode": 0,
+    "seconds": 26.9
+  },
+  {
+    "name": "context",
+    "command": [
+      "npm",
+      "run",
+      "test:context"
+    ],
+    "exitCode": 0,
+    "seconds": 4.55
+  },
+  {
+    "name": "contract",
+    "command": [
+      "npm",
+      "run",
+      "test:table-contract"
+    ],
+    "exitCode": 0,
+    "seconds": 0.26
+  },
+  {
+    "name": "workflow",
+    "command": [
+      "npm",
+      "run",
+      "test:workflow"
+    ],
+    "exitCode": 0,
+    "seconds": 2.79
+  },
+  {
+    "name": "table-api",
+    "command": [
+      "npm",
+      "run",
+      "test:table-api"
+    ],
+    "exitCode": 0,
+    "seconds": 2.13
+  },
+  {
+    "name": "syntax",
+    "command": [
+      "npm",
+      "run",
+      "test:syntax"
+    ],
+    "exitCode": 0,
+    "seconds": 2.38
+  },
+  {
+    "name": "full-lint",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "exitCode": 2,
+    "seconds": 0.53
+  },
+  {
+    "name": "full-workers",
+    "command": [
+      "npm",
+      "test"
+    ],
+    "exitCode": 127,
+    "seconds": 0.11
+  },
+  {
+    "name": "bundle",
+    "command": [
+      "npm",
+      "run",
+      "test:bundle"
+    ],
+    "exitCode": 1,
+    "seconds": 0.16
+  }
+]

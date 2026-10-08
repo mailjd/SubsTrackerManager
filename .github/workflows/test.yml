@@ -36,6 +36,9 @@ jobs:
       - name: Type check (JSDoc + // @ts-check)
         run: npm run lint
 
+      - name: Run unit tests
+        run: npm test
+
       - name: Deployment routing and safety regression (local fixtures only)
         run: |
           npm run test:context
@@ -49,5 +52,3 @@ jobs:
       - name: Run current-history / database workflow regression
         run: npm run test:workflow
 
-      - name: Run unit tests
-        run: npm test

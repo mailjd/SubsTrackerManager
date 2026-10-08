@@ -383,6 +383,7 @@ async function handleSubscriptions(request, env, path) {
           success: true,
           id: result.subscription.id,
           historyId: result.historyId, historyOnly: result.historyOnly, updated: result.updated, replayed: !!result.replayed,
+          metadataWarnings: result.metadataWarnings || [],
           name: result.subscription.name,
           ...(accountDatabase ? { accountDatabase } : {})
         });

@@ -1,0 +1,10 @@
+import {it,expect,beforeEach,afterEach,vi} from 'vitest';
+import {env} from 'cloudflare:test';
+import {checkExpiringSubscriptions} from '../../src/services/scheduler.js';
+import * as repo from '../../src/data/subscriptions.repo.js';
+import * as reminders from '../../src/data/reminders.repo.js';
+beforeEach(async()=>{const rows=await env.SUBSCRIPTIONS_KV.list();await Promise.all(rows.keys.map(k=>env.SUBSCRIPTIONS_KV.delete(k.name)));vi.useFakeTimers();vi.setSystemTime(new Date('2026-06-10T08:00:00Z'));await env.SUBSCRIPTIONS_KV.put('config',JSON.stringify({JWT_SECRET:'local-key',CREDENTIALS_ENCRYPTION_KEY:'local-creds',TIMEZONE:'UTC',NOTIFICATION_HOURS:[],ENABLED_NOTIFIERS:['telegram'],TG_BOT_TOKEN:'local-only',TG_CHAT_ID:'local-only'}));vi.stubGlobal('fetch',async()=>new Response(JSON.stringify({ok:true,result:{message_id:1}}),{status:200}));});
+afterEach(()=>{vi.useRealTimers();vi.unstubAllGlobals();});
+async function seed(mode){await repo.save(env,{id:'mode',name:'Mode',subscriptionMode:mode,customType:'开会员',isActive:true,autoRenew:false,periodValue:1,periodUnit:'month',startDate:'2026-05-01T00:00:00Z',expiryDate:'2026-06-01T00:00:00Z',paymentHistory:[]});await reminders.replaceForSubscription(env,'mode',[reminders.normalizeRule({id:'after',type:'after_expiry',value:0,unit:'days',repeatInterval:24})]);}
+it('reset + autoRenew=false remains expired and sends after-expiry reminder',async()=>{await seed('reset');const r=await checkExpiringSubscriptions(env);expect(r.sentCount).toBe(1);expect(r.autoRenewedCount).toBe(0);const sub=await repo.getById(env,'mode');expect(sub.expiryDate).toBe('2026-06-01T00:00:00Z');expect(sub.memberLevel).toBe('Free');});
+it('cycle + autoRenew=false advances without fabricated payment or after-expiry message',async()=>{await seed('cycle');const r=await checkExpiringSubscriptions(env);expect(r.autoRenewedCount).toBe(1);expect(r.sentCount).toBe(0);const sub=await repo.getById(env,'mode');expect(new Date(sub.expiryDate).getTime()).toBeGreaterThan(Date.now());expect(sub.paymentHistory).toEqual([]);});

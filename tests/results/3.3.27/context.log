@@ -1,0 +1,137 @@
+
+> subscription-manager@3.3.27 test:context
+> node --test tests/compat/*.test.mjs
+
+TAP version 13
+# (node:5782) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# \# Context regression TypeScript: 5.8.3; declarations below are a minimal diagnostic fixture, not full Workers types
+# Subtest: reproduces missing-props TS2345, patches it, then REAL compiler accepts the fixture
+ok 1 - reproduces missing-props TS2345, patches it, then REAL compiler accepts the fixture
+  ---
+  duration_ms: 1087.56635
+  type: 'test'
+  ...
+# Subtest: preserves every original byte except the property insertion and saves an exact original
+ok 2 - preserves every original byte except the property insertion and saves an exact original
+  ---
+  duration_ms: 91.508043
+  type: 'test'
+  ...
+# Subtest: idempotent on repeat build and restart: no duplicate props, backups or fingerprint drift
+ok 3 - idempotent on repeat build and restart: no duplicate props, backups or fingerprint drift
+  ---
+  duration_ms: 173.571584
+  type: 'test'
+  ...
+# Subtest: forwards original request/env, preserves this-bound methods, and provides empty props
+ok 4 - forwards original request/env, preserves this-bound methods, and provides empty props
+  ---
+  duration_ms: 84.388916
+  type: 'test'
+  ...
+# Subtest: inline third-argument object is repaired
+ok 5 - inline third-argument object is repaired
+  ---
+  duration_ms: 235.823345
+  type: 'test'
+  ...
+# Subtest: bound-method property assignments and CRLF/comments are preserved
+ok 6 - bound-method property assignments and CRLF/comments are preserved
+  ---
+  duration_ms: 92.485077
+  type: 'test'
+  ...
+# Subtest: parenthesized const and quoted property names are handled
+ok 7 - parenthesized const and quoted property names are handled
+  ---
+  duration_ms: 209.617512
+  type: 'test'
+  ...
+# Subtest: same object referenced by two calls is patched just once
+ok 8 - same object referenced by two calls is patched just once
+  ---
+  duration_ms: 242.428659
+  type: 'test'
+  ...
+# Subtest: existing nonempty props are preserved exactly
+ok 9 - existing nonempty props are preserved exactly
+  ---
+  duration_ms: 39.506976
+  type: 'test'
+  ...
+# Subtest: no repair of an unused or unrelated two-method object without compiler error
+ok 10 - no repair of an unused or unrelated two-method object without compiler error
+  ---
+  duration_ms: 41.344151
+  type: 'test'
+  ...
+# Subtest: clean release without the legacy file is a nonmutating no-op
+ok 11 - clean release without the legacy file is a nonmutating no-op
+  ---
+  duration_ms: 0.653023
+  type: 'test'
+  ...
+# Subtest: does not patch a similarly named file outside src/pages-handler.js
+ok 12 - does not patch a similarly named file outside src/pages-handler.js
+  ---
+  duration_ms: 0.515296
+  type: 'test'
+  ...
+# Subtest: refuses mutable declarations instead of guessing assignments
+ok 13 - refuses mutable declarations instead of guessing assignments
+  ---
+  duration_ms: 43.919887
+  type: 'test'
+  ...
+# Subtest: refuses spreads or additional properties instead of rewriting an unknown custom adapter
+ok 14 - refuses spreads or additional properties instead of rewriting an unknown custom adapter
+  ---
+  duration_ms: 38.710454
+  type: 'test'
+  ...
+# Subtest: does not invent required props values: compiler validates candidate before write
+ok 15 - does not invent required props values: compiler validates candidate before write
+  ---
+  duration_ms: 75.114415
+  type: 'test'
+  ...
+# Subtest: syntax failure leaves original file untouched
+ok 16 - syntax failure leaves original file untouched
+  ---
+  duration_ms: 30.566712
+  type: 'test'
+  ...
+# Subtest: unrelated type errors remain errors after the context-only fix
+ok 17 - unrelated type errors remain errors after the context-only fix
+  ---
+  duration_ms: 216.616762
+  type: 'test'
+  ...
+# Subtest: symbolic-link target is refused
+ok 18 - symbolic-link target is refused
+  ---
+  duration_ms: 0.91037
+  type: 'test'
+  ...
+# Subtest: full lint is still exact tsc, prelint and release test are mandatory, jsconfig not weakened
+ok 19 - full lint is still exact tsc, prelint and release test are mandatory, jsconfig not weakened
+  ---
+  duration_ms: 0.403017
+  type: 'test'
+  ...
+# Subtest: real npm prelint repairs a legacy checkout, runs real tsc, and a fresh retry is stable
+ok 20 - real npm prelint repairs a legacy checkout, runs real tsc, and a fresh retry is stable
+  ---
+  duration_ms: 1471.329165
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4427.980697

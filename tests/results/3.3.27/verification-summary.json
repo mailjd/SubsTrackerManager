@@ -1,0 +1,42 @@
+{
+  "version": "3.3.27",
+  "baselineVersion": "3.3.26",
+  "sourceZipSha256": "837585c3425a4bc8853d357e75fa1d33a747cf758e6b09688a742af78fadd3c1",
+  "localRegressionPassed": 340,
+  "crossVersionScenariosPassed": 7,
+  "syntaxPassed": 111,
+  "extraNativeSuiteSyntaxChecks": 3,
+  "yamlParsed": 2,
+  "tomlParsed": 3,
+  "strictNewContractBefore": {
+    "total": 30,
+    "passed": 7,
+    "failed": 23
+  },
+  "strictNewContractAfter": {
+    "total": 30,
+    "passed": 30,
+    "failed": 0
+  },
+  "nativeWorkersTests": {
+    "executedSuccessfully": false,
+    "reason": "npm dependency installation failed: registry DNS EAI_AGAIN; vitest not installed",
+    "newTestCasesAddedButNotExecuted": 17
+  },
+  "fullPinnedLintPassed": false,
+  "realWranglerBundlePassed": false,
+  "liveCloudflareDeployAttempted": false,
+  "remoteUserDataAccessed": false,
+  "contextFixtureTypescript": "5.8.3",
+  "projectTypescriptPinned": "5.9.3",
+  "businessFiles": {
+    "total": 67,
+    "unchanged": 62,
+    "changed": 5
+  },
+  "storage": [
+    "D1",
+    "KV"
+  ],
+  "r2Added": false
+}

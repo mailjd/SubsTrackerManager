@@ -1,0 +1,16 @@
+475 http fetch GET https://registry.npmjs.org/zod/-/zod-3.25.76.tgz attempt 1 failed with EAI_AGAIN
+476 http fetch GET https://registry.npmjs.org/youch/-/youch-3.3.4.tgz attempt 1 failed with EAI_AGAIN
+477 http fetch GET https://registry.npmjs.org/ws/-/ws-8.21.0.tgz attempt 1 failed with EAI_AGAIN
+478 http fetch GET https://registry.npmjs.org/wrangler/-/wrangler-3.114.17.tgz attempt 1 failed with EAI_AGAIN
+479 http fetch GET https://registry.npmjs.org/workerd/-/workerd-1.20241230.0.tgz attempt 1 failed with EAI_AGAIN
+480 http fetch GET https://registry.npmjs.org/xxhash-wasm/-/xxhash-wasm-1.1.0.tgz attempt 1 failed with EAI_AGAIN
+481 http fetch GET https://registry.npmjs.org/why-is-node-running/-/why-is-node-running-2.3.0.tgz attempt 1 failed with EAI_AGAIN
+482 http fetch GET https://registry.npmjs.org/vite-node/-/vite-node-2.1.9.tgz attempt 1 failed with EAI_AGAIN
+483 http fetch GET https://registry.npmjs.org/vitest/-/vitest-2.1.9.tgz attempt 1 failed with EAI_AGAIN
+484 http fetch GET https://registry.npmjs.org/vite/-/vite-5.4.21.tgz attempt 1 failed with EAI_AGAIN
+485 http fetch GET https://registry.npmjs.org/unenv/-/unenv-2.0.0-rc.14.tgz attempt 1 failed with EAI_AGAIN
+486 http fetch GET https://registry.npmjs.org/undici/-/undici-5.29.0.tgz attempt 1 failed with EAI_AGAIN
+487 http fetch GET https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz attempt 1 failed with EAI_AGAIN
+488 http fetch GET https://registry.npmjs.org/ufo/-/ufo-1.6.4.tgz attempt 1 failed with EAI_AGAIN
+489 http fetch GET https://registry.npmjs.org/tinyspy/-/tinyspy-3.0.2.tgz attempt 1 failed with EAI_AGAIN
+494 error Exit handler never called!

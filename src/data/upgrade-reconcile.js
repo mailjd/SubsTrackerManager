@@ -32,12 +32,18 @@ export async function hasTable(env, name) {
   if (!env.SUBSCRIPTIONS_DB) return false;
   return !!await env.SUBSCRIPTIONS_DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").bind(name).first();
 }
+/** Read cache TTL is 60s for compatibility with the pinned 2024 workerd/Miniflare.
+ * Newer KV runtimes also accept 30s, but that is rejected by our release test runtime.
+ * This is NOT the lifetime of a KV record and does not provide strong consistency.
+ * The existing D1/version reconciliation and maintenance verification remain necessary.
+ */
+export const KV_READ_CACHE_TTL_SECONDS = 60;
 /** Bulk get is one KV operation per up-to-100 keys. Legacy/local adapters may lack the overload. */
 export async function readKVTexts(kv,names){
   const values=new Map();
   for(let i=0;i<names.length;i+=100){
     const keys=names.slice(i,i+100);let batch;
-    try{batch=await kv.get(keys,{type:'text',cacheTtl:30});}
+    try{batch=await kv.get(keys,{type:'text',cacheTtl:KV_READ_CACHE_TTL_SECONDS});}
     catch(error){if(!/key.*string|string.*key|invalid.*argument/i.test(String(error?.message||error)))throw error;}
     if(batch instanceof Map){for(const key of keys){if(!batch.has(key))throw new UpgradeConflict('KV 批量读取缺少响应项：'+key);values.set(key,batch.get(key));}}
     else {for(const key of keys)values.set(key,await kv.get(key));}

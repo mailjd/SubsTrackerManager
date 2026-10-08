@@ -45,3 +45,6 @@ wrangler.upgrade.json
 # Python test-runner caches are not release source or backup data
 __pycache__/
 *.py[cod]
+
+# Local synthetic API regression outputs (never commit fixture databases)
+regression-output/

@@ -3,6 +3,7 @@ import {hasD1,listCurrentSubscriptionSnapshots} from './subscription-history.rep
 import { createSubscription, getAllSubscriptions } from './subscriptions.js';
 import { normalizeRule, defaultPresetRules, deriveLegacyFromRules, formatRulesSummary, replaceForSubscription } from './reminders.repo.js';
 import { getMenuOptions, addMenuOption } from './menu-options.js';
+import { addCategory } from './categories.js';
 import { ensureLedgerSeed, isMembership, memberKey, hashInput, getLedgerEntry, makeLedgerEntry, commitLedgerAndCurrent } from './subscription-ledger.js';
 
 export async function acceptSubscriptionRecord(raw,env,{operationId,source='create'}={}) {
@@ -24,7 +25,8 @@ export async function acceptSubscriptionRecord(raw,env,{operationId,source='crea
         const repo=await import('./subscriptions.repo.js');const old=await repo.getById(env,replay.subscriptionId);
         if(!old||Date.parse(old.updatedAt||0)<Date.parse(replay.snapshot.updatedAt||0))await repo.save(env,replay.snapshot);
       }
-      return {success:true,replayed:true,historyOnly,historyId:id,subscription:replay.snapshot,message:'本次操作已保存，未重复写入历史'};
+      const metadataWarnings = await syncAcceptedCategory(env, replay.snapshot);
+      return {success:true,replayed:true,historyOnly,historyId:id,subscription:replay.snapshot,metadataWarnings,message:'本次操作已保存，未重复写入历史'};
     }
     // Blank input remains backwards compatible with the original ordinary-membership form.
     input.customType=String(input.customType||'开会员').trim();
@@ -57,8 +59,28 @@ export async function acceptSubscriptionRecord(raw,env,{operationId,source='crea
     const additions=[['subscriptionNames',sub.name],['subscriptionTypes',sub.customType],['memberLevels',input.memberLevel]];
     String(sub.users||'').split(/[,，]/).forEach(v=>additions.push(['users',v]));
     String(sub.category||'').split(/[,，/\s]+/).forEach(v=>additions.push(['categories',v]));
-    const menus=await getMenuOptions(env);
-    for(const [group,value] of additions)if(value&&String(value).trim()&&!menus[group]?.includes(String(value).trim()))try{await addMenuOption(env,group,String(value),{returnMenus:false});}catch(e){console.warn('[workflow] menu sync delayed:',e.message);}
-    return {success:true,historyOnly,updated:!!existing,historyId:id,subscription:sub,message:historyOnly?'已累计写入订阅历史':existing?'已更新现有订阅，并新增一条订阅历史':'已新增订阅，并写入订阅历史'};
+    const metadataWarnings = await syncAcceptedCategory(env, sub);
+    // A committed financial operation must not be returned as a failed creation
+    // merely because an auxiliary menu write failed. Return explicit warnings.
+    try {
+      const menus=await getMenuOptions(env);
+      for(const [group,value] of additions)if(value&&String(value).trim()&&!menus[group]?.includes(String(value).trim()))try{await addMenuOption(env,group,String(value),{returnMenus:false});}catch(e){metadataWarnings.push('基础资料菜单同步失败：'+group);console.warn('[workflow] menu sync delayed:',e.message);}
+    } catch(e) {metadataWarnings.push('基础资料菜单读取失败');console.warn('[workflow] menu sync delayed:',e.message);}
+    return {success:true,historyOnly,updated:!!existing,historyId:id,subscription:sub,metadataWarnings,message:historyOnly?'已累计写入订阅历史':existing?'已更新现有订阅，并新增一条订阅历史':'已新增订阅，并写入订阅历史'};
   }catch(error){return {success:false,message:error.message||'订阅保存失败'};}
+}
+
+/** prepareOnly deliberately has no writes. After the real commit, maintain the
+ * legacy /api/categories and backup.categories contract as the old create path did.
+ * Database menus continue to use menu-options; existing categories are only appended.
+ * Replaying the same operation can repair this auxiliary write without a new receipt.
+ */
+async function syncAcceptedCategory(env, sub) {
+  const category = typeof sub?.category === 'string' ? sub.category.trim() : '';
+  if (!category) return [];
+  try { await addCategory(env, category); return []; }
+  catch (error) {
+    console.warn('[workflow] legacy category sync delayed:', error?.message);
+    return ['订阅已保存，但兼容分类同步失败；可重试相同操作编号修复'];
+  }
 }

@@ -1,6 +1,6 @@
 {
   "name": "subscription-manager",
-  "version": "3.3.26",
+  "version": "3.3.27",
   "description": "订阅管理系统 - 基于 Cloudflare Workers + Hono",
   "main": "src/index.js",
   "type": "module",
@@ -35,7 +35,9 @@
     "repair:context": "node scripts/repair-pages-context.mjs",
     "test:context": "node --test tests/compat/*.test.mjs",
     "test:table-api": "node scripts/run-python-test.mjs tests/regression/api-regression.py .",
-    "test:runtime": "node scripts/check-test-runtime.mjs && node --test tests/runtime/*.test.mjs"
+    "test:runtime": "node scripts/check-test-runtime.mjs && node --test tests/runtime/*.test.mjs",
+    "verify:release": "node scripts/verify-release.mjs",
+    "diagnose:checkout": "node scripts/check-checkout.mjs"
   },
   "dependencies": {
     "hono": "4.12.22"

@@ -26,7 +26,7 @@ class Statement {
 }
 const controls={failPatch:false,delayPatch:0,dropWrites:false,dropReminderWrites:false,dropD1Writes:false,failIds:[],staleReads:false,stale:new Map()};
 const env = {SUBSCRIPTIONS_KV:{
-  async get(key,opts){let v=controls.staleReads && controls.stale.has(key)?controls.stale.get(key):(kv[key]??null); return (opts==='json'||opts?.type==='json') && v!==null ? JSON.parse(v) : v;},
+  async get(key,opts){if(opts && typeof opts==='object' && opts.cacheTtl!==undefined && (!Number.isInteger(opts.cacheTtl)||opts.cacheTtl<60))throw new Error('KV GET failed: 400 Invalid cache_ttl. Cache TTL must be at least 60.');if(Array.isArray(key)){if(key.length>100)throw new Error('KV bulk get accepts at most 100 keys');return new Map(await Promise.all(key.map(async k=>[k,await this.get(k,opts)])));}let v=controls.staleReads && controls.stale.has(key)?controls.stale.get(key):(kv[key]??null); return (opts==='json'||opts?.type==='json') && v!==null ? JSON.parse(v) : v;},
   async put(key,value){fs.appendFileSync(path.join(state,'writes.jsonl'),JSON.stringify({key,at:Date.now()})+'\n');if((controls.dropWrites && key.startsWith('sub:'))||(controls.dropReminderWrites && key.startsWith('reminder_rules:')))return; kv[key]=String(value);flush();},
   async delete(key){delete kv[key];flush();},
   async list({prefix='',limit=1000,cursor=''}={}){const keys=Object.keys(kv).filter(x=>x.startsWith(prefix)).sort();const i=Number(cursor)||0;return {keys:keys.slice(i,i+limit).map(name=>({name})),list_complete:i+limit>=keys.length,cursor:i+limit<keys.length?String(i+limit):''};}

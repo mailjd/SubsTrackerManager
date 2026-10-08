@@ -1,0 +1,382 @@
+TAP version 13
+# Subtest: checkout diagnostic exposes added source/tests, modified and missing files without deleting them
+ok 1 - checkout diagnostic exposes added source/tests, modified and missing files without deleting them
+  ---
+  duration_ms: 5.131663
+  type: 'test'
+  ...
+# Subtest: real Workers test runs after lint and before expensive simulated deployment, never dropped
+ok 2 - real Workers test runs after lint and before expensive simulated deployment, never dropped
+  ---
+  duration_ms: 0.148543
+  type: 'test'
+  ...
+# (node:2877) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+# [runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+# Subtest: failure injection really reproduces a missing Python _sqlite3 extension
+ok 3 - failure injection really reproduces a missing Python _sqlite3 extension
+  ---
+  duration_ms: 649.533433
+  type: 'test'
+  ...
+# Subtest: disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+ok 4 - disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+  ---
+  duration_ms: 682.899648
+  type: 'test'
+  ...
+# Subtest: bound parameters preserve quotes and prevent query text injection
+ok 5 - bound parameters preserve quotes and prevent query text injection
+  ---
+  duration_ms: 679.166384
+  type: 'test'
+  ...
+# Subtest: missing fixture is rejected and is not silently created
+ok 6 - missing fixture is rejected and is not silently created
+  ---
+  duration_ms: 604.927351
+  type: 'test'
+  ...
+# Subtest: corrupt fixture and invalid SQL fail, not empty successful test results
+ok 7 - corrupt fixture and invalid SQL fail, not empty successful test results
+  ---
+  duration_ms: 1228.762596
+  type: 'test'
+  ...
+# Subtest: the read-only path rejects mutations and leaves original bytes untouched
+ok 8 - the read-only path rejects mutations and leaves original bytes untouched
+  ---
+  duration_ms: 646.471888
+  type: 'test'
+  ...
+# Subtest: explicit fixture transaction persists on independent process reopen
+ok 9 - explicit fixture transaction persists on independent process reopen
+  ---
+  duration_ms: 1254.832673
+  type: 'test'
+  ...
+# Subtest: a failed batch rolls back its preceding statement
+ok 10 - a failed batch rolls back its preceding statement
+  ---
+  duration_ms: 668.948164
+  type: 'test'
+  ...
+# Subtest: multiple SQL statements cannot silently execute only the first one
+ok 11 - multiple SQL statements cannot silently execute only the first one
+  ---
+  duration_ms: 635.710954
+  type: 'test'
+  ...
+# Subtest: fixture DDL and ATTACH are not accepted by the write helper
+ok 12 - fixture DDL and ATTACH are not accepted by the write helper
+  ---
+  duration_ms: 1352.677985
+  type: 'test'
+  ...
+# Subtest: blob/empty string/NULL and minimum int64 values round trip through fixture writes
+ok 13 - blob/empty string/NULL and minimum int64 values round trip through fixture writes
+  ---
+  duration_ms: 699.570645
+  type: 'test'
+  ...
+# Subtest: out-of-range integer and non-finite real parameters fail without modifying fixture
+ok 14 - out-of-range integer and non-finite real parameters fail without modifying fixture
+  ---
+  duration_ms: 1230.163247
+  type: 'test'
+  ...
+# Subtest: missing Node executable is an actual failure, not a Python/sqlite fallback
+ok 15 - missing Node executable is an actual failure, not a Python/sqlite fallback
+  ---
+  duration_ms: 584.335657
+  type: 'test'
+  ...
+# Subtest: runtime preflight tests a real disk file and a Python-to-Node round trip
+ok 16 - runtime preflight tests a real disk file and a Python-to-Node round trip
+  ---
+  duration_ms: 610.357901
+  type: 'test'
+  ...
+# Subtest: runtime preflight rejects a missing Python executable before release checks
+ok 17 - runtime preflight rejects a missing Python executable before release checks
+  ---
+  duration_ms: 2.621456
+  type: 'test'
+  ...
+# Subtest: workflow launcher uses PYTHON rather than silently invoking another interpreter
+ok 18 - workflow launcher uses PYTHON rather than silently invoking another interpreter
+  ---
+  duration_ms: 33.918766
+  type: 'test'
+  ...
+# Subtest: mandatory release workflow and original checks are retained; runtime probe is first
+ok 19 - mandatory release workflow and original checks are retained; runtime probe is first
+  ---
+  duration_ms: 0.368164
+  type: 'test'
+  ...
+# Subtest: all shipped Python disk assertions use the portable helper, not sqlite3 imports
+ok 20 - all shipped Python disk assertions use the portable helper, not sqlite3 imports
+  ---
+  duration_ms: 0.447844
+  type: 'test'
+  ...
+# Subtest: runtime preflight succeeds when the selected Python explicitly blocks SQLite imports
+ok 21 - runtime preflight succeeds when the selected Python explicitly blocks SQLite imports
+  ---
+  duration_ms: 650.705499
+  type: 'test'
+  ...
+# Subtest: disabled Node SQLite is rejected explicitly instead of silently skipping local SQL checks
+ok 22 - disabled Node SQLite is rejected explicitly instead of silently skipping local SQL checks
+  ---
+  duration_ms: 29.408448
+  type: 'test'
+  ...
+# Subtest: Python test failures propagate their exit status through the launcher
+ok 23 - Python test failures propagate their exit status through the launcher
+  ---
+  duration_ms: 1325.76923
+  type: 'test'
+  ...
+# (node:2878) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: strict adapter reproduces rejected cacheTtl=30, rather than silently accepting it
+ok 24 - strict adapter reproduces rejected cacheTtl=30, rather than silently accepting it
+  ---
+  duration_ms: 1.656303
+  type: 'test'
+  ...
+# Subtest: production bulk read uses a compatible TTL and preserves all values
+ok 25 - production bulk read uses a compatible TTL and preserves all values
+  ---
+  duration_ms: 0.948567
+  type: 'test'
+  ...
+# Subtest: more than 100 keys are split without omission
+ok 26 - more than 100 keys are split without omission
+  ---
+  duration_ms: 0.596467
+  type: 'test'
+  ...
+# Subtest: old runtime rejecting array overload falls back to string reads only
+ok 27 - old runtime rejecting array overload falls back to string reads only
+  ---
+  duration_ms: 0.336467
+  type: 'test'
+  ...
+# Subtest: permission failures propagate without a misleading single-key fallback
+ok 28 - permission failures propagate without a misleading single-key fallback
+  ---
+  duration_ms: 0.223787
+  type: 'test'
+  ...
+# Subtest: partial bulk response is an error, never an empty successful inventory
+ok 29 - partial bulk response is an error, never an empty successful inventory
+  ---
+  duration_ms: 0.330348
+  type: 'test'
+  ...
+# Subtest: repository list works under strict KV contract and retains the record
+ok 30 - repository list works under strict KV contract and retains the record
+  ---
+  duration_ms: 16.870551
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [JWT] 验证成功，用户: admin
+# [配置] 从KV读取配置: 成功
+# Subtest: backup API works under strict KV and does not leak configured passwords
+ok 31 - backup API works under strict KV and does not leak configured passwords
+  ---
+  duration_ms: 25.444254
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# Subtest: create syncs legacy category and Database menu, with no dropped subscription
+ok 32 - create syncs legacy category and Database menu, with no dropped subscription
+  ---
+  duration_ms: 18.76374
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# Subtest: non-membership also records category without creating a current membership
+ok 33 - non-membership also records category without creating a current membership
+  ---
+  duration_ms: 3.663293
+  type: 'test'
+  ...
+# Subtest: invalid input does not create category entries before validation
+ok 34 - invalid input does not create category entries before validation
+  ---
+  duration_ms: 3.117582
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [workflow] legacy category sync delayed: injected category failure
+# Subtest: category mirror failure reports warning while preserving successful committed operation
+ok 35 - category mirror failure reports warning while preserving successful committed operation
+  ---
+  duration_ms: 4.127231
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# Subtest: replay cannot add another receipt or reset current subscription dates
+ok 36 - replay cannot add another receipt or reset current subscription dates
+  ---
+  duration_ms: 10.967637
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [JWT] 验证成功，用户: admin
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [JWT] 验证成功，用户: admin
+# Subtest: D1-backed category/menu sync survives independent API calls
+ok 37 - D1-backed category/menu sync survives independent API calls
+  ---
+  duration_ms: 13.032954
+  type: 'test'
+  ...
+# Subtest: runtime SuperAdmin compatibility functions are exported
+ok 38 - runtime SuperAdmin compatibility functions are exported
+  ---
+  duration_ms: 0.183607
+  type: 'test'
+  ...
+# Subtest: runtime credentials require both fields; no hardcoded/config fallback
+ok 39 - runtime credentials require both fields; no hardcoded/config fallback
+  ---
+  duration_ms: 0.131147
+  type: 'test'
+  ...
+# Subtest: runtime verifier checks both username and password, including empty/nonstring inputs
+ok 40 - runtime verifier checks both username and password, including empty/nonstring inputs
+  ---
+  duration_ms: 1.217261
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: password whitespace is preserved, not silently trimmed
+ok 41 - password whitespace is preserved, not silently trimmed
+  ---
+  duration_ms: 0.492711
+  type: 'test'
+  ...
+# [JWT] 验证成功，用户: root-admin
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: independent runtime SuperAdmin login gets proper role and HttpOnly cookies
+ok 42 - independent runtime SuperAdmin login gets proper role and HttpOnly cookies
+  ---
+  duration_ms: 2.31267
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: explicit runtime username does not accept admin-name plus elevated password
+ok 43 - explicit runtime username does not accept admin-name plus elevated password
+  ---
+  duration_ms: 1.103321
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: ordinary admin login remains valid and clears elevated cookie
+ok 44 - ordinary admin login remains valid and clears elevated cookie
+  ---
+  duration_ms: 1.727661
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: password-only legacy SuperAdmin flow is preserved when username is not configured
+ok 45 - password-only legacy SuperAdmin flow is preserved when username is not configured
+  ---
+  duration_ms: 3.52174
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# Subtest: explicit empty independent username fails closed without breaking ordinary admin
+ok 46 - explicit empty independent username fails closed without breaking ordinary admin
+  ---
+  duration_ms: 1.557163
+  type: 'test'
+  ...
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: correct timezone sends a day-rule notification with strict KV reads
+ok 47 - scheduler: correct timezone sends a day-rule notification with strict KV reads
+  ---
+  duration_ms: 5.682162
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: outside the window skips without a KV exception
+ok 48 - scheduler: outside the window skips without a KV exception
+  ---
+  duration_ms: 2.799012
+  type: 'test'
+  ...
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: daily dedupe works across two hours on the same date
+ok 49 - scheduler: daily dedupe works across two hours on the same date
+  ---
+  duration_ms: 17.431785
+  type: 'test'
+  ...
+# [定时任务] telegram 发送失败: Telegram 拒绝: 未知
+# [配置] 从KV读取配置: 成功
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: failed delivery does not reserve dedupe; retry can send
+ok 50 - scheduler: failed delivery does not reserve dedupe; retry can send
+  ---
+  duration_ms: 4.905332
+  type: 'test'
+  ...
+# [定时任务] 已自动处理 1 个订阅生命周期更新
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: reset + renewal off stays expired and observes after-expiry interval
+ok 51 - scheduler: reset + renewal off stays expired and observes after-expiry interval
+  ---
+  duration_ms: 5.934541
+  type: 'test'
+  ...
+# [定时任务] 已自动处理 1 个订阅生命周期更新
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: cycle + renewal off still advances dates but invents no payment
+ok 52 - scheduler: cycle + renewal off still advances dates but invents no payment
+  ---
+  duration_ms: 4.197517
+  type: 'test'
+  ...
+# [定时任务] 已自动处理 1 个订阅生命周期更新
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: cycle renewal appends history once, not on every tick
+ok 53 - scheduler: cycle renewal appends history once, not on every tick
+  ---
+  duration_ms: 4.936179
+  type: 'test'
+  ...
+1..53
+# tests 53
+# suites 0
+# pass 53
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13638.901206

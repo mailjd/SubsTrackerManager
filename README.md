@@ -1,3 +1,11 @@
+# SubsTracker v3.3.28｜SuperAdmin 舊測試契約相容修復
+
+這個版本修正 v3.3.27 部署時唯一失敗的 Workers 測試：`runtime.configured` 原為 `undefined`，現在正確提供 `true`。原憑證 `{username,password}` 可列舉結構不變；驗證邏輯、D1、KV、密文和模板不變。詳見 `DEPLOY_REPAIR_3.3.28.md` 與 `VERIFICATION_3.3.28.md`。
+
+正式部署仍由 `npm run deploy:cloudflare` 執行，仍需所有 Workers 測試通過，遇到問題先停止，不直接改動正式儲存。
+
+---
+
 # SubsTracker v3.3.27｜Workers 契約與部署失敗修正
 
 **本次操作：[DEPLOY_REPAIR_3.3.27.md](DEPLOY_REPAIR_3.3.27.md)；實測與限制：[VERIFICATION_3.3.27.md](VERIFICATION_3.3.27.md)。**

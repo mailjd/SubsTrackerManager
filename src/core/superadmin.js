@@ -35,14 +35,24 @@ export async function verifySuperAdminPassword(password, env) {
 /** Runtime-only independent SuperAdmin identity. Never reads credentials from KV,
  * process.env, the ordinary admin configuration, or a hard-coded fallback.
  * @param {any} env
- * @returns {{ username: string, password: string } | null}
+ * @returns {{ username: string, password: string, configured?: boolean } | null}
  */
 export function getRuntimeSuperAdminCredentials(env) {
   const username = typeof env?.SUBSTRACKER_SUPERADMIN_USERNAME === 'string'
     ? env.SUBSTRACKER_SUPERADMIN_USERNAME.trim() : '';
   const password = getRuntimeSuperAdminPassword(env);
   // Do not trim a password: whitespace is part of the secret.
-  return username && password ? { username, password } : null;
+  if (!username || !password) return null;
+  // An older Workers-facing client checks `.configured === true`.  Keep the
+  // original enumerable {username,password} shape for existing consumers and
+  // JSON snapshots, but provide the compatibility status through an own,
+  // non-enumerable, immutable property.  Never emit this object to a response.
+  return Object.defineProperty({ username, password }, 'configured', {
+    value: true,
+    enumerable: false,
+    writable: false,
+    configurable: false
+  });
 }
 
 /** Compatibility API expected by repositories with an independent runtime username.

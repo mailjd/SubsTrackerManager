@@ -1,0 +1,15 @@
+493 http fetch GET https://registry.npmjs.org/zod/-/zod-3.25.76.tgz attempt 1 failed with EAI_AGAIN
+494 http fetch GET https://registry.npmjs.org/youch/-/youch-3.3.4.tgz attempt 1 failed with EAI_AGAIN
+495 http fetch GET https://registry.npmjs.org/ws/-/ws-8.21.0.tgz attempt 1 failed with EAI_AGAIN
+496 http fetch GET https://registry.npmjs.org/xxhash-wasm/-/xxhash-wasm-1.1.0.tgz attempt 1 failed with EAI_AGAIN
+497 http fetch GET https://registry.npmjs.org/wrangler/-/wrangler-3.114.17.tgz attempt 1 failed with EAI_AGAIN
+498 http fetch GET https://registry.npmjs.org/why-is-node-running/-/why-is-node-running-2.3.0.tgz attempt 1 failed with EAI_AGAIN
+499 http fetch GET https://registry.npmjs.org/workerd/-/workerd-1.20241230.0.tgz attempt 1 failed with EAI_AGAIN
+500 http fetch GET https://registry.npmjs.org/vite/-/vite-5.4.21.tgz attempt 1 failed with EAI_AGAIN
+501 http fetch GET https://registry.npmjs.org/vitest/-/vitest-2.1.9.tgz attempt 1 failed with EAI_AGAIN
+502 http fetch GET https://registry.npmjs.org/undici-types/-/undici-types-7.24.6.tgz attempt 1 failed with EAI_AGAIN
+503 http fetch GET https://registry.npmjs.org/unenv/-/unenv-2.0.0-rc.14.tgz attempt 1 failed with EAI_AGAIN
+504 http fetch GET https://registry.npmjs.org/vite-node/-/vite-node-2.1.9.tgz attempt 1 failed with EAI_AGAIN
+505 http fetch GET https://registry.npmjs.org/ufo/-/ufo-1.6.4.tgz attempt 1 failed with EAI_AGAIN
+506 http fetch GET https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz attempt 1 failed with EAI_AGAIN
+507 http fetch GET https://registry.npmjs.org/undici/-/undici-5.29.0.tgz attempt 1 failed with EAI_AGAIN

@@ -1,0 +1,16 @@
+PASS active input -> actual Save click -> disk
+PASS cleared subscription type stays cleared
+PASS entered expired date is persisted exactly
+PASS text + select + number saved together
+PASS start date recalculates expiry and saves both
+PASS Cancel restores active and staged edits with no write
+PASS HTTP failure keeps drafts, retry persists
+PASS partial batch only clears successful row drafts
+PASS multi-cell paste enters draft and is persisted
+PASS in-flight guard prevents duplicate save and new edits
+PASS forged success with wrong returned value rejected
+PASS older backend detected before PATCH; draft kept
+PASS reminder editing and clear survive fresh page
+PASS focused editor draft survives page reconstruction
+PASS Escape removes editor and restores previous value
+PASS new server process + fresh browser storage still reads edit

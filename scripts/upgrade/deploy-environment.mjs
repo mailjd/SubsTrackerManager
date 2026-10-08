@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
+import {assertD1KVConfig} from './storage-policy.mjs';
 
 export class DeploymentError extends Error {
   constructor(code, message) { super(message); this.name = 'DeploymentError'; this.code = code; }
@@ -21,23 +22,22 @@ export function deploymentRouteHelp(host = detectDeploymentHost()) {
   const where = host === 'cloudflare-workers-builds' ? 'Cloudflare Workers Builds / Git 直连'
     : host === 'cloudflare-pages' ? 'Cloudflare Pages（本项目是 Worker）' : '未受保护的 Wrangler 部署入口';
   return [
-    `当前入口：${where}。本版本禁止直接 wrangler deploy。`,
-    '此检查失败不代表数据库损坏；本检查未发布 Worker、未改写任何远端记录。',
-    '正确入口：原 GitHub 仓库 → Actions → Safe upgrade → Run workflow。',
-    '先到 Cloudflare → 原 Worker → Settings → Builds → Disconnect，断开 Git 直连；不要删除 Worker / KV / D1。',
-    '在原 GitHub 仓库 Settings → Secrets and variables → Actions 配置：',
-    '  Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, SUBSTRACKER_BACKUP_PASSWORD（至少16字符）。',
-    '  Variables: SUBSTRACKER_WORKER_NAME（原 Worker 名称）；自定义域名另设 SUBSTRACKER_WORKER_URL。',
-    '本机也可运行 npm run deploy:check 后再 npm run deploy:safe（需要 Node 22.13+ / Python 3.11+）。',
-    '不要只把 Workers Builds 的 deploy command 换成 npm run deploy:safe：平台总时限20分钟，本流程仅安全等待就16分钟，另需备份、迁移和验收。',
-    '不要删除 [build]、不要伪造 SUBSTRACKER_SAFE_DEPLOY_RUN、不要缩短维护等待、不要跳过测试或备份。',
-    '详细操作：CLOUDFLARE_DEPLOY_FIX_3.3.21.md。',
+    `当前入口：${where}。禁止直接 wrangler deploy 绕过备份。`,
+    'v3.3.22 已支持保留 Cloudflare Git 直连；不必 Disconnect。',
+    '请将原 Worker → Settings → Builds 的 Deploy command 改为 npm run deploy:cloudflare，Build command 留空。',
+    '在 Builds 的变量/机密配置原 CLOUDFLARE_ACCOUNT_ID、CLOUDFLARE_API_TOKEN、SUBSTRACKER_BACKUP_PASSWORD（至少16字符）、SUBSTRACKER_WORKER_NAME。',
+    '第一次运行：加密备份并部署维护版本；日志 ST_UPGRADE_WAIT 会给出再次运行时间。',
+    '等待至少16分钟后，Retry 同一提交：恢复加密检查点、补迁移、逐项验收后才开站。',
+    '构建成功不等于升级完成；只有 ST_UPGRADE_COMPLETE 且 maintenance:false 才完成。',
+    '本机/GitHub Actions → Safe upgrade 仍可运行完整流程；Cloudflare Pages 仍不支持。',
+    '不要删除 build guard、不要伪造 runId、不要重建 Worker / KV / D1。',
+    '详细操作：CLOUDFLARE_SPLIT_DEPLOY_3.3.23.md。',
   ].join('\n');
 }
 
-export function assertSupportedDeploymentHost(env = process.env) {
+export function assertSupportedDeploymentHost(env = process.env, {allowWorkersBuilds = false} = {}) {
   const host = detectDeploymentHost(env);
-  if (host === 'cloudflare-workers-builds' || host === 'cloudflare-pages') {
+  if ((host === 'cloudflare-workers-builds' && !allowWorkersBuilds) || host === 'cloudflare-pages') {
     fail('ST_DEPLOY_ROUTE', deploymentRouteHelp(host));
   }
   return host;
@@ -55,7 +55,7 @@ export function validateDeploymentSecrets(env = process.env) {
   if (!/^[a-fA-F0-9]{32}$/.test(env.CLOUDFLARE_ACCOUNT_ID || '')) missing.push('CLOUDFLARE_ACCOUNT_ID（32位 Account ID，不是 Zone ID）');
   if (!String(env.CLOUDFLARE_API_TOKEN || '').trim()) missing.push('CLOUDFLARE_API_TOKEN');
   if (String(env.SUBSTRACKER_BACKUP_PASSWORD || '').length < 16) missing.push('SUBSTRACKER_BACKUP_PASSWORD（至少16字符）');
-  if (missing.length) fail('ST_DEPLOY_CONFIG', '缺少或格式不符：' + missing.join('、') + '。配置位置：GitHub 仓库 Settings → Secrets and variables → Actions → Secrets；Cloudflare 的运行时 Secrets 不会自动复制到 GitHub。值不会写入日志。');
+  if (missing.length) fail('ST_DEPLOY_CONFIG', '缺少或格式不符：' + missing.join('、') + '。配置位置：Cloudflare 的 Settings → Builds → Build variables and secrets，或 GitHub Actions Secrets；运行时 Secrets 不等于构建 Secrets。值不会写入日志。');
 }
 
 export function readWranglerConfig(root, env = process.env) {
@@ -67,6 +67,7 @@ export function readWranglerConfig(root, env = process.env) {
     {encoding:'utf8',timeout:10000});
   if (result.status !== 0) fail('ST_DEPLOY_PYTHON', '需要 Python 3.11+，且 wrangler.toml 必须是有效 TOML；不会猜测或重写原配置。');
   let config = JSON.parse(result.stdout);
+  assertD1KVConfig(config);
   const selected = env.SUBSTRACKER_ENVIRONMENT;
   if (selected) {
     if (!Object.hasOwn(config.env || {}, selected)) fail('ST_DEPLOY_ENV', '找不到 SUBSTRACKER_ENVIRONMENT 对应的 Wrangler 环境。');
@@ -86,8 +87,8 @@ export function readWranglerConfig(root, env = process.env) {
   return config;
 }
 
-export function checkDeploymentEnvironment(root, env = process.env) {
-  const host = assertSupportedDeploymentHost(env);
+export function checkDeploymentEnvironment(root, env = process.env, options = {}) {
+  const host = assertSupportedDeploymentHost(env, options);
   assertNodeRuntime();
   validateDeploymentSecrets(env);
   const config = readWranglerConfig(root, env);
@@ -95,5 +96,6 @@ export function checkDeploymentEnvironment(root, env = process.env) {
   return {host, node: process.versions.node, worker: config.name,
     workerSource: env.SUBSTRACKER_WORKER_NAME ? 'SUBSTRACKER_WORKER_NAME' : 'wrangler.toml',
     urlSource: env.SUBSTRACKER_WORKER_URL ? 'explicit-original-origin' : 'discover-existing-workers.dev',
+    storagePolicy: 'D1_KV_ONLY', d1Backup: 'query-only', objectStorageRequired: false,
     secretsPresent: true, remoteAccessChecked: false};
 }

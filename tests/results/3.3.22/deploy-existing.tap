@@ -1,0 +1,118 @@
+TAP version 13
+# Subtest: Workers Builds is detected before generic CI or Actions flags
+ok 1 - Workers Builds is detected before generic CI or Actions flags
+  ---
+  duration_ms: 0.962698
+  type: 'test'
+  ...
+# Subtest: Pages is explicitly rejected; local / GitHub Actions remain supported
+ok 2 - Pages is explicitly rejected; local / GitHub Actions remain supported
+  ---
+  duration_ms: 0.786336
+  type: 'test'
+  ...
+# Subtest: unsupported Node stops before any backup or remote API
+ok 3 - unsupported Node stops before any backup or remote API
+  ---
+  duration_ms: 0.454855
+  type: 'test'
+  ...
+# Subtest: preflight aggregates missing secret NAMES without printing configured values
+ok 4 - preflight aggregates missing secret NAMES without printing configured values
+  ---
+  duration_ms: 0.400344
+  type: 'test'
+  ...
+# Subtest: successful preflight reads but never mutates original TOML or creates state
+ok 5 - successful preflight reads but never mutates original TOML or creates state
+  ---
+  duration_ms: 696.513983
+  type: 'test'
+  ...
+# Subtest: Cloudflare preflight rejects even if secrets are configured, before reading any file
+ok 6 - Cloudflare preflight rejects even if secrets are configured, before reading any file
+  ---
+  duration_ms: 0.155921
+  type: 'test'
+  ...
+# Subtest: explicit original Worker name overrides template, environment is preserved
+ok 7 - explicit original Worker name overrides template, environment is preserved
+  ---
+  duration_ms: 2181.366875
+  type: 'test'
+  ...
+# Subtest: wrong account ID rejects rather than rewriting to another account
+ok 8 - wrong account ID rejects rather than rewriting to another account
+  ---
+  duration_ms: 933.970859
+  type: 'test'
+  ...
+# Subtest: Worker URL is an HTTPS origin, not /admin or credentialed URL
+ok 9 - Worker URL is an HTTPS origin, not /admin or credentialed URL
+  ---
+  duration_ms: 4660.478772
+  type: 'test'
+  ...
+# Subtest: missing Python produces actionable failure, not guessed config
+ok 10 - missing Python produces actionable failure, not guessed config
+  ---
+  duration_ms: 2.496384
+  type: 'test'
+  ...
+# Subtest: raw Cloudflare command explains the supported split route, not a mandatory disconnect
+ok 11 - raw Cloudflare command explains the supported split route, not a mandatory disconnect
+  ---
+  duration_ms: 31.326057
+  type: 'test'
+  ...
+# Subtest: ordinary raw Wrangler guard still fails closed without SQLite warning
+ok 12 - ordinary raw Wrangler guard still fails closed without SQLite warning
+  ---
+  duration_ms: 33.977908
+  type: 'test'
+  ...
+# Subtest: setting a fake run ID cannot unlock guard
+ok 13 - setting a fake run ID cannot unlock guard
+  ---
+  duration_ms: 34.103433
+  type: 'test'
+  ...
+# Subtest: preflight CLI succeeds locally with synthetic config and leaks no secrets
+ok 14 - preflight CLI succeeds locally with synthetic config and leaks no secrets
+  ---
+  duration_ms: 689.00858
+  type: 'test'
+  ...
+# Subtest: CLI rejects Workers Builds before prepare and does not create state
+ok 15 - CLI rejects Workers Builds before prepare and does not create state
+  ---
+  duration_ms: 36.54691
+  type: 'test'
+  ...
+# Subtest: safe workflow retains required tests, both uploaded backups, recovery, and long timeout
+ok 16 - safe workflow retains required tests, both uploaded backups, recovery, and long timeout
+  ---
+  duration_ms: 0.311803
+  type: 'test'
+  ...
+# Subtest: Vitest uses isolated local configuration, never real production binding IDs
+ok 17 - Vitest uses isolated local configuration, never real production binding IDs
+  ---
+  duration_ms: 0.241388
+  type: 'test'
+  ...
+# Subtest: build version and upgrade runner stay consistent, and drain is not shortened
+ok 18 - build version and upgrade runner stay consistent, and drain is not shortened
+  ---
+  duration_ms: 0.754891
+  type: 'test'
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9368.301221

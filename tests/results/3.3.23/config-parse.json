@@ -1,0 +1,27 @@
+[
+  {
+    "file": "wrangler.toml",
+    "type": "TOML",
+    "passed": true
+  },
+  {
+    "file": "wrangler.dev.toml",
+    "type": "TOML",
+    "passed": true
+  },
+  {
+    "file": "wrangler.test.toml",
+    "type": "TOML",
+    "passed": true
+  },
+  {
+    "file": ".github/workflows/deploy.yml",
+    "type": "YAML",
+    "passed": true
+  },
+  {
+    "file": ".github/workflows/test.yml",
+    "type": "YAML",
+    "passed": true
+  }
+]

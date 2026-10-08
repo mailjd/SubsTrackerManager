@@ -68,9 +68,9 @@ test('Worker URL is an HTTPS origin, not /admin or credentialed URL',t=>{
 test('missing Python produces actionable failure, not guessed config',t=>{
   const root=rootFixture(t);assert.throws(()=>readWranglerConfig(root,{...validEnv(),PYTHON:'/missing/python'}),{code:'ST_DEPLOY_PYTHON'});
 });
-test('the supplied screenshot failure is reproduced as specific ST_DEPLOY_ROUTE',()=>{
+test('raw Cloudflare command explains the supported split route, not a mandatory disconnect',()=>{
   const r=node('scripts/require-safe-upgrade.mjs',{WORKERS_CI:'1'});
-  assert.equal(r.status,1);assert.match(r.stderr,/ST_DEPLOY_ROUTE/);assert.match(r.stderr,/Actions → Safe upgrade/);assert.match(r.stderr,/Disconnect/);
+  assert.equal(r.status,1);assert.match(r.stderr,/ST_DEPLOY_COMMAND/);assert.match(r.stderr,/deploy:cloudflare/);assert.match(r.stderr,/不必 Disconnect/);
   assert.doesNotMatch(r.stderr,/ExperimentalWarning/);assert.doesNotMatch(r.stderr,/node:sqlite/);
 });
 test('ordinary raw Wrangler guard still fails closed without SQLite warning',()=>{
@@ -87,9 +87,10 @@ test('preflight CLI succeeds locally with synthetic config and leaks no secrets'
   assert.match(r.stdout,/尚未部署/);assert.ok(!r.stdout.includes(env.CLOUDFLARE_API_TOKEN));assert.ok(!r.stdout.includes(env.SUBSTRACKER_BACKUP_PASSWORD));
 });
 test('CLI rejects Workers Builds before prepare and does not create state',()=>{
-  assert.equal(fs.existsSync(path.join(source,'.upgrade')),false);
+  const marker=path.join(source,'.upgrade/state.stbackup');
+  const before=fs.existsSync(marker)?fs.readFileSync(marker):null;
   const r=spawnSync(process.execPath,['scripts/safe-upgrade.mjs','all'],{cwd:source,env:{...process.env,...validEnv(),WORKERS_CI:'1'},encoding:'utf8',timeout:10000});
-  assert.equal(r.status,1);assert.match(r.stderr,/ST_DEPLOY_ROUTE/);assert.equal(fs.existsSync(path.join(source,'.upgrade')),false);
+  assert.equal(r.status,1);assert.match(r.stderr,/ST_DEPLOY_ROUTE/);assert.deepEqual(fs.existsSync(marker)?fs.readFileSync(marker):null,before);
 });
 
 test('safe workflow retains required tests, both uploaded backups, recovery, and long timeout',()=>{
@@ -107,6 +108,6 @@ test('Vitest uses isolated local configuration, never real production binding ID
 });
 test('build version and upgrade runner stay consistent, and drain is not shortened',()=>{
   const pkg=JSON.parse(fs.readFileSync(path.join(source,'package.json'),'utf8'));
-  assert.equal(pkg.version,'3.3.21');assert.match(fs.readFileSync(path.join(source,'src/version.js'),'utf8'),/VERSION = '3.3.21'/);
+  assert.equal(pkg.version,'3.3.23');assert.match(fs.readFileSync(path.join(source,'src/version.js'),'utf8'),/VERSION = '3.3.23'/);
   const runner=fs.readFileSync(path.join(source,'scripts/safe-upgrade.mjs'),'utf8');assert.match(runner,/import \{VERSION\} from '\.\.\/src\/version.js'/);assert.match(runner,/16\*60\*1000/);
 });

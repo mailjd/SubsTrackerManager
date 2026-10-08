@@ -1,0 +1,350 @@
+TAP version 13
+# Subtest: custom storage IDs retained without any name-based discovery
+ok 1 - custom storage IDs retained without any name-based discovery
+  ---
+  duration_ms: 1.814383
+  type: 'test'
+  ...
+# Subtest: matching explicit local binding retained
+ok 2 - matching explicit local binding retained
+  ---
+  duration_ms: 0.256625
+  type: 'test'
+  ...
+# Subtest: local KV different from actual binding rejected
+ok 3 - local KV different from actual binding rejected
+  ---
+  duration_ms: 0.34613
+  type: 'test'
+  ...
+# Subtest: local D1 different from actual binding rejected
+ok 4 - local D1 different from actual binding rejected
+  ---
+  duration_ms: 0.127611
+  type: 'test'
+  ...
+# Subtest: unknown binding rejected rather than removed at deploy
+ok 5 - unknown binding rejected rather than removed at deploy
+  ---
+  duration_ms: 0.134182
+  type: 'test'
+  ...
+# Subtest: second KV rejected rather than silently dropped
+ok 6 - second KV rejected rather than silently dropped
+  ---
+  duration_ms: 0.15294
+  type: 'test'
+  ...
+# Subtest: legacy D1 id and modern database_id formats supported and conflicts refused
+ok 7 - legacy D1 id and modern database_id formats supported and conflicts refused
+  ---
+  duration_ms: 0.230877
+  type: 'test'
+  ...
+# Subtest: KV-only deployment does not create D1
+ok 8 - KV-only deployment does not create D1
+  ---
+  duration_ms: 0.122655
+  type: 'test'
+  ...
+# Subtest: missing bindings or missing token/account rejected
+ok 9 - missing bindings or missing token/account rejected
+  ---
+  duration_ms: 0.301853
+  type: 'test'
+  ...
+# Subtest: full KV pagination preserves binary, expiration, metadata and encodes keys
+ok 10 - full KV pagination preserves binary, expiration, metadata and encodes keys
+  ---
+  duration_ms: 32.631631
+  type: 'test'
+  ...
+# Subtest: missing KV cursor metadata rejects partial backup
+ok 11 - missing KV cursor metadata rejects partial backup
+  ---
+  duration_ms: 1.269074
+  type: 'test'
+  ...
+# Subtest: KV pagination duplicate keys stop backup
+ok 12 - KV pagination duplicate keys stop backup
+  ---
+  duration_ms: 1.046381
+  type: 'test'
+  ...
+# Subtest: KV key vanishing on read does not produce incomplete success
+ok 13 - KV key vanishing on read does not produce incomplete success
+  ---
+  duration_ms: 1.214413
+  type: 'test'
+  ...
+# Subtest: Cloudflare API permission failure stops without create/delete calls
+ok 14 - Cloudflare API permission failure stops without create/delete calls
+  ---
+  duration_ms: 0.473861
+  type: 'test'
+  ...
+# Subtest: D1 export polls actual API schema and never forwards token to signed URL
+ok 15 - D1 export polls actual API schema and never forwards token to signed URL
+  ---
+  duration_ms: 1002.500539
+  type: 'test'
+  ...
+# Subtest: empty exported SQL or failed polling fail closed
+ok 16 - empty exported SQL or failed polling fail closed
+  ---
+  duration_ms: 0.486791
+  type: 'test'
+  ...
+# Subtest: schedules and settings use correct endpoint and response structure
+ok 17 - schedules and settings use correct endpoint and response structure
+  ---
+  duration_ms: 0.564368
+  type: 'test'
+  ...
+# (node:4992) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: repair partial 3319 migration, preserve raw data, retry idempotent (KV)
+ok 18 - repair partial 3319 migration, preserve raw data, retry idempotent (KV)
+  ---
+  duration_ms: 38.370425
+  type: 'test'
+  ...
+# Subtest: repair partial 3319 migration, preserve raw data, retry idempotent (D1)
+ok 19 - repair partial 3319 migration, preserve raw data, retry idempotent (D1)
+  ---
+  duration_ms: 53.548578
+  type: 'test'
+  ...
+# Subtest: full KV scan finds records omitted by index; D1-only record retained
+ok 20 - full KV scan finds records omitted by index; D1-only record retained
+  ---
+  duration_ms: 6.245064
+  type: 'test'
+  ...
+# Subtest: latest D1 changes used without modifying original KV or losing encrypted field
+ok 21 - latest D1 changes used without modifying original KV or losing encrypted field
+  ---
+  duration_ms: 22.490569
+  type: 'test'
+  ...
+# Subtest: equal timestamp business conflict fails before writes
+ok 22 - equal timestamp business conflict fails before writes
+  ---
+  duration_ms: 3.672002
+  type: 'test'
+  ...
+# Subtest: same payment ID with conflicting amount fails before writes
+ok 23 - same payment ID with conflicting amount fails before writes
+  ---
+  duration_ms: 1.826501
+  type: 'test'
+  ...
+# Subtest: newer snapshot missing an older payment is not silently resurrected
+ok 24 - newer snapshot missing an older payment is not silently resurrected
+  ---
+  duration_ms: 1.946271
+  type: 'test'
+  ...
+# Subtest: equal timestamp additive payments repair stale mirror
+ok 25 - equal timestamp additive payments repair stale mirror
+  ---
+  duration_ms: 4.599674
+  type: 'test'
+  ...
+# Subtest: corrupt JSON never becomes an empty record list
+ok 26 - corrupt JSON never becomes an empty record list
+  ---
+  duration_ms: 1.780042
+  type: 'test'
+  ...
+# Subtest: enumeration error fails without writes or done marker
+ok 27 - enumeration error fails without writes or done marker
+  ---
+  duration_ms: 1.813923
+  type: 'test'
+  ...
+# Subtest: index-only missing entry fails instead of claiming complete
+ok 28 - index-only missing entry fails instead of claiming complete
+  ---
+  duration_ms: 1.522085
+  type: 'test'
+  ...
+# Subtest: duplicate payment IDs rejected without writes
+ok 29 - duplicate payment IDs rejected without writes
+  ---
+  duration_ms: 5.026635
+  type: 'test'
+  ...
+# Subtest: old placeholder retained but excluded from spend after actual payments recovered
+ok 30 - old placeholder retained but excluded from spend after actual payments recovered
+  ---
+  duration_ms: 9.747321
+  type: 'test'
+  ...
+# Subtest: dropped ledger writes never report verified (KV)
+ok 31 - dropped ledger writes never report verified (KV)
+  ---
+  duration_ms: 4.071351
+  type: 'test'
+  ...
+# Subtest: dropped ledger writes never report verified (D1)
+ok 32 - dropped ledger writes never report verified (D1)
+  ---
+  duration_ms: 3.534335
+  type: 'test'
+  ...
+# Subtest: failed marker write leaves retryable additive rows
+ok 33 - failed marker write leaves retryable additive rows
+  ---
+  duration_ms: 4.767707
+  type: 'test'
+  ...
+# Subtest: source changes during additive migration prevents complete marker
+ok 34 - source changes during additive migration prevents complete marker
+  ---
+  duration_ms: 1.077257
+  type: 'test'
+  ...
+# Subtest: wrong expected source digest stops before migration
+ok 35 - wrong expected source digest stops before migration
+  ---
+  duration_ms: 2.426883
+  type: 'test'
+  ...
+# Subtest: existing conflicting ledger row not overwritten
+ok 36 - existing conflicting ledger row not overwritten
+  ---
+  duration_ms: 2.084619
+  type: 'test'
+  ...
+# Subtest: deleted current not resurrected; original snapshot still protected
+ok 37 - deleted current not resurrected; original snapshot still protected
+  ---
+  duration_ms: 2.083488
+  type: 'test'
+  ...
+# Subtest: encrypted full archive restores every SQL row, ciphertext, key, KV metadata and binary
+ok 38 - encrypted full archive restores every SQL row, ciphertext, key, KV metadata and binary
+  ---
+  duration_ms: 267.056043
+  type: 'test'
+  ...
+# Subtest: wrong backup password and file corruption rejected
+ok 39 - wrong backup password and file corruption rejected
+  ---
+  duration_ms: 291.364666
+  type: 'test'
+  ...
+# Subtest: weak backup password refused
+ok 40 - weak backup password refused
+  ---
+  duration_ms: 0.13304
+  type: 'test'
+  ...
+# Subtest: missing original key refuses upgrade instead of generating a replacement
+ok 41 - missing original key refuses upgrade instead of generating a replacement
+  ---
+  duration_ms: 5.381498
+  type: 'test'
+  ...
+# Subtest: row count equality cannot hide overwritten original values
+ok 42 - row count equality cannot hide overwritten original values
+  ---
+  duration_ms: 6.750042
+  type: 'test'
+  ...
+# Subtest: KV same count with altered template rejected
+ok 43 - KV same count with altered template rejected
+  ---
+  duration_ms: 6.005445
+  type: 'test'
+  ...
+# Subtest: SQL truncated file or foreign-key violation rejected in isolated restore
+ok 44 - SQL truncated file or foreign-key violation rejected in isolated restore
+  ---
+  duration_ms: 2.321425
+  type: 'test'
+  ...
+# Subtest: two-phase gate only unlocks after original/restore proof (KV)
+ok 45 - two-phase gate only unlocks after original/restore proof (KV)
+  ---
+  duration_ms: 33.694195
+  type: 'test'
+  ...
+# Subtest: two-phase gate only unlocks after original/restore proof (D1)
+ok 46 - two-phase gate only unlocks after original/restore proof (D1)
+  ---
+  duration_ms: 25.311693
+  type: 'test'
+  ...
+# Subtest: commit rejects data changed since applied report
+ok 47 - commit rejects data changed since applied report
+  ---
+  duration_ms: 4.354807
+  type: 'test'
+  ...
+# Subtest: manual raw deployment cannot silently migrate or expose application
+ok 48 - manual raw deployment cannot silently migrate or expose application
+  ---
+  duration_ms: 1.736947
+  type: 'test'
+  ...
+# Subtest: 180 receipts migrate in bounded requests under strict 50-query cold-isolate budget
+ok 49 - 180 receipts migrate in bounded requests under strict 50-query cold-isolate budget
+  ---
+  duration_ms: 539.3285
+  type: 'test'
+  ...
+# Subtest: bulk KV inventory reads >1000 subscriptions without >1000 storage operations
+ok 50 - bulk KV inventory reads >1000 subscriptions without >1000 storage operations
+  ---
+  duration_ms: 17.515177
+  type: 'test'
+  ...
+# Subtest: missing key in a bulk Map is an error, never a skipped row
+ok 51 - missing key in a bulk Map is an error, never a skipped row
+  ---
+  duration_ms: 6.468665
+  type: 'test'
+  ...
+# (node:4999) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: complete prepare→build guard→stage→backup→apply→restore→commit transport integration
+ok 52 - complete prepare→build guard→stage→backup→apply→restore→commit transport integration
+  ---
+  duration_ms: 5556.37976
+  type: 'test'
+  ...
+# Subtest: lost apply response resumes from server report without rerunning or overwriting originals
+ok 53 - lost apply response resumes from server report without rerunning or overwriting originals
+  ---
+  duration_ms: 5351.211142
+  type: 'test'
+  ...
+# Subtest: raw build without safe-run capability is blocked before deploy
+ok 54 - raw build without safe-run capability is blocked before deploy
+  ---
+  duration_ms: 31.243192
+  type: 'test'
+  ...
+# Subtest: lost commit acknowledgement recovers completed receipt without repeating migration
+ok 55 - lost commit acknowledgement recovers completed receipt without repeating migration
+  ---
+  duration_ms: 5471.785098
+  type: 'test'
+  ...
+# Subtest: runner iterates bounded migration batches and reports total additions
+ok 56 - runner iterates bounded migration batches and reports total additions
+  ---
+  duration_ms: 5277.824282
+  type: 'test'
+  ...
+1..56
+# tests 56
+# suites 0
+# pass 56
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 21770.444549

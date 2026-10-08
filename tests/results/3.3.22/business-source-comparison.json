@@ -1,0 +1,28 @@
+{
+  "src/api": {
+    "identical_count": 14,
+    "changed": []
+  },
+  "src/core": {
+    "identical_count": 7,
+    "changed": []
+  },
+  "src/data": {
+    "identical_count": 20,
+    "changed": [
+      "src/data/upgrade-gate.js"
+    ]
+  },
+  "src/services": {
+    "identical_count": 16,
+    "changed": []
+  },
+  "migrations": {
+    "identical_count": 7,
+    "changed": []
+  },
+  "public": {
+    "identical_count": 2,
+    "changed": []
+  }
+}

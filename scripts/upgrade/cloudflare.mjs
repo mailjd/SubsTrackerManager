@@ -1,15 +1,19 @@
-/** All discovery/snapshot APIs are read-only. SQL export is a read operation using POST.
+/** All discovery/snapshot APIs are read-only. D1 backup uses read-only SELECT/PRAGMA via POST.
  * No create/namespace replacement/credential reset is present in the upgrade path. */
 import {setTimeout as sleep} from 'node:timers/promises';
+import {snapshotD1WithQueries} from './d1-query-snapshot.mjs';
+import {assertD1KVConfig,assertD1KVRequest} from './storage-policy.mjs';
 export class Cloudflare {
   constructor({accountId,token,fetchImpl=fetch}){
     if(!/^[a-fA-F0-9]{32}$/.test(accountId||'')||!token)throw new Error('缺少有效 CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN');
     this.accountId=accountId;this.token=token;this.fetchImpl=fetchImpl;
   }
-  async request(path,{method='GET',body,raw=false}={}){
+  async request(path,{method='GET',body,raw=false,allowNotFound=false}={}){
+    assertD1KVRequest(path,method);
     const url='https://api.cloudflare.com/client/v4/accounts/'+this.accountId+path;
     for(let n=0;n<5;n++){
       const r=await this.fetchImpl(url,{method,redirect:'error',headers:{Authorization:'Bearer '+this.token,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(120000)});
+      if(r.status===404 && allowNotFound)return null;
       if((r.status===429||r.status>=500)&&n<4){await sleep(Math.min(30000,1000*2**n));continue;}
       if(raw){if(!r.ok)throw new Error(`Cloudflare 读取失败 HTTP ${r.status} (${path.split('?')[0]})`);return Buffer.from(await r.arrayBuffer());}
       let data;try{data=await r.json();}catch{throw new Error('Cloudflare 返回非 JSON，已停止');}
@@ -23,7 +27,8 @@ export class Cloudflare {
   async accountSubdomain(){return (await this.request('/workers/subdomain')).result;}
   async namespace(id){return (await this.request('/storage/kv/namespaces/'+encodeURIComponent(id))).result;}
   async database(id){return (await this.request('/d1/database/'+encodeURIComponent(id))).result;}
-  async snapshotKV(id){
+  async snapshotKV(id,{excludePrefix}={}){
+    if(excludePrefix && !/^__substracker_upgrade_artifacts_v1__:[a-f0-9]{32}:$/.test(excludePrefix))throw new Error('无效的内部备份前缀');
     const rows=[],seen=new Set(),cursors=new Set();let cursor='';
     do{
       const page=await this.request('/storage/kv/namespaces/'+encodeURIComponent(id)+'/keys?limit=1000'+(cursor?'&cursor='+encodeURIComponent(cursor):''));
@@ -31,6 +36,7 @@ export class Cloudflare {
       if(!page.result_info || typeof page.result_info.cursor!=='string')throw new Error('KV 分页元数据不完整，拒绝猜测已到末页');
       if(page.result_info.count!=null && page.result_info.count!==page.result.length)throw new Error('KV 页计数不符，备份已停止');
       for(const key of page.result){if(seen.has(key.name))throw new Error('KV 分页出现重复 key；数据仍在变化');seen.add(key.name);
+        if(excludePrefix && key.name.startsWith(excludePrefix))continue; // Dedicated encrypted build artifacts only; never business keys.
         const value=await this.request('/storage/kv/namespaces/'+encodeURIComponent(id)+'/values/'+encodeURIComponent(key.name),{raw:true});
         rows.push({name:key.name,valueBase64:value.toString('base64'),...(key.expiration!=null?{expiration:key.expiration}:{}),...(key.metadata!==undefined?{metadata:key.metadata}:{})});}
       cursor=page.result_info?.cursor||'';
@@ -39,23 +45,14 @@ export class Cloudflare {
     return rows.sort((a,b)=>a.name.localeCompare(b.name));
   }
   async exportSQL(id){
-    let bookmark;
-    for(let n=0;n<180;n++){
-      const result=(await this.request('/d1/database/'+encodeURIComponent(id)+'/export',{method:'POST',body:{output_format:'polling',...(bookmark?{current_bookmark:bookmark}:{})}})).result;
-      if(result?.status==='error')throw new Error('D1 SQL 导出失败');
-      if(result?.status==='complete'){
-        const url=new URL(result.result?.signed_url||'');if(url.protocol!=='https:')throw new Error('SQL 下载地址不是 HTTPS');
-        // Signed export URL: never forward the Cloudflare API token to this host.
-        const r=await this.fetchImpl(url,{signal:AbortSignal.timeout(120000)});
-        if(!r.ok)throw new Error('SQL 导出文件下载失败');const sql=await r.text();if(!sql.trim())throw new Error('SQL 导出为空');return sql;
-      }
-      if(!result?.at_bookmark)throw new Error('D1 导出未返回轮询书签');bookmark=result.at_bookmark;await sleep(1000);
-    }
-    throw new Error('D1 导出超时；没有继续部署');
+    // Compatibility method name; implementation is D1 query-only, with no export job or signed download.
+    return snapshotD1WithQueries(this,id);
   }
 }
 export function protectBindings(config,settings){
+  assertD1KVConfig(config);
   if(!Array.isArray(settings?.bindings))throw new Error('无法读取正在运行的 Worker 绑定；不按名称创建替代库');
+  if(settings.bindings.some(b=>b.type==='r2_bucket'))throw new Error('ST_STORAGE_POLICY：原 Worker 含 R2 綁定；本版不使用 R2，不自動刪除或移轉，請先核對原資源。');
   const allowed=new Set(['kv_namespace','d1','plain_text','json','secret_text','assets']);
   const unknown=settings.bindings.filter(b=>!allowed.has(b.type));
   if(unknown.length)throw new Error('存在未纳入升级器的其他绑定，请保留原配置并人工审查：'+unknown.map(b=>b.name).join(','));

@@ -1,3 +1,5 @@
+> **歷史文件：只適用 v3.3.21。v3.3.22 已新增保留 Cloudflare Git 直連的分階段流程，請改讀 `CLOUDFLARE_SPLIT_DEPLOY_3.3.22.md`；下方 Disconnect 指引不是本版的必要條件。**
+
 # Cloudflare 部署錯誤修正｜v3.3.21
 
 對應 2026-10-08 截圖：`node scripts/require-safe-upgrade.mjs` 返回 exit code 1。

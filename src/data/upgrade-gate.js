@@ -79,7 +79,7 @@ export async function handleUpgradeGate(request,env,run=UPGRADE_RUN){
     }
     return json({success:false,message:'没有此升级操作'},404);
   }
-  const message='升级保护模式：数据尚未完成备份/迁移/验收，业务写入和自动续订已暂停。请执行项目内 npm run deploy:safe（或继续 GitHub 的 Safe upgrade 工作流），不要初始化或更换数据库。';
+  const message='升级保护模式：数据尚未完成备份/迁移/验收，业务写入和自动续订已暂停。Cloudflare 分段部署请在日志给出的等待时间之后 Retry 同一提交（Deploy command: npm run deploy:cloudflare）；也可继续原 GitHub Safe upgrade 流程。不要初始化或更换数据库。';
   if(path.startsWith('/api/'))return json({success:false,code:'UPGRADE_MAINTENANCE',version:run.version,message},503);
-  return new Response(`<!doctype html><html lang="zh"><meta charset="utf-8"><title>SubsTracker 升级保护</title><body style="background:#111827;color:#e5e7eb;font:18px/1.8 system-ui;max-width:780px;margin:80px auto;padding:24px"><h1>SubsTracker ${run.version} · 升级保护中</h1><p>${message}</p><p>检查 GitHub Actions 进度和加密备份附件。发生冲突时保留原记录，不会清库后继续。</p></body></html>`,{status:503,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Retry-After':'60'}});
+  return new Response(`<!doctype html><html lang="zh"><meta charset="utf-8"><title>SubsTracker 升级保护</title><body style="background:#111827;color:#e5e7eb;font:18px/1.8 system-ui;max-width:780px;margin:80px auto;padding:24px"><h1>SubsTracker ${run.version} · 升级保护中</h1><p>${message}</p><p>检查 Cloudflare 的 ST_UPGRADE_WAIT / ST_UPGRADE_COMPLETE 日志，或 GitHub Actions 进度与加密备份附件。第一次构建成功只表示维护版本已发布，不等于升级完成。发生冲突时保留原记录，不会清库后继续。</p></body></html>`,{status:503,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Retry-After':'60'}});
 }

@@ -1,21 +1,37 @@
-# SubsTracker v3.3.21｜部署入口修正
+# SubsTracker v3.3.23｜D1＋KV 限定版
 
-**既有資料保留、安全驗收通過才開站。應用仍運行在原 Cloudflare Worker。**
+本版基於 v3.3.22。應用資料、Cloudflare分階段備份與恢復只使用既有D1＋KV，沒有R2綁定、R2金鑰或R2 SDK。不要求開通R2。
 
-## Cloudflare 部署 error 的處理
+舊版無專案R2 bucket，但D1全量备份仍經`export`與`signed_url`下載。本版改為D1 `query`分頁生成SQL，並增加儲存白名單與拒絕額外物件儲存的檢查。業務相關67個檔案維持原值。
 
-看到 `node scripts/require-safe-upgrade.mjs` exit code 1，是一般 Wrangler／Cloudflare Git 直連入口未執行備份與原綁定驗證，被安全檢查拒絕。
+**先讀 `D1_KV_ONLY_3.3.23.md`，測試明細見 `VERIFICATION_3.3.23.md`。**
 
-**先看 `CLOUDFLARE_DEPLOY_FIX_3.3.21.md`。不要只替換 ZIP 後在 Cloudflare Retry，不要刪掉 [build]。**
+## Cloudflare部署
 
-本版使用原 GitHub 儲存庫的 **Actions → Safe upgrade** 發布。斷開的是 Cloudflare 的 Git Builds 連線，不刪除原 Worker 或原儲存。工作流含16分鐘維護等待，不應放入20分鐘時限的 Workers Builds。
+Build command留空；Deploy command仍為：
 
-## 操作文件
+```sh
+npm run deploy:cloudflare
+```
 
-- `CLOUDFLARE_DEPLOY_FIX_3.3.21.md`：這次 error 的逐步處理、Secrets／Variables、正確入口。
-- `SAFE_UPGRADE_3.3.21.md`：完整加密備份、資料驗收、維護與中斷恢復。
-- `VERIFICATION_3.3.21.md`：本次實際測試及驗證邊界。
+沿用原Worker、KV、D1和Builds機密，不新建資料庫，不刪除build guard。第一次WAIT後依readyAfter重試同一提交，直到COMPLETE並maintenance:false。若舊版批次仍在維護，先處理原批次，不能混用新程式。
 
-`npm run deploy:check` 僅本地預檢；`npm run deploy:safe`／三階段命令維持原安全流程。原業務記錄、Database、模板及 SQL 遷移結構不改；資源 ID 不一致即停止。
+詳細步驟：`CLOUDFLARE_SPLIT_DEPLOY_3.3.23.md`。可選長流程：`SAFE_UPGRADE_3.3.23.md`。
 
-此包不是全新安裝器，禁止為解決部署錯誤重建空資料庫。已在維護的舊批次需先使用同版來源及該次憑證恢復，不混用版本。
+## 本機檢查
+
+```sh
+npm ci
+npm run test:storage
+npm run test:syntax
+npm run test:deploy
+npm run test:upgrade
+npm run test:table-contract
+npm run test:workflow
+npm run lint
+npm test
+```
+
+`test:storage`使用Node＋Python合成D1測試，無需R2。正式發布仍要求完整測試，不提供跳過備份/測試開關。本機全部已執行與未完成項目以驗證報告為準；舊的`tests/results/3.3.xx`是歷史證據，不算本次測試。
+
+備份下載：`npm run upgrade:download`。備份密碼另存，完整加密附件另存本機；存於原KV不能代替獨立災難備份。

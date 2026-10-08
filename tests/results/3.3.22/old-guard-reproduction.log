@@ -1,0 +1,12 @@
+[upgrade] ST_DEPLOY_ROUTE 阻止未经保护的部署：
+当前入口：Cloudflare Workers Builds / Git 直连。本版本禁止直接 wrangler deploy。
+此检查失败不代表数据库损坏；本检查未发布 Worker、未改写任何远端记录。
+正确入口：原 GitHub 仓库 → Actions → Safe upgrade → Run workflow。
+先到 Cloudflare → 原 Worker → Settings → Builds → Disconnect，断开 Git 直连；不要删除 Worker / KV / D1。
+在原 GitHub 仓库 Settings → Secrets and variables → Actions 配置：
+  Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, SUBSTRACKER_BACKUP_PASSWORD（至少16字符）。
+  Variables: SUBSTRACKER_WORKER_NAME（原 Worker 名称）；自定义域名另设 SUBSTRACKER_WORKER_URL。
+本机也可运行 npm run deploy:check 后再 npm run deploy:safe（需要 Node 22.13+ / Python 3.11+）。
+不要只把 Workers Builds 的 deploy command 换成 npm run deploy:safe：平台总时限20分钟，本流程仅安全等待就16分钟，另需备份、迁移和验收。
+不要删除 [build]、不要伪造 SUBSTRACKER_SAFE_DEPLOY_RUN、不要缩短维护等待、不要跳过测试或备份。
+详细操作：CLOUDFLARE_DEPLOY_FIX_3.3.21.md。

@@ -1,3 +1,3 @@
 // Replaced locally by scripts/safe-upgrade.mjs before a verified upgrade deployment.
 // The distributed default deliberately fails closed; it cannot unlock an unverified manual deploy.
-export const UPGRADE_RUN = Object.freeze({version:'3.3.21',id:'manual-3.3.21',tokenHash:''});
+export const UPGRADE_RUN = Object.freeze({version:'3.3.23',id:'manual-3.3.23',tokenHash:''});

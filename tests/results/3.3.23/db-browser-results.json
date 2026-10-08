@@ -1,0 +1,110 @@
+[
+  {
+    "name": "Database opens foundation tab by default",
+    "passed": true
+  },
+  {
+    "name": "foundation Add writes same source used by subscription menus",
+    "passed": true
+  },
+  {
+    "name": "foundation double-click edit enables Save immediately and persists",
+    "passed": true
+  },
+  {
+    "name": "foundation Cancel removes active and staged edits",
+    "passed": true
+  },
+  {
+    "name": "foundation double-click header toggles sorting",
+    "passed": true
+  },
+  {
+    "name": "foundation header supports multi-select value filtering",
+    "passed": true
+  },
+  {
+    "name": "foundation default template consumes no custom template slot",
+    "passed": true
+  },
+  {
+    "name": "account tab retains accounts grid with new headers",
+    "passed": true
+  },
+  {
+    "name": "account selection is dark BEFORE editing",
+    "passed": true
+  },
+  {
+    "name": "header arrows stay small, column resize does not enlarge buttons",
+    "passed": true
+  },
+  {
+    "name": "account active input Save returns verified persisted value",
+    "passed": true
+  },
+  {
+    "name": "ownership cell uses two-choice dropdown and persists",
+    "passed": true
+  },
+  {
+    "name": "account Cancel clears all drafts and restores original row",
+    "passed": true
+  },
+  {
+    "name": "account clipboard paste marks and saves edits",
+    "passed": true
+  },
+  {
+    "name": "account header double-click performs server sorting",
+    "passed": true
+  },
+  {
+    "name": "account header filters entire database before pagination",
+    "passed": true
+  },
+  {
+    "name": "account columns hide/show and persist layout",
+    "passed": true
+  },
+  {
+    "name": "account column reorder keeps selection/actions pinned",
+    "passed": true
+  },
+  {
+    "name": "account saved template cloud persistence + free default template",
+    "passed": true
+  },
+  {
+    "name": "new account owner choice generates correct serial and saves",
+    "passed": true
+  },
+  {
+    "name": "fresh browser local storage recovers both template scopes from server",
+    "passed": true
+  },
+  {
+    "name": "subscription form switches renewal default while allowing manual override",
+    "passed": true
+  },
+  {
+    "name": "actual subscription Add form routes non-membership only to history",
+    "passed": true
+  },
+  {
+    "name": "subscription table mode change stages and persists auto-renew default",
+    "passed": true
+  },
+  {
+    "name": "dashboard type/name spending appears after overview and before recent payments",
+    "passed": true
+  },
+  {
+    "name": "separate history page loads ledger and shows immutable snapshot",
+    "passed": true
+  },
+  {
+    "name": "login success routes admin/superadmin to subscription records",
+    "passed": true
+  }
+]

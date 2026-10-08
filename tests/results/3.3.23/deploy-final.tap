@@ -1,0 +1,224 @@
+TAP version 13
+# Subtest: Workers Builds is detected before generic CI or Actions flags
+ok 1 - Workers Builds is detected before generic CI or Actions flags
+  ---
+  duration_ms: 5.758419
+  type: 'test'
+  ...
+# Subtest: Pages is explicitly rejected; local / GitHub Actions remain supported
+ok 2 - Pages is explicitly rejected; local / GitHub Actions remain supported
+  ---
+  duration_ms: 1.191776
+  type: 'test'
+  ...
+# Subtest: unsupported Node stops before any backup or remote API
+ok 3 - unsupported Node stops before any backup or remote API
+  ---
+  duration_ms: 0.656812
+  type: 'test'
+  ...
+# Subtest: preflight aggregates missing secret NAMES without printing configured values
+ok 4 - preflight aggregates missing secret NAMES without printing configured values
+  ---
+  duration_ms: 20.641898
+  type: 'test'
+  ...
+# Subtest: successful preflight reads but never mutates original TOML or creates state
+ok 5 - successful preflight reads but never mutates original TOML or creates state
+  ---
+  duration_ms: 1257.093451
+  type: 'test'
+  ...
+# Subtest: Cloudflare preflight rejects even if secrets are configured, before reading any file
+ok 6 - Cloudflare preflight rejects even if secrets are configured, before reading any file
+  ---
+  duration_ms: 0.387619
+  type: 'test'
+  ...
+# Subtest: explicit original Worker name overrides template, environment is preserved
+ok 7 - explicit original Worker name overrides template, environment is preserved
+  ---
+  duration_ms: 3404.697804
+  type: 'test'
+  ...
+# Subtest: wrong account ID rejects rather than rewriting to another account
+ok 8 - wrong account ID rejects rather than rewriting to another account
+  ---
+  duration_ms: 961.068512
+  type: 'test'
+  ...
+# Subtest: Worker URL is an HTTPS origin, not /admin or credentialed URL
+ok 9 - Worker URL is an HTTPS origin, not /admin or credentialed URL
+  ---
+  duration_ms: 6985.346126
+  type: 'test'
+  ...
+# Subtest: missing Python produces actionable failure, not guessed config
+ok 10 - missing Python produces actionable failure, not guessed config
+  ---
+  duration_ms: 8.446353
+  type: 'test'
+  ...
+# Subtest: raw Cloudflare command explains the supported split route, not a mandatory disconnect
+ok 11 - raw Cloudflare command explains the supported split route, not a mandatory disconnect
+  ---
+  duration_ms: 71.331862
+  type: 'test'
+  ...
+# Subtest: ordinary raw Wrangler guard still fails closed without SQLite warning
+ok 12 - ordinary raw Wrangler guard still fails closed without SQLite warning
+  ---
+  duration_ms: 57.255216
+  type: 'test'
+  ...
+# Subtest: setting a fake run ID cannot unlock guard
+ok 13 - setting a fake run ID cannot unlock guard
+  ---
+  duration_ms: 49.162543
+  type: 'test'
+  ...
+# Subtest: preflight CLI succeeds locally with synthetic config and leaks no secrets
+ok 14 - preflight CLI succeeds locally with synthetic config and leaks no secrets
+  ---
+  duration_ms: 932.143819
+  type: 'test'
+  ...
+# Subtest: CLI rejects Workers Builds before prepare and does not create state
+ok 15 - CLI rejects Workers Builds before prepare and does not create state
+  ---
+  duration_ms: 51.682893
+  type: 'test'
+  ...
+# Subtest: safe workflow retains required tests, both uploaded backups, recovery, and long timeout
+ok 16 - safe workflow retains required tests, both uploaded backups, recovery, and long timeout
+  ---
+  duration_ms: 0.373989
+  type: 'test'
+  ...
+# Subtest: Vitest uses isolated local configuration, never real production binding IDs
+ok 17 - Vitest uses isolated local configuration, never real production binding IDs
+  ---
+  duration_ms: 1.635385
+  type: 'test'
+  ...
+# Subtest: build version and upgrade runner stay consistent, and drain is not shortened
+ok 18 - build version and upgrade runner stay consistent, and drain is not shortened
+  ---
+  duration_ms: 0.632111
+  type: 'test'
+  ...
+# (node:8764) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: append-only split metadata does not invalidate maintenance backup
+ok 19 - append-only split metadata does not invalidate maintenance backup
+  ---
+  duration_ms: 1.280716
+  type: 'test'
+  ...
+# Subtest: changed original metadata cannot hide behind the operational prefix filter
+ok 20 - changed original metadata cannot hide behind the operational prefix filter
+  ---
+  duration_ms: 1.489606
+  type: 'test'
+  ...
+# Subtest: new ordinary metadata must not be silently accepted as checkpoint bookkeeping
+ok 21 - new ordinary metadata must not be silently accepted as checkpoint bookkeeping
+  ---
+  duration_ms: 0.551924
+  type: 'test'
+  ...
+# Subtest: source changes stop, even if summary row counts are identical
+ok 22 - source changes stop, even if summary row counts are identical
+  ---
+  duration_ms: 2.10677
+  type: 'test'
+  ...
+# Subtest: KV-only is not silently given a race-prone deployment lease
+ok 23 - KV-only is not silently given a race-prone deployment lease
+  ---
+  duration_ms: 0.437064
+  type: 'test'
+  ...
+# Subtest: D1 lease insertion atomically excludes a concurrent Build; release is append-only
+ok 24 - D1 lease insertion atomically excludes a concurrent Build; release is append-only
+  ---
+  duration_ms: 5.80831
+  type: 'test'
+  ...
+# Subtest: expired lease can be superseded without deleting the original claim
+ok 25 - expired lease can be superseded without deleting the original claim
+  ---
+  duration_ms: 1.395089
+  type: 'test'
+  ...
+# (node:8766) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Cloudflare first build really passes guard, remains closed, persists encrypted recovery; fresh second build unlocks once
+ok 26 - Cloudflare first build really passes guard, remains closed, persists encrypted recovery; fresh second build unlocks once
+  ---
+  duration_ms: 23166.269431
+  type: 'test'
+  ...
+# Subtest: test failure stops before lease, artifact upload or Worker deployment
+ok 27 - test failure stops before lease, artifact upload or Worker deployment
+  ---
+  duration_ms: 2361.834983
+  type: 'test'
+  ...
+# Subtest: wrong backup password on a fresh Build cannot create a replacement run
+ok 28 - wrong backup password on a fresh Build cannot create a replacement run
+  ---
+  duration_ms: 9812.051993
+  type: 'test'
+  ...
+# Subtest: changed code while maintenance is active is rejected rather than silently starting another run
+ok 29 - changed code while maintenance is active is rejected rather than silently starting another run
+  ---
+  duration_ms: 9166.350528
+  type: 'test'
+  ...
+# Subtest: lost apply acknowledgement resumes from durable checkpoint in a new Build
+ok 30 - lost apply acknowledgement resumes from durable checkpoint in a new Build
+  ---
+  duration_ms: 15727.961929
+  type: 'test'
+  ...
+# Subtest: lost commit acknowledgement recovers without remigrating or reopening a new run
+ok 31 - lost commit acknowledgement recovers without remigrating or reopening a new run
+  ---
+  duration_ms: 17335.04678
+  type: 'test'
+  ...
+# Subtest: lost Wrangler acknowledgement detects actual maintenance version without duplicate upload and restarts conservative drain
+ok 32 - lost Wrangler acknowledgement detects actual maintenance version without duplicate upload and restarts conservative drain
+  ---
+  duration_ms: 17063.327652
+  type: 'test'
+  ...
+# Subtest: corrupted remote ciphertext is detected before any new deployment or migration
+ok 33 - corrupted remote ciphertext is detected before any new deployment or migration
+  ---
+  duration_ms: 9443.703009
+  type: 'test'
+  ...
+# Subtest: original SQL modified between maintenance backup and retry is not accepted as internal bookkeeping
+ok 34 - original SQL modified between maintenance backup and retry is not accepted as internal bookkeeping
+  ---
+  duration_ms: 16757.040233
+  type: 'test'
+  ...
+# Subtest: encrypted backup download works from a new local directory without a deploy or test bypass
+ok 35 - encrypted backup download works from a new local directory without a deploy or test bypass
+  ---
+  duration_ms: 10157.663395
+  type: 'test'
+  ...
+1..35
+# tests 35
+# suites 0
+# pass 35
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 131190.785152

@@ -1,0 +1,102 @@
+{
+  "version": "3.3.23",
+  "base_version": "3.3.22",
+  "test_groups": [
+    {
+      "file": "storage.tap",
+      "tests": 36,
+      "pass": 36,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "deploy-final.tap",
+      "tests": 35,
+      "pass": 35,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "upgrade-final.tap",
+      "tests": 57,
+      "pass": 57,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "contract.tap",
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "api-results.json",
+      "tests": 37,
+      "pass": 37,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "workflow-results.json",
+      "tests": 69,
+      "pass": 69,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "browser-results.json",
+      "tests": 16,
+      "pass": 16,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "db-browser-results.json",
+      "tests": 27,
+      "pass": 27,
+      "fail": 0,
+      "skipped": 0
+    }
+  ],
+  "total_passed": 285,
+  "cross_version_scenarios": 7,
+  "syntax": {
+    "checked": 99,
+    "passed": 99,
+    "failed": 0
+  },
+  "config_parse": [
+    {
+      "file": "wrangler.toml",
+      "type": "TOML",
+      "passed": true
+    },
+    {
+      "file": "wrangler.dev.toml",
+      "type": "TOML",
+      "passed": true
+    },
+    {
+      "file": "wrangler.test.toml",
+      "type": "TOML",
+      "passed": true
+    },
+    {
+      "file": ".github/workflows/deploy.yml",
+      "type": "YAML",
+      "passed": true
+    },
+    {
+      "file": ".github/workflows/test.yml",
+      "type": "YAML",
+      "passed": true
+    }
+  ],
+  "dependencies_unchanged": true,
+  "business_files_identical": 67,
+  "live_cloudflare_verified": false,
+  "full_workers_vitest": "not completed: npm registry DNS EAI_AGAIN; vitest missing",
+  "full_types": "not completed: @cloudflare/workers-types missing",
+  "real_wrangler_publish": "not executed"
+}

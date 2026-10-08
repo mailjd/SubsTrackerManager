@@ -1,12 +1,12 @@
-# v3.3.21 部署檢查表
+# v3.3.23 部署檢查
 
-- 原 Cloudflare Worker 的 Git Builds 已斷開；沒有兩套發布器同時操作同一 Worker。
-- 原 repo 已更新解壓後的所有專案內容，尤其 `.github/workflows/`、`scripts/`、測試設定；不是只上傳 ZIP。
-- 三個 Repository Secrets 已在 GitHub Actions 配置，沒有寫入公開原始碼。
-- `SUBSTRACKER_WORKER_NAME` 指向原 Worker，原 KV/D1 ID、密鑰、模板沒有清除或改綁。
-- Safe upgrade 在 GitHub Actions 執行；本地部署前檢查／型別／測試通過後才建立備份和發布維護版本。
-- 升級前／維護期加密備份都先上傳成功，才進下一步。
-- 最終驗收成功，`/api/upgrade/status` 為 3.3.21、maintenance:false；保留加密附件與 acceptance 報告。
-- 未驗收完成不強行解鎖、不重建儲存；依同版文件使用恢復憑證。
+1. 已閱讀 `D1_KV_ONLY_3.3.23.md`；本工具不使用R2，不需要開通bucket或新增R2金鑰。
+2. 原Worker準確名稱、Account ID、KV／D1 ID均保留，不以範例替換。
+3. 原版未完成的升級先用同版原提交及恢復憑證處理，不混用來源。
+4. Cloudflare Build command留空，Deploy command為`npm run deploy:cloudflare`。
+5. Builds配置原Token、Account ID、至少16字元備份密碼、Worker名稱／必要的源網址。Token需涵蓋原Worker、KV、D1，不需要R2。
+6. 不同發布器不要並行運作；保留完整測試、加密備份、維護與驗收門禁。
+7. WAIT不是完成；依readyAfter重試同一提交，到COMPLETE且3.3.23/maintenance:false才完成。
+8. 下載加密備份另存本機；核對原記錄、歷史、帳號、模板和保存診斷。
 
-逐步介面說明：`CLOUDFLARE_DEPLOY_FIX_3.3.21.md`。
+完整操作與停止情況見 `CLOUDFLARE_SPLIT_DEPLOY_3.3.23.md`。不宣稱未驗證正式環境一定一次成功。

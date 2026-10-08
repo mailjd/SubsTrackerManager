@@ -21,7 +21,7 @@ test('complete prepare→build guard→stage→backup→apply→restore→commit
  const files=fs.readdirSync(path.join(f.root,'upgrade-backups'));assert.ok(files.some(x=>x.endsWith('acceptance.json')));assert.ok(files.some(x=>x.endsWith('maintenance.stbackup')));
  const state=decryptArchive(fs.readFileSync(path.join(f.root,'.upgrade/state.stbackup')),f.env.SUBSTRACKER_BACKUP_PASSWORD);assert.equal(state.phase,'complete');assert.equal(state.bindings.kvId,'b'.repeat(32));assert.equal(state.resourceNames.d1,'CUSTOM-EXISTING-D1');
  const after=JSON.parse(fs.readFileSync(path.join(f.state,'kv.json'),'utf8'));for(const [k,v] of Object.entries(JSON.parse(before)))assert.equal(after[k],v);
- const trace=fs.readFileSync(path.join(f.state,'transport.jsonl'),'utf8').trim().split('\n').map(JSON.parse);assert.ok(!trace.some(x=>x.host==='api.cloudflare.com'&&['DELETE','PUT','PATCH'].includes(x.method)));assert.ok(trace.some(x=>x.path.endsWith('/api/upgrade/commit')));
+ const trace=fs.readFileSync(path.join(f.state,'transport.jsonl'),'utf8').trim().split('\n').map(JSON.parse);assert.ok(!trace.some(x=>x.host==='api.cloudflare.com'&&['DELETE','PUT','PATCH'].includes(x.method)));assert.ok(trace.some(x=>x.path.endsWith('/api/upgrade/commit')));assert.ok(trace.every(x=>['api.cloudflare.com','upgrade.example.invalid'].includes(x.host)));assert.ok(!trace.some(x=>/\/(?:r2|export|import)(?:\/|$)/.test(x.path)));assert.ok(trace.some(x=>x.path.endsWith('/query')));
 });
 test('lost apply response resumes from server report without rerunning or overwriting originals',async t=>{
  const f=await setup(t);for(const p of ['prepare','stage']){const r=f.run(p);assert.equal(r.status,0,r.stderr);}
@@ -45,4 +45,11 @@ test('runner iterates bounded migration batches and reports total additions',asy
  const f=await setup(t,true);for(const phase of ['prepare','stage','finish']){const r=f.run(phase);assert.equal(r.status,0,r.stdout+'\n'+r.stderr);}
  const calls=fs.readFileSync(path.join(f.state,'transport.jsonl'),'utf8').trim().split('\n').map(JSON.parse);assert.equal(calls.filter(x=>x.path.endsWith('/api/upgrade/apply')).length,4);
  const file=fs.readdirSync(path.join(f.root,'upgrade-backups')).find(x=>x.endsWith('-acceptance.json'));const report=JSON.parse(fs.readFileSync(path.join(f.root,'upgrade-backups',file),'utf8'));assert.equal(report.migration.added,26);assert.equal(report.ready,true);
+});
+
+test('generated configuration cannot add R2 even after an authentic verified backup',async t=>{
+ const f=await setup(t);const prepared=f.run('prepare');assert.equal(prepared.status,0,prepared.stderr);
+ const state=decryptArchive(fs.readFileSync(path.join(f.root,'.upgrade/state.stbackup')),f.env.SUBSTRACKER_BACKUP_PASSWORD);
+ const file=path.join(f.root,'wrangler.upgrade.json'),cfg=JSON.parse(fs.readFileSync(file));cfg.r2_buckets=[{binding:'INJECTED',bucket_name:'must-not-create-or-bind'}];fs.writeFileSync(file,JSON.stringify(cfg));
+ const guard=spawnSync(process.execPath,['scripts/require-safe-upgrade.mjs'],{cwd:f.root,env:{...f.env,SUBSTRACKER_SAFE_DEPLOY_RUN:state.runId},encoding:'utf8',timeout:10000});assert.notEqual(guard.status,0);assert.match(guard.stderr,/ST_STORAGE_POLICY/);assert.ok(!fs.existsSync(path.join(f.state,'deployed')));
 });

@@ -1,0 +1,28 @@
+PASS Database opens foundation tab by default
+PASS foundation Add writes same source used by subscription menus
+PASS foundation double-click edit enables Save immediately and persists
+PASS foundation Cancel removes active and staged edits
+PASS foundation double-click header toggles sorting
+PASS foundation header supports multi-select value filtering
+PASS foundation default template consumes no custom template slot
+PASS account tab retains accounts grid with new headers
+PASS account selection is dark BEFORE editing
+PASS header arrows stay small, column resize does not enlarge buttons
+PASS account active input Save returns verified persisted value
+PASS ownership cell uses two-choice dropdown and persists
+PASS account Cancel clears all drafts and restores original row
+PASS account clipboard paste marks and saves edits
+PASS account header double-click performs server sorting
+PASS account header filters entire database before pagination
+PASS account columns hide/show and persist layout
+PASS account column reorder keeps selection/actions pinned
+PASS account saved template cloud persistence + free default template
+PASS new account owner choice generates correct serial and saves
+PASS fresh browser local storage recovers both template scopes from server
+PASS subscription form switches renewal default while allowing manual override
+PASS actual subscription Add form routes non-membership only to history
+PASS subscription table mode change stages and persists auto-renew default
+PASS dashboard type/name spending appears after overview and before recent payments
+PASS separate history page loads ledger and shows immutable snapshot
+PASS login success routes admin/superadmin to subscription records
+TOTAL 27 PASS 27 FAIL 0

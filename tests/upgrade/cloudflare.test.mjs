@@ -21,11 +21,10 @@ test('missing KV cursor metadata rejects partial backup',async()=>{const c=new C
 test('KV pagination duplicate keys stop backup',async()=>{const c=new Cloudflare({accountId,token:'x',fetchImpl:async u=>u.includes('/keys')?ok([{name:'x'}],{cursor:'same',count:1}):new Response('one')});await assert.rejects(c.snapshotKV(kv),/重复 key/);});
 test('KV key vanishing on read does not produce incomplete success',async()=>{const c=new Cloudflare({accountId,token:'x',fetchImpl:async u=>u.includes('/keys')?ok([{name:'gone'}],{cursor:'',count:1}):new Response('',{status:404})});await assert.rejects(c.snapshotKV(kv),/404/);});
 test('Cloudflare API permission failure stops without create/delete calls',async()=>{const trace=[];const c=new Cloudflare({accountId,token:'x',fetchImpl:async(u,o)=>{trace.push(o.method);return new Response(JSON.stringify({success:false,errors:[{code:10000}]}),{status:403});}});await assert.rejects(c.settings('existing'),/403/);assert.deepEqual(trace,['GET']);});
-test('D1 export polls actual API schema and never forwards token to signed URL',async()=>{
- const trace=[];let n=0;const c=new Cloudflare({accountId,token:'x',fetchImpl:async(u,o)=>{trace.push({url:String(u),opts:o});if(String(u).includes('export.invalid'))return new Response('CREATE TABLE example(id TEXT);');return ok(++n===1?{status:'active',at_bookmark:'book'}:{status:'complete',result:{signed_url:'https://export.invalid/sql'}});}});
- assert.match(await c.exportSQL(db),/CREATE TABLE/);assert.equal(JSON.parse(trace[1].opts.body).current_bookmark,'book');assert.equal(trace[2].opts.headers,undefined);
+test('D1 backup only uses query API, never an export/download job',async()=>{
+ const {makeD1}=await import('../storage/helpers.mjs');const x=makeD1();try{x.db.exec('CREATE TABLE example(id TEXT);');assert.match(await x.cf.exportSQL(db),/CREATE TABLE example/);assert.ok(x.trace.some(q=>q.sql==='PRAGMA table_list'));}finally{x.close();}
 });
-test('empty exported SQL or failed polling fail closed',async()=>{const c=new Cloudflare({accountId,token:'x',fetchImpl:async u=>String(u).includes('export.invalid')?new Response(''):ok({status:'complete',result:{signed_url:'https://export.invalid/sql'}})});await assert.rejects(c.exportSQL(db),/为空/);});
+test('malformed D1 query backup response fails closed',async()=>{const c=new Cloudflare({accountId,token:'x',fetchImpl:async()=>ok({status:'complete'})});await assert.rejects(c.exportSQL(db),/ST_D1_SNAPSHOT_RESPONSE/);});
 test('schedules and settings use correct endpoint and response structure',async()=>{
  const trace=[];const c=new Cloudflare({accountId,token:'x',fetchImpl:async u=>{trace.push(u);return u.endsWith('/schedules')?ok({schedules:[{cron:'0 * * * *'}]}):ok(settings());}});assert.equal((await c.schedules('my-worker'))[0].cron,'0 * * * *');assert.equal((await c.settings('my-worker')).bindings.length,4);assert.ok(trace[1].endsWith('/scripts/my-worker/settings'));
 });

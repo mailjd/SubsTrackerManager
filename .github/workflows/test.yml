@@ -32,6 +32,7 @@ jobs:
 
       - name: Deployment routing and safety regression (local fixtures only)
         run: |
+          npm run test:storage
           npm run test:deploy
           npm run test:upgrade
 

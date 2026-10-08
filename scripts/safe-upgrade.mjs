@@ -22,8 +22,8 @@ const STATE=path.join(STATE_DIR,'state.stbackup');
 const CONFIG=path.join(ROOT,'wrangler.upgrade.json');
 function password(){const v=process.env.SUBSTRACKER_BACKUP_PASSWORD||'';if(v.length<16)throw new Error('请先设置 SUBSTRACKER_BACKUP_PASSWORD（至少16字符），加密保护完整备份；尚未修改线上数据');return v;}
 function savePrivate(file,bytes){fs.mkdirSync(path.dirname(file),{recursive:true,mode:0o700});const tmp=file+'.tmp';fs.writeFileSync(tmp,bytes,{mode:0o600});fs.renameSync(tmp,file);}
-function saveState(state){const bytes=encryptArchive(state,password());savePrivate(STATE,bytes);savePrivate(path.join(BACKUPS,state.runId+'-resume.stbackup'),bytes);}
-function loadState(){if(!fs.existsSync(STATE))throw new Error('缺少升级状态，请先执行 prepare；若恢复中断流程，请使用 resume 加密状态文件');return decryptArchive(fs.readFileSync(STATE),password());}
+export function saveState(state){const bytes=encryptArchive(state,password());savePrivate(STATE,bytes);savePrivate(path.join(BACKUPS,state.runId+'-resume.stbackup'),bytes);}
+export function loadState(){if(!fs.existsSync(STATE))throw new Error('缺少升级状态，请先执行 prepare；若恢复中断流程，请使用 resume 加密状态文件');return decryptArchive(fs.readFileSync(STATE),password());}
 function cfClient(){return new Cloudflare({accountId:process.env.CLOUDFLARE_ACCOUNT_ID,token:process.env.CLOUDFLARE_API_TOKEN});}
 export function readConfig(){ return readWranglerConfig(ROOT); }
 async function assertBindingIdentity(cf,state){
@@ -38,7 +38,7 @@ async function assertBindingIdentity(cf,state){
 }
 async function snapshot(cf,state){
   const settings=await assertBindingIdentity(cf,state);
-  const kv=await cf.snapshotKV(state.bindings.kvId);
+  const kv=await cf.snapshotKV(state.bindings.kvId,{excludePrefix:state.remoteArtifactsPrefix});
   const d1Sql=state.bindings.dbId?await cf.exportSQL(state.bindings.dbId):null;
   return {format:'substracker-full-storage',version:1,appVersion:VERSION,runId:state.runId,accountId:state.accountId,worker:state.worker,bindings:state.bindings,
     capturedAt:new Date().toISOString(),kv,d1Sql,workerSettings:settings,originalWrangler:state.originalWrangler,
@@ -62,12 +62,12 @@ async function stableBackup(cf,state,phase){
   console.log(`[upgrade] 备份通过：KV ${b.summary.kvCount} keys；订阅 ${b.summary.counts.total}；待补历史 ${b.summary.newHistory}。`);
   return {filename,manifest};
 }
-function writeGenerated(state){
+export function writeGenerated(state){
   savePrivate(CONFIG,JSON.stringify(state.config,null,2));
   savePrivate(path.join(ROOT,'src/upgrade-release.js'),`// Generated for this one verified upgrade; contains only a capability hash.\nexport const UPGRADE_RUN=Object.freeze(${JSON.stringify({version:VERSION,id:state.runId,tokenHash:crypto.createHash('sha256').update(state.token).digest('hex')})});\n`);
 }
-export async function prepare(){
-  checkDeploymentEnvironment(ROOT);
+export async function prepare(options={}){
+  checkDeploymentEnvironment(ROOT,process.env,options);
   password();const cf=cfClient(),config=readConfig();
   const settings=await cf.settings(config.name); // 404/permission errors STOP. Never create a new worker/store.
   const bindings=protectBindings(config,settings);
@@ -89,31 +89,41 @@ export async function prepare(){
   if(config.account_id&&config.account_id!==cf.accountId)throw new Error('Wrangler account_id 与当前 Token 的账号不一致');
   config.account_id=cf.accountId;
   const state={format:'substracker-upgrade-state',version:VERSION,runId:VERSION+'-'+crypto.randomUUID(),token:crypto.randomBytes(32).toString('hex'),accountId:cf.accountId,worker:config.name,url:parsed.origin,
-    bindings,resourceNames:{kv:namespace.title,d1:database?.name||null},config,originalWrangler,phase:'prepared'};
+    bindings,resourceNames:{kv:namespace.title,d1:database?.name||null},config,originalWrangler,phase:'prepared',...(options.allowWorkersBuilds?{deploymentMode:'cloudflare-split',remoteArtifactsPrefix:options.remoteArtifactsPrefix,remoteControlPrefix:options.remoteControlPrefix,sourceHash:options.sourceHash}:{})};
   const backup=await stableBackup(cf,state,'before-deploy');state.preBackup=backup;
   writeGenerated(state);saveState(state);
   console.log('[upgrade] 升级前检查与加密备份完成；原 wrangler.toml、数据库及密码/密钥均未改写。');
   return state;
 }
-async function workerCall(state,operation,body){
+export async function workerCall(state,operation,body){
   const url=state.url+'/api/upgrade/'+operation;
   const res=await fetch(url,{method:body?'POST':'GET',redirect:'error',headers:{'Cache-Control':'no-store',...(body?{'Content-Type':'application/json','X-Upgrade-Token':state.token}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(120000)});
   let data;try{data=await res.json();}catch{throw new Error('Worker 返回非 JSON；请检查域名/Access 访问权限');}
-  if(!res.ok||data.success===false)throw new Error(data.message||`Worker HTTP ${res.status}`);
+  if(!res.ok||data.success===false){const error=new Error(data.message||`Worker HTTP ${res.status}`);error.httpStatus=res.status;throw error;}
   return data;
 }
-export async function stage(){
-  assertSupportedDeploymentHost();
+export async function stage(options={}){
+  assertSupportedDeploymentHost(process.env,options);
   const state=loadState(),cf=cfClient();await assertBindingIdentity(cf,state);
   if(!state.preBackup)throw new Error('尚无升级前备份');
   if(state.applyIntent||state.applied)throw new Error('迁移已开始，禁止重建该批次基线；请执行 finish/resume，冲突核对后另开新批次');
+  if(state.phase==='prepared' && options.allowWorkersBuilds){
+    let online;
+    try{online=await workerCall(state,'status');}catch(error){if(![401,403,404].includes(error.httpStatus)&&!/非 JSON/.test(error.message))throw error;}
+    if(online?.runId===state.runId && online.maintenance){
+      state.phase='staged';state.stagedAt=Date.now();saveState(state);
+      await options.checkpoint?.(state); // Conservative 16-minute drain from first confirmed observation.
+    }else if(online?.maintenance){throw new Error('线上另一个升级尚未完成，禁止覆盖维护版本；恢复原批次');}
+  }
   if(state.phase==='prepared'){
+    await options.beforeWrite?.();
+    await options.checkpoint?.(state);
     writeGenerated(state);
     const npx=process.platform==='win32'?'npx.cmd':'npx';
     // --no-install prevents unexpectedly using a different CLI when dependencies are missing.
-    const deployed=spawnSync(npx,['--no-install','wrangler','deploy','--config',CONFIG],{cwd:ROOT,stdio:'inherit',timeout:600000,env:{...process.env,SUBSTRACKER_SAFE_DEPLOY_RUN:state.runId}});
+    const deployed=spawnSync(npx,['--no-install','wrangler','deploy','--config',CONFIG],{cwd:ROOT,stdio:'inherit',timeout:options.deployTimeoutMs?.()||600000,env:{...process.env,SUBSTRACKER_SAFE_DEPLOY_RUN:state.runId}});
     if(deployed.status!==0)throw new Error('部署命令失败；保留备份和原存储，请检查线上版本');
-    state.phase='staged';state.stagedAt=Date.now();saveState(state);
+    state.phase='staged';state.stagedAt=Date.now();saveState(state);await options.checkpoint?.(state);
   }
   let status;
   for(let n=0;n<60;n++){
@@ -124,13 +134,15 @@ export async function stage(){
   // Conservative drain for old in-flight Cron jobs. This is not a lock against external writers.
   const drainMs=16*60*1000;
   const remaining=Math.max(0,drainMs-(Date.now()-(state.stagedAt||Date.now())));
+  if(remaining && options.pauseForDrain){state.readyAfter=state.stagedAt+drainMs;saveState(state);await options.checkpoint?.(state);return state;}
   if(remaining){console.log(`[upgrade] 维护模式已确认；等待旧请求/定时任务结束，约 ${Math.ceil(remaining/60000)} 分钟。请勿从其他脚本写入数据库。`);await sleep(remaining);}
-  state.maintenanceBackup=await stableBackup(cf,state,'maintenance');state.phase='backed-up';saveState(state);
+  await options.beforeWrite?.();
+  state.maintenanceBackup=await stableBackup(cf,state,'maintenance');state.phase='backed-up';saveState(state);await options.checkpoint?.(state);
   console.log('[upgrade] 维护期备份已验证。GitHub 工作流会先保留加密附件，再执行迁移。');
   return state;
 }
-export async function finish(){
-  assertSupportedDeploymentHost();
+export async function finish(options={}){
+  assertSupportedDeploymentHost(process.env,options);
   const state=loadState(),cf=cfClient();await assertBindingIdentity(cf,state);
   if(!state.maintenanceBackup)throw new Error('缺少维护期备份，不能提交升级');
   const bytes=fs.readFileSync(path.join(BACKUPS,state.maintenanceBackup.filename));
@@ -143,13 +155,13 @@ export async function finish(){
     if(!confirmation.ready||confirmation.report?.runId!==state.runId||confirmation.report?.backupSha256!==state.maintenanceBackup.manifest.archiveSha256)throw new Error('线上完成凭证与本次备份不一致');
     if(state.preCommitVerification && state.preCommitVerification.reportDigest!==confirmation.report.reportDigest)throw new Error('线上完成摘要与本地验收不一致');
     savePrivate(path.join(BACKUPS,state.runId+'-acceptance.json'),JSON.stringify({version:VERSION,runId:state.runId,ready:true,recoveredAcknowledgement:true,serverVerification:confirmation.report,localVerification:state.preCommitVerification||null},null,2));
-    state.phase='complete';saveState(state);console.log('[upgrade] 本次升级已完成，已恢复完成凭证。');return state;
+    state.phase='complete';saveState(state);await options.checkpoint?.(state);console.log('[upgrade] 本次升级已完成，已恢复完成凭证。');return state;
   }
   let applied=state.applied;
   if(!applied && status.phase==='applied'){
     applied=await workerCall(state,'report',{});
     if(applied.report?.backupReceipt?.archiveSha256!==state.maintenanceBackup.manifest.archiveSha256)throw new Error('服务器报告与恢复的维护备份不一致');
-    state.applied=applied;state.phase='applied';saveState(state);
+    state.applied=applied;state.phase='applied';saveState(state);await options.checkpoint?.(state);
   }
   if(!applied){
     if(!state.applyIntent && status.phase==='writing'){
@@ -160,38 +172,41 @@ export async function finish(){
     const actual=await snapshot(cf,state),pre=await inspectBundle(actual);
     if(state.applyIntent){assertOriginalsPreserved(before,actual,original.image,pre.image);if(pre.summary.sourceDigest!==original.summary.sourceDigest)throw new Error('分批恢复时原始订阅来源发生变化');}
     else {
-      if(pre.summary.kvDigest!==original.summary.kvDigest||pre.summary.sqlDigest!==original.summary.sqlDigest)throw new Error('备份后存储已发生变化；请重新执行 stage 获取维护期备份，不会覆盖现有记录');
+      const {assertSameBaseline}=await import('./upgrade/split-baseline.mjs');
+      assertSameBaseline(before,actual,original,pre,state.remoteControlPrefix);
       state.applyIntent={expectedSourceDigest:original.summary.sourceDigest,backupReceipt:{runId:state.runId,verified:true,archiveSha256:state.maintenanceBackup.manifest.archiveSha256,ledgerCount:original.summary.existingHistory}};state.phase='applying';saveState(state);
     }
+    await options.checkpoint?.(state);
     let remaining=Infinity;
     for(let step=0;step<100000;step++){
+      await options.beforeWrite?.();
       applied=await workerCall(state,'apply',state.applyIntent);
       if(!applied.pending)break;
       if(!(applied.progress?.remaining<remaining))throw new Error('分批迁移未前进，已停止而不是无限重试');
       remaining=applied.progress.remaining;console.log(`[upgrade] 本批 ${applied.progress.written} 条，待处理 ${remaining} 条。`);
     }
     if(applied.pending)throw new Error('迁移分批次数超过保护上限');
-    state.applied=applied;state.phase='applied';saveState(state);
+    state.applied=applied;state.phase='applied';saveState(state);await options.checkpoint?.(state);
   }
   const after=await snapshot(cf,state),post=await inspectBundle(after);
   assertOriginalsPreserved(before,after,original.image,post.image);
   // Post-migration encrypted snapshot provides an independent restore point before unlocking.
   const postBytes=encryptArchive(after,password());const postDecoded=decryptArchive(postBytes,password());await inspectBundle(postDecoded);
   savePrivate(path.join(BACKUPS,state.runId+'-after-migration.stbackup'),postBytes);
-  state.preCommitVerification={reportDigest:applied.reportDigest,originalsVerified:true,restoreVerified:true,postArchiveSha256:crypto.createHash('sha256').update(postBytes).digest('hex')};state.phase='verified';saveState(state);
+  state.preCommitVerification={reportDigest:applied.reportDigest,originalsVerified:true,restoreVerified:true,postArchiveSha256:crypto.createHash('sha256').update(postBytes).digest('hex')};state.phase='verified';saveState(state);await options.checkpoint?.(state);await options.beforeWrite?.();
   const committed=await workerCall(state,'commit',{reportDigest:applied.reportDigest,originalsVerified:true,restoreVerified:true});
   if(!committed.ready)throw new Error('服务器没有确认升级完成');
   const finalStatus=await workerCall(state,'status');if(finalStatus.maintenance||finalStatus.runId!==state.runId)throw new Error('验收后维护状态异常');
   const report={version:VERSION,runId:state.runId,ready:true,bindingsPreserved:true,originalsVerified:true,restoreVerified:true,backup:state.maintenanceBackup.manifest,
     migration:applied.report,completedAt:new Date().toISOString()};
-  savePrivate(path.join(BACKUPS,state.runId+'-acceptance.json'),JSON.stringify(report,null,2));state.phase='complete';saveState(state);
+  savePrivate(path.join(BACKUPS,state.runId+'-acceptance.json'),JSON.stringify(report,null,2));state.phase='complete';saveState(state);await options.checkpoint?.(state);
   console.log('[upgrade] 升级完成：原始记录逐项保留、历史补齐、加密备份还原与原绑定核验均通过。');
   console.log('[upgrade] 加密备份与验收报告目录：upgrade-backups/（请保留备份密码，勿提交备份文件到 Git）。');
   return state;
 }
 async function main(){
   const cmd=process.argv[2]||'all';
-  if(cmd==='--help'||cmd==='help'){console.log('prepare → stage → finish；或 all。resume <加密恢复状态文件> 继续中断升级。先执行 npm run deploy:check；Cloudflare Git 直连请先阅读 CLOUDFLARE_DEPLOY_FIX_3.3.21.md。详见 SAFE_UPGRADE_3.3.21.md。');return;}
+  if(cmd==='--help'||cmd==='help'){console.log('prepare → stage → finish；或 all。resume <加密恢复状态文件> 继续中断升级。先执行 npm run deploy:check；Cloudflare Git 直连请先阅读 CLOUDFLARE_SPLIT_DEPLOY_3.3.23.md。详见 SAFE_UPGRADE_3.3.23.md。');return;}
   assertSupportedDeploymentHost();
   if(cmd==='prepare')await prepare();
   else if(cmd==='stage')await stage();

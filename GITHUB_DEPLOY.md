@@ -1,15 +1,9 @@
-# GitHub / Cloudflare 發布入口
+# v3.3.23 GitHub Actions（可選長流程）
 
-當前版本：3.3.21。
+一般Cloudflare Git直連繼續使用`npm run deploy:cloudflare`，不必切換發布器。
 
-**操作步驟：`CLOUDFLARE_DEPLOY_FIX_3.3.21.md`。**
+要使用GitHub長流程時，在原repo的Actions選Safe upgrade手動執行；保留原Cloudflare憑證、資源ID及備份密碼，不與Cloudflare發布並行。流程保留D1＋KV核對、完整測試、加密備份、維護等待、驗收與恢復附件。
 
-在原 GitHub 儲存庫建立三個 Repository Secrets：`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`SUBSTRACKER_BACKUP_PASSWORD`；核對原 `SUBSTRACKER_WORKER_NAME`，自訂網域設定 `SUBSTRACKER_WORKER_URL`。
+D1來源改為query-only，不需要R2。此可選工作流仍把加密備份另存GitHub Actions artifacts（CI附件而非業務資料庫）；Cloudflare原生分階段入口則把恢復檢查點放在原KV／D1。
 
-Cloudflare 原 Worker → Settings → Builds → Disconnect（只斷開 Git 連線）。保留原 Worker/KV/D1；停用其他同時發布器。
-
-解壓後更新專案根目錄，包括 `.github/workflows/deploy.yml`，保留原 Wrangler 專屬設定。原 repo Actions → Safe upgrade → Run workflow；只看 Test 工作流成功不等於已部署。
-
-本 workflow 維持必要測試、備份上傳後才部署、16分鐘等待、逐項驗收與失敗恢復附件。不要刪除 guard 或改回 raw `npx wrangler deploy`。
-
-完整流程與復原：`SAFE_UPGRADE_3.3.21.md`。
+見 `SAFE_UPGRADE_3.3.23.md` 及 `D1_KV_ONLY_3.3.23.md`。原Secret不要貼到聊天或寫入Git。

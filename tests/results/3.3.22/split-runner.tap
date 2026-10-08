@@ -1,0 +1,54 @@
+TAP version 13
+# (node:1558) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Cloudflare first build really passes guard, remains closed, persists encrypted recovery; fresh second build unlocks once
+ok 1 - Cloudflare first build really passes guard, remains closed, persists encrypted recovery; fresh second build unlocks once
+  ---
+  duration_ms: 15167.064253
+  type: 'test'
+  ...
+# Subtest: test failure stops before lease, artifact upload or Worker deployment
+ok 2 - test failure stops before lease, artifact upload or Worker deployment
+  ---
+  duration_ms: 1329.204173
+  type: 'test'
+  ...
+# Subtest: wrong backup password on a fresh Build cannot create a replacement run
+ok 3 - wrong backup password on a fresh Build cannot create a replacement run
+  ---
+  duration_ms: 7305.014236
+  type: 'test'
+  ...
+# Subtest: changed code while maintenance is active is rejected rather than silently starting another run
+ok 4 - changed code while maintenance is active is rejected rather than silently starting another run
+  ---
+  duration_ms: 7525.432558
+  type: 'test'
+  ...
+# Subtest: lost apply acknowledgement resumes from durable checkpoint in a new Build
+ok 5 - lost apply acknowledgement resumes from durable checkpoint in a new Build
+  ---
+  duration_ms: 13553.603267
+  type: 'test'
+  ...
+# Subtest: lost commit acknowledgement recovers without remigrating or reopening a new run
+ok 6 - lost commit acknowledgement recovers without remigrating or reopening a new run
+  ---
+  duration_ms: 13666.888597
+  type: 'test'
+  ...
+# Subtest: lost Wrangler acknowledgement detects actual maintenance version without duplicate upload and restarts conservative drain
+ok 7 - lost Wrangler acknowledgement detects actual maintenance version without duplicate upload and restarts conservative drain
+  ---
+  duration_ms: 13237.713162
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 71867.504513

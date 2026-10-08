@@ -17,7 +17,7 @@ export async function createAccountDatabaseBackup(env, options = {}) {
   const db = env.SUBSCRIPTIONS_DB;
   const [accountsResult, credentialsResult] = await Promise.all([
     db.prepare(`SELECT account_serial, account, password_encrypted, source_subscription_id,
-      created_at, updated_at, real_name, account_type
+      created_at, updated_at, real_name, account_type, owner_type
       FROM accounts ORDER BY account_serial COLLATE NOCASE ASC, account COLLATE NOCASE ASC`).all(),
     db.prepare(`SELECT c.account, a.account_serial, c.credential_type, c.password_encrypted, c.created_at, c.updated_at
       FROM account_credentials c
@@ -124,13 +124,13 @@ export async function restoreAccountDatabaseSnapshot(env, snapshot) {
       await db.prepare(`
         INSERT INTO accounts (
           account, account_serial, password_encrypted, source_subscription_id,
-          created_at, updated_at, real_name, account_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          created_at, updated_at, real_name, account_type, owner_type
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
         String(row.account || ''), String(row.account_serial || ''), String(row.password_encrypted || ''),
         row.source_subscription_id ? String(row.source_subscription_id) : null,
         String(row.created_at || nowIso()), String(row.updated_at || nowIso()),
-        String(row.real_name || ''), String(row.account_type || '')
+        String(row.real_name || ''), String(row.account_type || ''), String(row.owner_type || '')
       ).run();
     }
 

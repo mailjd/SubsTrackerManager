@@ -1,3 +1,4 @@
+import { handleSubscriptionHistory } from './handlers/subscription-history.js';
 import { handleLogin, handleLogout, getUserFromRequest } from './handlers/auth.js';
 import { handleGetConfig, handleUpdateConfig } from './handlers/config.js';
 import { handleDashboardStats } from './handlers/dashboard.js';
@@ -63,6 +64,9 @@ async function handleApiRequest(request, env) {
   // 新增路由：提醒规则 / 通知日志 / 调度日志（提醒规则 / 通知日志 / 调度日志）
   const extraResponse = await handleExtraRoutes(request, env, path);
   if (extraResponse) return extraResponse;
+
+  const historyResponse = await handleSubscriptionHistory(request, env, path);
+  if (historyResponse) return historyResponse;
 
   const accountsResponse = await handleAccounts(request, env, path);
   if (accountsResponse) return accountsResponse;

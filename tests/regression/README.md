@@ -1,4 +1,4 @@
-# Table save regression suite (3.3.18)
+# SubsTracker table/workflow regression (3.3.19)
 
 ## Scope
 
@@ -52,3 +52,14 @@ reported as unconfirmed, not rolled back or falsely marked successful.
 
 The existing calendar overflow / end-of-month policy is unchanged by this fix.
 Automatic expiry recalculation is tested independently from implicit renewal.
+
+## New 3.3.19 workflows
+
+```sh
+npm run test:workflow
+python3 tests/regression/workflow-browser3319.py .
+```
+
+These use new temporary output directories by default and return a nonzero exit status on failure. Explicit output folders must be fresh. They cover new membership upserts, immutable history, imports/retries, renewal history, account ownership/sequences, foundation options, templates, filters, backup preflight and dashboard placement. The generic save suites remain unchanged in purpose.
+
+Current results are in `results/`; previous release evidence is preserved under `results/v3.3.18/`. Full Workers Vitest is not replaced by these adapters.

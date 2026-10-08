@@ -33,8 +33,8 @@ class Server:
         try:r=self.op.open(req,timeout=15)
         except urllib.error.HTTPError as e:r=e
         return r.status,json.loads(r.read())
-    def patch(self,changes,id='row-a',client='3.3.18'):
-        return self.call(f'/api/subscriptions/{id}/table-edit',{'changes':changes,'clientVersion':client},'PATCH')
+    def patch(self,changes,id='row-a',client=None):
+        return self.call(f'/api/subscriptions/{id}/table-edit',{'changes':changes,'clientVersion':client or json.loads((ROOT/'package.json').read_text())['version']},'PATCH')
     def raw(self,id='row-a'):return json.loads(json.loads((self.state/'kv.json').read_text())['sub:'+id])
     def d1(self,id='row-a'):
         with sqlite3.connect(self.state/'d1.sqlite') as db:return json.loads(db.execute('select data_json from subscriptions_current where id=?',(id,)).fetchone()[0])

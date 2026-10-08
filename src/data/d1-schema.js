@@ -1,13 +1,12 @@
 // @ts-check
 /**
- * D1 运行时兜底建表。
- *
- * 正常部署仍应执行 migrations；这里用于 Cloudflare Git 直连部署、
- * 手动 wrangler deploy 或迁移遗漏时自动补齐基础表，避免页面直接报
- * "no such table"。所有语句均为 CREATE ... IF NOT EXISTS，可重复执行。
+ * D1 schema helpers. Safe upgrades are gated by backup/preflight before this is called.
+ * Existing modern installations use additive schema checks only. Legacy schema fallback
+ * remains for isolated tests/old code paths, but is refused by the production upgrade gate.
+ * Do not run legacy migration SQL or raw Wrangler deployment to bypass the safe runner.
  */
 
-let schemaReadyPromise = null;
+const schemaReadyPromises = new WeakMap();
 
 /** @param {any} env */
 export function hasD1Binding(env) {
@@ -17,10 +16,30 @@ export function hasD1Binding(env) {
 /** @param {any} env */
 export async function ensureD1Schema(env) {
   if (!hasD1Binding(env)) return false;
-  if (schemaReadyPromise) return schemaReadyPromise;
+  if (schemaReadyPromises.has(env.SUBSCRIPTIONS_DB)) return schemaReadyPromises.get(env.SUBSCRIPTIONS_DB);
 
-  schemaReadyPromise = (async () => {
+  const schemaReadyPromise = (async () => {
     const db = env.SUBSCRIPTIONS_DB;
+    // Modern existing installations: avoid dozens of redundant CREATE queries per cold Worker.
+    const tables=new Set((await db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results.map(r=>r.name));
+    const core=['schema_meta','subscriptions_current','subscription_history','accounts','account_credentials','account_history','menu_option_groups','menu_options','account_database_backups'];
+    if(core.every(name=>tables.has(name))){
+      const accountInfo=(await db.prepare('PRAGMA table_info(accounts)').all()).results;
+      const credentialInfo=(await db.prepare('PRAGMA table_info(account_credentials)').all()).results;
+      const columns=new Set(accountInfo.map(r=>r.name));
+      if(accountInfo.some(r=>r.name==='account'&&Number(r.pk)>0)&&!credentialInfo.some(r=>r.name==='account_serial')&&columns.has('real_name')&&columns.has('account_type')){
+        if(!columns.has('owner_type')){
+          await db.prepare("ALTER TABLE accounts ADD COLUMN owner_type TEXT NOT NULL DEFAULT ''").run();
+          await db.prepare("UPDATE accounts SET owner_type=CASE WHEN account_serial LIKE '公司%' THEN '公司' WHEN account_serial LIKE '个人%' OR account_serial LIKE '個人%' THEN '个人' ELSE '' END WHERE owner_type='' ").run();
+        }
+        if(!tables.has('subscription_ledger'))await db.batch([
+          db.prepare("CREATE TABLE IF NOT EXISTS subscription_ledger(entry_id TEXT PRIMARY KEY,subscription_id TEXT NOT NULL,source TEXT NOT NULL,occurred_at TEXT NOT NULL,created_at TEXT NOT NULL,snapshot_json TEXT NOT NULL,input_hash TEXT NOT NULL DEFAULT '')"),
+          db.prepare('CREATE INDEX IF NOT EXISTS idx_subscription_ledger_time ON subscription_ledger(occurred_at DESC,entry_id)'),
+          db.prepare('CREATE INDEX IF NOT EXISTS idx_subscription_ledger_sub ON subscription_ledger(subscription_id)')
+        ]);
+        return true;
+      }
+    }
     const statements = [
       db.prepare(`CREATE TABLE IF NOT EXISTS schema_meta (
         key TEXT PRIMARY KEY,
@@ -184,6 +203,11 @@ export async function ensureD1Schema(env) {
       try { await db.prepare("ALTER TABLE accounts ADD COLUMN real_name TEXT NOT NULL DEFAULT ''").run(); }
       catch (error) { if (!String(error?.message || error).toLowerCase().includes('duplicate column')) throw error; }
     }
+    if (!columns.has('owner_type')) {
+      try { await db.prepare("ALTER TABLE accounts ADD COLUMN owner_type TEXT NOT NULL DEFAULT ''").run(); }
+      catch (error) { if (!String(error?.message || error).toLowerCase().includes('duplicate column')) throw error; }
+      await db.prepare("UPDATE accounts SET owner_type=CASE WHEN account_serial LIKE '公司%' THEN '公司' WHEN account_serial LIKE '个人%' OR account_serial LIKE '個人%' THEN '个人' ELSE '' END WHERE owner_type=''").run();
+    }
     if (!columns.has('account_type')) {
       try { await db.prepare("ALTER TABLE accounts ADD COLUMN account_type TEXT NOT NULL DEFAULT ''").run(); }
       catch (error) { if (!String(error?.message || error).toLowerCase().includes('duplicate column')) throw error; }
@@ -192,6 +216,13 @@ export async function ensureD1Schema(env) {
       db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_account ON accounts(account)'),
       db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_serial_unique_except_voice_supplier ON accounts(account_serial) WHERE account_serial <> '配音供应商'"),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_account_serial ON accounts(account_serial)'),
+      db.prepare(`CREATE TABLE IF NOT EXISTS subscription_ledger (
+        entry_id TEXT PRIMARY KEY, subscription_id TEXT NOT NULL, source TEXT NOT NULL,
+        occurred_at TEXT NOT NULL, created_at TEXT NOT NULL, snapshot_json TEXT NOT NULL,
+        input_hash TEXT NOT NULL DEFAULT ''
+      )`),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_subscription_ledger_time ON subscription_ledger(occurred_at DESC, entry_id)'),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_subscription_ledger_sub ON subscription_ledger(subscription_id)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_real_name ON accounts(real_name)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_accounts_account_type ON accounts(account_type)'),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_account_credentials_type ON account_credentials(credential_type)'),
@@ -202,10 +233,11 @@ export async function ensureD1Schema(env) {
     ]);
     return true;
   })().catch((error) => {
-    schemaReadyPromise = null;
+    schemaReadyPromises.delete(env.SUBSCRIPTIONS_DB);
     console.error('[d1] 运行时初始化数据库结构失败:', error);
     throw error;
   });
 
+  schemaReadyPromises.set(env.SUBSCRIPTIONS_DB, schemaReadyPromise);
   return schemaReadyPromise;
 }

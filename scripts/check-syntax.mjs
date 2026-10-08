@@ -1,0 +1,5 @@
+import fs from 'node:fs';import path from 'node:path';import os from 'node:os';import {spawnSync} from 'node:child_process';
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'subs-syntax-'));let checked=0,failed=0;
+function check(file,original){const r=spawnSync(process.execPath,['--check',file],{encoding:'utf8'});checked++;if(r.status!==0){failed++;console.error(original+'\n'+r.stderr);}}
+function scan(dir){for(const d of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,d.name);if(d.isDirectory())scan(p);else if(/\.(?:js|cjs|mjs)$/.test(p))check(p,p);else if(p.endsWith('.html')){let n=0;for(const match of fs.readFileSync(p,'utf8').matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){if(/\bsrc\s*=|application\/(?:ld\+)?json/i.test(match[1])||!match[2].trim())continue;const file=path.join(temp,(checked+1)+'.js');fs.writeFileSync(file,match[2]);check(file,p+'#script-'+(++n));}}}}
+try{for(const dir of ['src','scripts'])scan(dir);console.log(JSON.stringify({checked,passed:checked-failed,failed}));process.exitCode=failed?1:0;}finally{fs.rmSync(temp,{recursive:true,force:true});}

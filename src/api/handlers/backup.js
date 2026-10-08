@@ -1,3 +1,5 @@
+import {collectSubscriptionInventory,sha256} from '../../data/upgrade-reconcile.js';
+import {ensureLedgerSeed,allLedgerEntries,restoreLedgerEntries,validateLedgerRestore,buildLegacyLedgerEntries} from '../../data/subscription-ledger.js';
 // @ts-check
 /**
  * 配置与数据备份 / 恢复
@@ -23,7 +25,7 @@ import { syncCurrentSubscriptions } from '../../data/subscription-history.repo.j
 import { listAllRaw as listAllAccountsRaw, restoreAccounts, syncFromSubscription } from '../../data/accounts.repo.js';
 
 const BACKUP_FORMAT = 'substracker-backup';
-const BACKUP_VERSION = 5;
+const BACKUP_VERSION = 7;
 
 /** 永不导出/覆盖的字段 */
 const NEVER_EXPORT_FIELDS = ['JWT_SECRET', 'ADMIN_PASSWORD', 'CREDENTIALS_ENCRYPTION_KEY', 'SUPERADMIN_PASSWORD_HASH'];
@@ -79,14 +81,19 @@ export async function handleExportBackup(request, env) {
     const config = await getConfig(env);
     const categories = await getCategories(env);
     const menuOptions = await getMenuOptions(env);
-    const subscriptions = await subRepo.listAll(env);
+    await ensureLedgerSeed(env);
+    const inventory = await collectSubscriptionInventory(env);
+    const subscriptions = inventory.current; // no membership filter; includes legacy non-member records
+    const subscriptionLedger = await allLedgerEntries(env, {includeSuperseded:true});
+    const tableTemplates = {};
+    for(const scope of ['subscription','database','base']) {const raw=await env.SUBSCRIPTIONS_KV.get(`ui:${scope}_table_templates:v1`);tableTemplates[scope]=raw?JSON.parse(raw):[];}
 
     /** @type {Record<string, any[]>} */
     const reminderRules = {};
     for (const sub of subscriptions) {
       if (!sub || !sub.id) continue;
-      let rules = await remindersRepo.listForSubscription(env, sub.id);
-      if (rules.length === 0) {
+      let rules = Array.isArray(sub.reminderRules) ? sub.reminderRules : await remindersRepo.listForSubscription(env, sub.id);
+      if (!Array.isArray(sub.reminderRules) && rules.length === 0) {
         rules = [remindersRepo.legacyFieldToRule(sub)];
       }
       reminderRules[sub.id] = rules;
@@ -142,9 +149,15 @@ export async function handleExportBackup(request, env) {
       categories,
       menuOptions,
       subscriptions: cleanSubs,
+      subscriptionLedger,
+      tableTemplates,
       accounts: cleanAccounts,
-      reminderRules
+      reminderRules,
+      coverage: {kind:'application-backup',allStorageKeys:false,passwordsIncluded:includeSecrets,
+        sourceDigest:inventory.sourceDigest,counts:inventory.counts,
+        notice:'完整升级/回滚请使用 safe-upgrade 加密存储备份；普通 JSON 不含 JWT/加密密钥/原始审计表。'}
     };
+    backup.integrity={algorithm:'SHA-256',payloadDigest:await sha256(backup)};
 
     return new Response(JSON.stringify(backup, null, 2), {
       status: 200,
@@ -207,6 +220,7 @@ function validateBackup(raw) {
     const err = validateSubscriptionEntry(raw.subscriptions[i], i);
     if (err) return { ok: false, message: err };
   }
+  if(raw.subscriptionLedger != null && !Array.isArray(raw.subscriptionLedger)) return {ok:false,message:'subscriptionLedger 必须是数组'};
   if (raw.menuOptions != null && (typeof raw.menuOptions !== 'object' || Array.isArray(raw.menuOptions))) {
     return { ok: false, message: 'menuOptions 必须是对象' };
   }
@@ -218,6 +232,7 @@ function validateBackup(raw) {
       const item = raw.accounts[i];
       if (!item || typeof item !== 'object') return { ok: false, message: `accounts[${i}] 不是对象` };
       if (!String(item.accountSerial || '').trim()) return { ok: false, message: `accounts[${i}] 缺少账号序号` };
+      if(item.ownerType && !['公司','个人','個人'].includes(item.ownerType))return {ok:false,message:`accounts[${i}] 公/私无效`};
       if (!String(item.account || '').trim()) return { ok: false, message: `accounts[${i}] 缺少账号` };
     }
   }
@@ -281,11 +296,18 @@ export async function handleImportBackup(request, env) {
     const mode = body && body.mode === 'replace' ? 'replace' : 'merge';
     const includeSecrets = !!(body && body.includeSecrets);
 
+    if (rawBackup?.integrity) {
+      const {integrity,...payload}=rawBackup;
+      if(integrity.algorithm!=='SHA-256'||integrity.payloadDigest!==await sha256(payload))return json({success:false,message:'备份校验码不匹配，未写入任何数据'},400);
+    } else if(Number(rawBackup?.version)>=7) return json({success:false,message:'新版备份缺少完整性校验信息'},400);
     const validated = validateBackup(rawBackup);
     if (!validated.ok) {
       return json({ success: false, message: /** @type {any} */ (validated).message }, 400);
     }
     const backup = /** @type {any} */ (validated).backup;
+    const importedLegacyPreflight = Array.isArray(backup.subscriptionLedger) ? backup.subscriptionLedger : await buildLegacyLedgerEntries(backup.subscriptions);
+    try { await validateLedgerRestore(env, importedLegacyPreflight); }
+    catch(e) { return json({success:false,message:e.message},400); }
 
     // 先读取当前配置：订阅密码必须使用目标环境自己的密钥重新加密。
     const currentConfig = await getConfig(env);
@@ -349,6 +371,7 @@ export async function handleImportBackup(request, env) {
           account,
           realName: String(rawAccount.realName || ''),
           accountType: String(rawAccount.accountType || ''),
+          ownerType: String(rawAccount.ownerType || ''),
           credentialsEncrypted,
           legacyPasswordEncrypted,
           sourceSubscriptionId: String(rawAccount.sourceSubscriptionId || '')
@@ -413,7 +436,7 @@ export async function handleImportBackup(request, env) {
     for (const sub of incomingSubs) {
       let rules = Array.isArray(rulesMap[sub.id]) ? rulesMap[sub.id] : null;
       if (!rules && Array.isArray(sub.reminderRules)) rules = sub.reminderRules;
-      if (rules && rules.length > 0) {
+      if (Array.isArray(rules)) {
         const normalized = rules.map((r) => remindersRepo.normalizeRule(r));
         await remindersRepo.replaceForSubscription(env, sub.id, normalized);
         importedRules += normalized.length;
@@ -447,13 +470,23 @@ export async function handleImportBackup(request, env) {
       } else {
         const currentMenus = await getMenuOptions(env);
         const mergedMenus = {};
-        for (const key of ['subscriptionNames', 'subscriptionTypes', 'categories']) {
+        for (const key of ['subscriptionNames', 'subscriptionTypes', 'categories', 'memberLevels', 'users', 'accountTypes']) {
           const currentList = Array.isArray(currentMenus[key]) ? currentMenus[key] : [];
           const incomingList = Array.isArray(backup.menuOptions[key]) ? backup.menuOptions[key] : [];
           mergedMenus[key] = [...new Set([...currentList, ...incomingList].map((item) => String(item || '').trim()).filter(Boolean))];
         }
         await setMenuOptions(env, mergedMenus);
       }
+    }
+
+    // Immutable history is merged even when current subscriptions are replaced.
+    // Same IDs are idempotent; conflicting history is rejected rather than overwritten.
+    const importedLedger=await restoreLedgerEntries(env,importedLegacyPreflight);
+    for(const scope of ['subscription','database','base']){
+      const incoming=backup.tableTemplates?.[scope];if(!Array.isArray(incoming))continue;
+      const key=`ui:${scope}_table_templates:v1`,raw=await env.SUBSCRIPTIONS_KV.get(key),old=raw?JSON.parse(raw):[];
+      const combined=mode==='replace'?incoming:[...old,...incoming.filter(t=>!old.some(o=>o.id===t.id||o.name===t.name))];
+      await env.SUBSCRIPTIONS_KV.put(key,JSON.stringify(combined.slice(0,5)));
     }
 
     // 配置放最后
@@ -467,6 +500,7 @@ export async function handleImportBackup(request, env) {
       message: `恢复完成（模式: ${mode === 'replace' ? '覆盖' : '合并'}）`,
       stats: {
         subscriptions: importedSubs,
+        history: importedLedger,
         accounts: importedAccounts,
         reminderRules: importedRules,
         categories: Array.isArray(backup.categories) ? backup.categories.length : 0,

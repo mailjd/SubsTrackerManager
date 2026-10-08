@@ -1,3 +1,4 @@
+import { VERSION } from '../../src/version.js';
 // @ts-check
 /**
  * 提醒规则 / 通知日志 / 调度日志 路由测试
@@ -248,7 +249,7 @@ describe('GET /api/version', () => {
     const res = await app.request('/api/version', { headers: { Cookie: cookie } }, env);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.version).toBe('3.0.0');
+    expect(body.version).toBe(VERSION);
   });
 });
 

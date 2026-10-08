@@ -46,6 +46,9 @@
           <a href="/admin" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition">
             <i class="fas fa-list mr-1"></i>订阅记录
           </a>
+<a href="/admin/history" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition">
+            <i class="fas fa-history mr-1"></i>订阅历史
+          </a>
           <a href="/admin/database" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition">
             <i class="fas fa-database mr-1"></i>Database
           </a>
@@ -77,6 +80,9 @@
         </a>
         <a href="/admin" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100 transition-colors">
           <i class="fas fa-list w-6 text-center mr-2"></i>订阅记录
+        </a>
+<a href="/admin/history" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100 transition-colors">
+          <i class="fas fa-history w-6 text-center mr-2"></i>订阅历史
         </a>
         <a href="/admin/database" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100 transition-colors">
           <i class="fas fa-database w-6 text-center mr-2"></i>Database
@@ -477,5 +483,5 @@
       await Promise.all([loadLogs(), loadSchedLogs()]);
     })();
   </script>
-</body>
+<script>document.querySelectorAll('nav a[href]').forEach(a=>{a.setAttribute('aria-current',a.getAttribute('href')===location.pathname?'page':'false');});</script></body>
 </html>

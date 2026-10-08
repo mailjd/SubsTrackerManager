@@ -84,7 +84,7 @@ async def main():
             tamper.update(version=False,ack=False)
             await call('/__test__/controls',{'failPatch':False,'failIds':[],'delayPatch':0,'dropWrites':False,'dropD1Writes':False,'dropReminderWrites':False,'staleReads':False})
             for id in ['row-a','row-b']:
-                status,r=await call('/api/subscriptions/'+id+'/table-edit',{'clientVersion':'3.3.18','changes':{'name':'Row '+id[-1],'notes':'Original note','customType':'开会员','category':'Test','expiryDate':'2030-10-25','startDate':'2030-09-25','periodValue':1,'periodUnit':'month','currency':'CNY','memberLevel':'Pro'}},'PATCH');eq(status,200)
+                status,r=await call('/api/subscriptions/'+id+'/table-edit',{'clientVersion':json.loads((ROOT/'package.json').read_text())['version'],'changes':{'name':'Row '+id[-1],'notes':'Original note','customType':'开会员','category':'Test','expiryDate':'2030-10-25','startDate':'2030-09-25','periodValue':1,'periodUnit':'month','currency':'CNY','memberLevel':'Pro'}},'PATCH');eq(status,200)
             await new_page()
         async def scenario(name,fn):
             try:

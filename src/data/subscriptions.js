@@ -1,3 +1,5 @@
+import {collectSubscriptionInventory} from './upgrade-reconcile.js';
+import { ensureLedgerSeed, isMembership, makeLedgerEntry, hashInput, commitLedgerAndCurrent } from './subscription-ledger.js';
 // 注：本文件暂不启用 // @ts-check，因 lunar 库返回类型分支较多，类型清理推迟到后续 Task。
 /**
  * 订阅业务层
@@ -140,18 +142,8 @@ function chooseNewerSubscriptionSnapshot(kvValue, d1Value) {
 async function getAllSubscriptions(env) {
   try {
     const { listForSubscription, formatRulesSummary, legacyFieldToRule } = await import('./reminders.repo.js');
-    let subs = await subRepo.listAll(env);
-    // Cloudflare KV 为最终一致性。部署在多个边缘节点时，刚保存后重新 GET 可能短暂读到旧值。
-    // 若已绑定 D1，用较新的 current 快照覆盖同 ID 的 KV 旧快照，保证表格保存后刷新仍读取已持久化值。
-    try {
-      const d1Rows = await listCurrentSubscriptionSnapshots(env);
-      if (d1Rows.length) {
-        const d1ById = new Map(d1Rows.map((item) => [String(item.id || ''), item]));
-        subs = subs.map((item) => chooseNewerSubscriptionSnapshot(item, d1ById.get(String(item.id || ''))));
-      }
-    } catch (error) {
-      console.warn('[subscriptions] D1 当前快照协调失败，继续使用 KV:', error?.message || error);
-    }
+    let subs = (await collectSubscriptionInventory(env)).current;
+    subs = subs.filter(isMembership);
     return Promise.all(
       subs.map(async (sub) => {
         const hasSnapshotRules = Array.isArray(sub.reminderRules);
@@ -168,7 +160,7 @@ async function getAllSubscriptions(env) {
     );
   } catch (error) {
     console.error('[subscriptions] 读取列表失败:', error);
-    return [];
+    throw error; // an incomplete read is not an empty database
   }
 }
 
@@ -248,7 +240,7 @@ async function createSubscription(subscription, env, options = {}) {
     const effectivePeriodUnit = subscription.periodUnit || 'month';
     const isSinglePeriod = effectivePeriodUnit === 'single';
     let useLunar = !isSinglePeriod && !!subscription.useLunar;
-    if (useLunar) {
+    if (useLunar && !options.preserveEnteredDates) {
       const expiryParts = getTimezoneDateParts(expiryDate, timezone);
       let lunar = lunarCalendar.solar2lunar(
         expiryParts.year,
@@ -257,7 +249,7 @@ async function createSubscription(subscription, env, options = {}) {
       );
 
       if (lunar && subscription.periodValue && subscription.periodUnit) {
-        while (getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight) {
+        while (!options.preserveEnteredDates && getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight) {
           lunar = lunarBiz.addLunarPeriod(lunar, subscription.periodValue, effectivePeriodUnit);
           const solar = lunarBiz.lunar2solar(lunar);
           expiryDate = buildTimezoneDate(solar.year, solar.month, solar.day, timezone);
@@ -265,7 +257,7 @@ async function createSubscription(subscription, env, options = {}) {
       }
     } else {
       if (!isSinglePeriod && getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight && subscription.periodValue && effectivePeriodUnit) {
-        while (getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight) {
+        while (!options.preserveEnteredDates && getTimezoneMidnightTimestamp(expiryDate, timezone) < todayMidnight) {
           const endOfMonth = !!subscription.endOfMonth && !useLunar;
           expiryDate = addCalendarPeriodInTimezone(
             expiryDate,
@@ -287,7 +279,7 @@ async function createSubscription(subscription, env, options = {}) {
 
     const initialPaymentDate = normalizedStartDate || createdAtIso;
     const newSubscription = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       name: subscription.name,
       subscriptionMode: subscription.subscriptionMode || 'cycle',
       customType: subscription.customType || '',
@@ -320,7 +312,7 @@ async function createSubscription(subscription, env, options = {}) {
         subscription.amount !== undefined && subscription.amount !== null
           ? [
               {
-                id: Date.now().toString(),
+                id: crypto.randomUUID(),
                 date: initialPaymentDate,
                 amount: subscription.amount,
                 currency: subscription.currency || 'CNY',
@@ -332,7 +324,7 @@ async function createSubscription(subscription, env, options = {}) {
             ]
           : [],
       isActive: subscription.isActive !== false,
-      autoRenew: isSinglePeriod ? false : subscription.autoRenew !== false,
+      autoRenew: isSinglePeriod ? false : subscription.autoRenew !== undefined ? !!subscription.autoRenew : (subscription.subscriptionMode || 'cycle') === 'cycle',
       useLunar: useLunar,
       createdAt: createdAtIso,
       updatedAt: createdAtIso
@@ -347,6 +339,7 @@ async function createSubscription(subscription, env, options = {}) {
       }
     }
 
+    if (options.prepareOnly) return {success:true,subscription:newSubscription};
     await subRepo.save(env, newSubscription);
     await syncFromSubscription(env, newSubscription, {
       action: options.historyAction === 'import' ? 'subscription_import' : 'subscription_create',
@@ -627,6 +620,8 @@ async function deleteSubscription(id, env) {
  */
 async function manualRenewSubscription(id, env, options = {}) {
   try {
+    // Preserve legacy payments before first direct renewal can replace its current snapshot.
+    await ensureLedgerSeed(env);
     const subscription = await subRepo.getById(env, id);
     if (!subscription) return { success: false, message: '订阅不存在' };
 
@@ -706,7 +701,8 @@ async function manualRenewSubscription(id, env, options = {}) {
       updatedAt: now.utc.toISOString()
     };
 
-    await subRepo.save(env, updated);
+    const idempotentRenewalId='manual-renew:'+updated.id+':'+updated.expiryDate;
+    await commitLedgerAndCurrent(env,[makeLedgerEntry(updated,{id:idempotentRenewalId,source:'manual_renew',occurredAt:updated.startDate,inputHash:await hashInput({id:idempotentRenewalId})})],{...updated,workflowVersion:3319});
     await recordSubscriptionChange(env, 'renew', updated, {
       paymentDate: paymentDate.toISOString(),
       periodMultiplier

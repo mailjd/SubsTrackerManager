@@ -1,19 +1,27 @@
 {
   "name": "subscription-manager",
-  "version": "3.3.18",
+  "version": "3.3.20",
   "description": "订阅管理系统 - 基于 Cloudflare Workers + Hono",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "build": "echo 'No build step required for Workers runtime'",
     "setup": "node scripts/setup-kv.cjs",
-    "deploy": "npx wrangler deploy",
-    "deploy:safe": "npm run setup && npm run deploy",
+    "deploy": "node scripts/safe-upgrade.mjs all",
+    "deploy:safe": "node scripts/safe-upgrade.mjs all",
     "lint": "tsc --noEmit -p jsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "setup:local-d1": "npx wrangler d1 migrations apply subscription-manager-dev --local --config wrangler.dev.toml",
-    "test:table-contract": "node --test tests/regression/contract.node.mjs"
+    "test:table-contract": "node --test tests/regression/contract.node.mjs",
+    "test:workflow": "python3 tests/regression/workflow3319.py .",
+    "upgrade:prepare": "node scripts/safe-upgrade.mjs prepare",
+    "upgrade:stage": "node scripts/safe-upgrade.mjs stage",
+    "upgrade:finish": "node scripts/safe-upgrade.mjs finish",
+    "upgrade:resume": "node scripts/safe-upgrade.mjs resume",
+    "backup:verify": "node scripts/inspect-upgrade-backup.mjs",
+    "test:upgrade": "node --test tests/upgrade/*.test.mjs",
+    "test:syntax": "node scripts/check-syntax.mjs"
   },
   "dependencies": {
     "hono": "^4.6.14"

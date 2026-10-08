@@ -11,7 +11,8 @@ name = "subscription-manager"
 [env.staging]
 name = "subscription-manager-staging"
 
-# KV 与 D1 默认模板不预设固定 ID，运行 npm run setup 自动创建并写入绑定
+# 保留原 Worker/存储 ID；安全升级只读取实际绑定，不创建或改绑新存储。
+# 参见 SAFE_UPGRADE_3.3.20.md；npm run setup 仅预检与加密备份。
 
 # 静态资源：托管 public/ 目录下的 JS/CSS/HTML 给浏览器
 # 使用方式：浏览器访问 /js/lib/api-client.js 等同于 public/js/lib/api-client.js
@@ -27,3 +28,7 @@ crons = ["0 * * * *"]
 # 非敏感环境变量；SuperAdmin 密码请在 Cloudflare Dashboard 的 Variables and Secrets 中以 Secret 设置
 [vars]
 ENVIRONMENT = "production"
+
+# Upgrade protection: do not bypass the encrypted backup / original-binding checks.
+[build]
+command = "node scripts/require-safe-upgrade.mjs"

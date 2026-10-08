@@ -21,7 +21,7 @@ import * as remindersRepo from '../../data/reminders.repo.js';
 import * as notifyLogsRepo from '../../data/notification-logs.repo.js';
 import * as schedLogsRepo from '../../data/scheduler-logs.repo.js';
 import { getCategories, addCategory } from '../../data/categories.js';
-import { getMenuOptions, addMenuOption, removeMenuOption, resetMenuOptions, isValidMenuGroup } from '../../data/menu-options.js';
+import { getMenuOptions, addMenuOption, removeMenuOption, resetMenuOptions, isValidMenuGroup, listBaseData, renameMenuOption } from '../../data/menu-options.js';
 import { getNextFireTime } from '../../services/notify/reminder-engine.js';
 
 import { VERSION, TABLE_EDIT_PROTOCOL } from '../../version.js';
@@ -31,7 +31,8 @@ export { VERSION };
 
 const TABLE_TEMPLATE_KEYS = {
   subscription: 'ui:subscription_table_templates:v1',
-  database: 'ui:database_table_templates:v1'
+  database: 'ui:database_table_templates:v1',
+  base: 'ui:base_table_templates:v1'
 };
 
 function normalizeTableTemplates(input) {
@@ -117,7 +118,7 @@ export async function handleExtraRoutes(request, env, path) {
   // /ui-preferences/table-templates/:scope
   // 显示模板持久化到绑定的 KV，而不是只放在浏览器 localStorage。
   // 这样正常发布/升级工具后，只要仍使用同一个 KV namespace，模板不会丢失。
-  const templateMatch = path.match(/^\/ui-preferences\/table-templates\/(subscription|database)\/?$/);
+  const templateMatch = path.match(/^\/ui-preferences\/table-templates\/(subscription|database|base)\/?$/);
   if (templateMatch) {
     const scope = templateMatch[1];
     if (method === 'GET') {
@@ -179,6 +180,18 @@ export async function handleExtraRoutes(request, env, path) {
   // /version
   if (path === '/version' && method === 'GET') {
     return json({ success: true, version: VERSION, tableEditProtocol: TABLE_EDIT_PROTOCOL });
+  }
+
+  // Database · 基础资料库 shares the existing configurable menus.
+  if (path === '/base-data') {
+    if (method === 'GET') return json({success:true,items:await listBaseData(env)});
+    if (method === 'PATCH') {
+      try {
+        const b=await request.json();
+        await renameMenuOption(env, b.group, b.oldValue, b.value);
+        return json({success:true,items:await listBaseData(env)});
+      } catch (e) { return json({success:false,message:e.message},400); }
+    }
   }
 
   // /menu-options：订阅名称 / 订阅类型 / 分类标签 / 会员级别 / 使用人的 D1 可配置菜单

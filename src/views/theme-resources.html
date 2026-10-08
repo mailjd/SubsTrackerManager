@@ -222,3 +222,13 @@
     };
   })();
 </script>
+
+<script>
+// Operation IDs remain available on non-secure development previews as well as HTTPS.
+window.newWorkflowOperationId = function () {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), b=>b.toString(16).padStart(2,'0')).join('');
+};
+</script>
+
+<style>nav a[aria-current="page"]{border-color:#6366f1!important;color:#6366f1!important}nav a[aria-current="false"]{border-color:transparent!important}html.dark nav a[aria-current="page"]{color:#a5b4fc!important}</style>

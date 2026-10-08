@@ -1,0 +1,26 @@
+<section id="baseTabPanel" role="tabpanel" aria-labelledby="baseDatabaseTab" class="db-card bg-white border border-gray-200 p-6 mb-6">
+ <h1 class="text-2xl font-bold mb-2">Database · 基礎資料庫</h1>
+ <p class="text-sm text-gray-500 mb-4">这里是订阅名称、会员级别、使用人、订阅类型、分类标签及账号类型的统一来源。「管理菜单」保留，编辑同一份数据库。更名不会改写已保存的订阅历史。</p>
+ <div class="flex flex-wrap items-center gap-2 mb-4">
+  <select id="baseGroupFilter" class="border rounded-lg px-3 py-2"><option value="">全部资料</option></select>
+  <input id="baseSearch" class="border rounded-lg px-3 py-2" placeholder="搜索基础资料" aria-label="搜索基础资料">
+  <button id="baseAdd" class="bg-indigo-600 text-white rounded-lg px-3 py-2">新增资料</button>
+  <button id="baseRefresh" class="border rounded-lg px-3 py-2">刷新</button>
+  <button id="baseDelete" disabled class="border rounded-lg px-3 py-2 text-red-600">批量删除</button>
+  <select id="baseTemplate" class="border rounded-lg px-3 py-2"><option value="">显示模板</option><option value="__default__">默认模板</option></select>
+  <button id="baseSaveTemplate" class="border rounded-lg px-3 py-2">保存模板</button>
+  <button id="baseDeleteTemplate" disabled class="border rounded-lg px-3 py-2">删除模板</button>
+  <button id="baseColumns" class="border rounded-lg px-3 py-2">显示/隐藏列</button>
+  <button id="baseReset" class="border rounded-lg px-3 py-2">重置 Layout</button>
+  <button id="baseCancel" disabled class="border rounded-lg px-3 py-2">取消</button>
+  <button id="baseSave" disabled class="bg-emerald-600 text-white rounded-lg px-3 py-2">保存</button>
+ </div>
+ <form id="baseAddForm" class="hidden flex flex-wrap items-center gap-2 mb-4 border rounded-lg p-4">
+  <select id="baseAddGroup" class="border rounded-lg px-3 py-2" aria-label="资料分组"></select>
+  <input id="baseAddValue" required maxlength="120" class="border rounded-lg px-3 py-2" placeholder="新增名称" aria-label="新增名称">
+  <button type="submit" class="bg-indigo-600 text-white rounded-lg px-3 py-2">添加</button><button type="button" id="baseAddClose" class="border rounded-lg px-3 py-2">关闭</button>
+ </form>
+ <div id="baseSummary" class="text-xs text-gray-500 mb-3"></div>
+ <div class="overflow-x-auto border rounded-lg" style="max-height:68vh;overflow:auto"><table id="baseTable" class="db-grid-table w-full"><thead><tr></tr></thead><tbody></tbody></table></div>
+ <p class="text-xs text-gray-500 mt-3">双击「名称/内容」编辑。输入或粘贴后暂存并变色，保存后才写入。分组和最后修改时间为只读；可复制、筛选、排序。最多 5 个自定义模板，默认模板不占名额。</p>
+</section>

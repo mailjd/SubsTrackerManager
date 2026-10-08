@@ -33,3 +33,8 @@ FULL_AUDIT_REPORT.md
 
 # 首次部署临时配置文件（脚本正常会自动删除）
 .substracker-bootstrap-config.json
+
+# Full encrypted backups and generated local-only deployment state
+.upgrade/
+upgrade-backups/
+wrangler.upgrade.json

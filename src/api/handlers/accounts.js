@@ -1,3 +1,4 @@
+import { getMenuOptions, addMenuOption } from '../../data/menu-options.js';
 import { getConfig } from '../../data/config.js';
 import { decryptCredential, encryptCredential } from '../../core/credentials.js';
 import { generateJWT, verifyJWT } from '../../core/auth.js';
@@ -19,7 +20,7 @@ import {
   upsert,
   updateAndPropagate,
   deleteAccount,
-  bulkDeleteAccounts
+  bulkDeleteAccounts, nextAccountSerial, normalizeOwner
 } from '../../data/accounts.repo.js';
 import {
   createAccountDatabaseBackup,
@@ -234,6 +235,7 @@ export async function handleAccounts(request, env, path) {
         const account = String(raw.account || '').trim();
         const realName = String(raw.realName || '').trim();
         const accountType = String(raw.accountType || '').trim();
+        let ownerType;try{ownerType=normalizeOwner(raw.ownerType||'',accountSerial);}catch(e){errors.push({row:sourceRow,success:false,message:e.message});continue;}
         if (!accountSerial || !account) {
           errors.push({ row: sourceRow, success: false, accountSerial, account, message: '账号序号和账号不能为空' });
           continue;
@@ -264,7 +266,7 @@ export async function handleAccounts(request, env, path) {
         const legacyPasswordEncrypted = legacyPlainPassword.length > 0
           ? await encryptCredential(legacyPlainPassword, config.CREDENTIALS_ENCRYPTION_KEY)
           : undefined;
-        prepared.push({ sourceRow, accountSerial, account, realName, accountType, credentialsEncrypted, legacyPasswordEncrypted });
+        prepared.push({ sourceRow, accountSerial, account, realName, accountType, ownerType, credentialsEncrypted, legacyPasswordEncrypted });
       }
 
       if (errors.length) {
@@ -289,6 +291,7 @@ export async function handleAccounts(request, env, path) {
             account: item.account,
             realName: item.realName,
             accountType: item.accountType,
+            ownerType: item.ownerType,
             credentialsEncrypted: item.credentialsEncrypted,
             ...(item.legacyPasswordEncrypted !== undefined ? { legacyPasswordEncrypted: item.legacyPasswordEncrypted } : {})
           }, { action: 'full_overwrite_import', metadata: { source: 'excel_file', sourceRow: item.sourceRow, sourceFilename } });
@@ -339,6 +342,7 @@ export async function handleAccounts(request, env, path) {
       }
 
       try {
+        const ownerType=normalizeOwner(raw.ownerType||'',accountSerial);
         const serialRow = isDuplicateSerialAllowed(accountSerial) ? null : await getBySerial(env, accountSerial);
         const accountRow = await getByAccount(env, account);
         if (serialRow && serialRow.account !== account) {
@@ -361,7 +365,7 @@ export async function handleAccounts(request, env, path) {
           if (plainPasswords[type].length > 0) passwordUpdates[type] = plainPasswords[type];
         }
         const credentialsEncrypted = await encryptPasswordUpdates(passwordUpdates, config);
-        const metadataChanged = !existing || (realName && realName !== existing.realName) || (accountType && accountType !== existing.accountType);
+        const metadataChanged = !existing || (ownerType && ownerType !== existing.ownerType) || (realName && realName !== existing.realName) || (accountType && accountType !== existing.accountType);
         const legacyPasswordEncrypted = legacyPlainPassword.length > 0
           ? await encryptCredential(legacyPlainPassword, config.CREDENTIALS_ENCRYPTION_KEY)
           : undefined;
@@ -373,6 +377,7 @@ export async function handleAccounts(request, env, path) {
         const result = await upsert(env, {
           accountSerial,
           account,
+          ...(ownerType ? {ownerType} : {}),
           ...(existing ? (realName ? { realName } : {}) : { realName }),
           ...(existing ? (accountType ? { accountType } : {}) : { accountType }),
           credentialsEncrypted,
@@ -390,6 +395,16 @@ export async function handleAccounts(request, env, path) {
 
     const processed = created + updated + unchanged;
     return json({ success: failed === 0, partial: processed > 0 && failed > 0, mode: 'merge', created, updated, unchanged, failed, total: rows.length, results }, processed > 0 ? 200 : 400);
+  }
+
+  if (path === '/accounts/next-serial' && method === 'GET') {
+    try { return json({success:true,accountSerial:await nextAccountSerial(env,url.searchParams.get('ownerType'))}); }
+    catch(e){return json({success:false,message:e.message},400);}
+  }
+  if (path === '/accounts/types' && method === 'GET') {
+    const menus=await getMenuOptions(env);
+    const existing=await listOptions(env);
+    return json({success:true,items:[...new Set([...(menus.accountTypes||[]),...existing.map(a=>a.accountType).filter(Boolean)])]});
   }
 
   if (path === '/accounts/options' && method === 'GET') return json({ success: true, items: await listOptions(env) });
@@ -410,31 +425,32 @@ export async function handleAccounts(request, env, path) {
     const q = url.searchParams.get('q') || '';
     const sortKey = url.searchParams.get('sortKey') || 'updatedAt';
     const sortDir = url.searchParams.get('sortDir') || 'desc';
-    return json({ success: true, ...(await listPaged(env, { page, pageSize, q, sortKey, sortDir })) });
+    let filters={};
+    try{filters=JSON.parse(url.searchParams.get('filters')||'{}');}catch{return json({success:false,message:'筛选格式无效'},400);}
+    return json({ success: true, ...(await listPaged(env, { page, pageSize, q, sortKey, sortDir, filters })) });
   }
 
   if (path === '/accounts' && method === 'POST') {
     let body;
-    try { body = await request.json(); } catch { return json({ success: false, message: '请求体不是合法 JSON' }, 400); }
-    const accountSerial = String(body?.accountSerial || '').trim();
-    const account = String(body?.account || '').trim();
-    if (!accountSerial || !account) return json({ success: false, message: '账号序号和账号不能为空' }, 400);
-    const existingSerial = isDuplicateSerialAllowed(accountSerial) ? null : await getBySerial(env, accountSerial);
-    const existingAccount = await getByAccount(env, account);
-    if (existingSerial || existingAccount) {
-      const existing = existingSerial || existingAccount;
-      return json({ success: false, message: `账号记录已存在：${existing.accountSerial} / ${existing.account}` }, 409);
+    try { body = await request.json(); } catch { return json({success:false,message:'请求体不是合法 JSON'},400); }
+    if(!hasAccountsDb(env))return json({success:false,message:'D1 数据库未绑定'},400);
+    let ownerType;
+    try{ownerType=normalizeOwner(body.ownerType||'',body.accountSerial||'');}catch(e){return json({success:false,message:e.message},400);}
+    const account=String(body.account||'').trim();
+    if(!account)return json({success:false,message:'账号不能为空'},400);
+    if(await getByAccount(env,account))return json({success:false,message:'账号已存在，未覆盖原记录'},409);
+    const config=await getConfig(env);
+    const credentialsEncrypted=await encryptPasswordUpdates(body.passwords,config);
+    const auto=body.autoSerial===true || !String(body.accountSerial||'').trim();
+    if(auto&&!ownerType)return json({success:false,message:'请选择公/私'},400);
+    let result;
+    for(let attempt=0;attempt<(auto?5:1);attempt++){
+      const accountSerial=auto?await nextAccountSerial(env,ownerType):String(body.accountSerial||'').trim();
+      result=await upsert(env,{accountSerial,account,ownerType,realName:String(body.realName||'').trim(),accountType:String(body.accountType||'').trim(),credentialsEncrypted},{action:'manual_create',createOnly:true});
+      if(result.success || !auto || await getByAccount(env,account))break;
     }
-    const config = await getConfig(env);
-    const credentialsEncrypted = await encryptPasswordUpdates(body?.passwords, config);
-    const result = await upsert(env, {
-      accountSerial,
-      account,
-      realName: String(body?.realName || '').trim(),
-      accountType: String(body?.accountType || '').trim(),
-      credentialsEncrypted
-    }, { action: 'manual_create' });
-    return json(result, result.success ? 201 : 400);
+    if(result.success&&body.accountType)await addMenuOption(env,'accountTypes',String(body.accountType));
+    return json(result,result.success?201:400);
   }
 
   if (path === '/accounts/item') {
@@ -456,6 +472,7 @@ export async function handleAccounts(request, env, path) {
           account: row.account,
           realName: row.realName,
           accountType: row.accountType,
+          ownerType: row.ownerType,
           credentialStatus: row.credentialStatus,
           hasPassword: row.hasPassword,
           hasLegacyPassword: row.hasLegacyPassword,
@@ -483,6 +500,7 @@ export async function handleAccounts(request, env, path) {
         account: String(body?.account || current.account).trim(),
         realName: String(body?.realName ?? current.realName ?? '').trim(),
         accountType: String(body?.accountType ?? current.accountType ?? '').trim(),
+        ownerType: body?.ownerType ?? current.ownerType ?? '',
         credentialsEncrypted,
         ...(body?.clearLegacyPassword ? { legacyPasswordEncrypted: '' } : {})
       });
@@ -519,6 +537,7 @@ export async function handleAccounts(request, env, path) {
         account: row.account,
         realName: row.realName,
         accountType: row.accountType,
+        ownerType: row.ownerType,
         credentialStatus: row.credentialStatus,
         hasPassword: row.hasPassword,
         hasLegacyPassword: row.hasLegacyPassword,
@@ -546,6 +565,7 @@ export async function handleAccounts(request, env, path) {
       account: String(body?.account || '').trim(),
       realName: String(body?.realName ?? current.realName ?? '').trim(),
       accountType: String(body?.accountType ?? current.accountType ?? '').trim(),
+      ownerType: body?.ownerType ?? current.ownerType ?? '',
       credentialsEncrypted,
       ...(body?.clearLegacyPassword ? { legacyPasswordEncrypted: '' } : {})
     });

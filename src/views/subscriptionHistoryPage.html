@@ -1,0 +1,54 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>订阅历史 - SubsTracker</title><link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">${themeResources}<style>th,td{white-space:nowrap;padding:12px;text-align:left;border-bottom:1px solid #64748b44}th{user-select:none;cursor:pointer}#historyTable{min-width:1400px}.history-details{white-space:pre-wrap;overflow-wrap:anywhere}dialog{max-width:90vw;width:900px;border:1px solid #64748b;border-radius:12px;padding:24px}html.dark dialog{background:#1e293b;color:#e2e8f0}</style></head><body class="bg-gray-100 min-h-screen">  <nav class="bg-white shadow-md relative z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center shrink-0">
+          <i class="fas fa-calendar-check text-indigo-600 text-2xl mr-2"></i>
+          <span class="font-bold text-xl text-gray-800">订阅管理系统</span>
+        </div>
+        <div class="hidden md:flex items-center space-x-3 ml-auto">
+          <a href="/admin/dashboard" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-chart-line mr-1"></i>仪表盘</a>
+          <a href="/admin" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-list mr-1"></i>订阅记录</a>
+<a href="/admin/history" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-history mr-1"></i>订阅历史</a>
+          <a href="/admin/database" class="text-indigo-600 border-b-2 border-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-database mr-1"></i>Database</a>
+          <a href="/admin/notify-logs" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-history mr-1"></i>通知历史</a>
+          <a href="/admin/config" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-cog mr-1"></i>系统配置</a>
+          <a href="/api/logout" class="text-gray-700 hover:text-red-600 border-b-2 border-transparent hover:border-red-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-sign-out-alt mr-1"></i>退出登录</a>
+        </div>
+        <div class="flex items-center md:hidden ml-auto">
+          <button id="mobile-menu-btn" type="button" aria-expanded="false" aria-label="切换导航菜单" class="text-gray-600 hover:text-indigo-600 focus:outline-none p-2 rounded-md hover:bg-gray-100"><i class="fas fa-bars text-xl"></i></button>
+        </div>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-b border-gray-200 w-full">
+      <div class="px-4 pt-2 pb-4 space-y-2">
+        <a href="/admin/dashboard" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-chart-line w-6 text-center mr-2"></i>仪表盘</a>
+        <a href="/admin" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-list w-6 text-center mr-2"></i>订阅记录</a>
+<a href="/admin/history" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-history w-6 text-center mr-2"></i>订阅历史</a>
+        <a href="/admin/database" class="block px-3 py-3 rounded-md text-base font-medium text-indigo-700 bg-indigo-50"><i class="fas fa-database w-6 text-center mr-2"></i>Database</a>
+        <a href="/admin/notify-logs" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-history w-6 text-center mr-2"></i>通知历史</a>
+        <a href="/admin/config" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-cog w-6 text-center mr-2"></i>系统配置</a>
+        <a href="/api/logout" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600"><i class="fas fa-sign-out-alt w-6 text-center mr-2"></i>退出登录</a>
+      </div>
+    </div>
+  </nav>
+
+
+<main data-app-content class="app-content-shell px-4 py-8">
+ <section class="bg-white rounded-lg p-6 border mb-6"><h1 class="text-2xl font-bold">订阅历史</h1><p class="text-sm text-gray-500 mt-2">独立、累计保存每次新增、导入和实际自动续订的快照。修改或删除当前订阅不会修改这里的历史；网络重试不会重复计入同一次操作。历史记录不含账号密码。</p></section>
+ <form id="historyFilters" class="flex flex-wrap gap-3 items-center mb-4"><input id="historySearch" class="border rounded-lg px-3 py-2" placeholder="名称 / 账号 / 类型 / 备注" aria-label="搜索历史"><select id="historyType" class="border rounded-lg px-3 py-2"><option value="">全部订阅类型</option></select><label>开始 <input id="historyFrom" type="date" class="border rounded-lg px-3 py-2"></label><label>结束 <input id="historyTo" type="date" class="border rounded-lg px-3 py-2"></label><button class="bg-indigo-600 text-white px-3 py-2 rounded-lg" type="submit">查询</button><button id="historyClear" type="button" class="border px-3 py-2 rounded-lg">清除筛选</button></form>
+ <p id="historyMessage" class="text-sm mb-3"></p><div class="overflow-x-auto bg-white border rounded-lg"><table id="historyTable" class="w-full"><thead><tr></tr></thead><tbody></tbody></table></div>
+ <div class="flex justify-between items-center mt-4"><span id="historyCount"></span><div class="flex gap-2"><select id="historyPageSize" class="border rounded-lg px-3 py-2"><option>20</option><option selected>50</option><option>100</option><option>500</option></select><button id="historyPrev" class="border rounded-lg px-3 py-2">上一页</button><button id="historyNext" class="border rounded-lg px-3 py-2">下一页</button></div></div>
+</main><dialog id="historyDetail"><div class="flex justify-between items-center"><h2>历史快照（只读）</h2><button id="historyDetailClose" class="border rounded-lg px-3 py-2">关闭</button></div><pre id="historyDetailText" class="history-details text-sm mt-4"></pre></dialog>
+<script>
+(function(){
+let page=1,totalPages=0,items=[],timezone='Asia/Shanghai';
+let subscriptionId=new URLSearchParams(location.search).get('subscriptionId')||'';
+const columns=[['occurredAt','记录日期'],['name','订阅名称'],['account','账号'],['accountSerial','账号序号'],['customType','订阅类型'],['memberLevel','会员级别'],['users','使用人'],['category','分类标签'],['amount','费用'],['currency','币种'],['startDate','开始日期'],['expiryDate','到期日期'],['source','来源'],['createdAt','历史写入时间']];
+const sources={create:'新增',import:'批量导入',auto_renew:'自动续订',manual_renew:'手动续订',legacy_payment:'旧版支付记录迁移',legacy_snapshot:'旧版订阅快照迁移'};
+const table=document.getElementById('historyTable');table.tHead.rows[0].innerHTML=columns.map(([k,l])=>'<th>'+l+'</th>').join('')+'<th>详情</th>';
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function date(v,full=false){if(!v)return '';try{return new Date(v).toLocaleString('zh-CN',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit',...(full?{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}:{})});}catch{return v;}}
+async function load(){const msg=document.getElementById('historyMessage');msg.textContent='读取历史…';try{const p=new URLSearchParams({subscriptionId,page:String(page),pageSize:document.getElementById('historyPageSize').value,q:document.getElementById('historySearch').value,type:document.getElementById('historyType').value,from:document.getElementById('historyFrom').value,to:document.getElementById('historyTo').value});const r=await fetch('/api/subscription-history?'+p,{credentials:'same-origin',cache:'no-store'});if(r.status===401){location.href='/';return;}const data=await r.json();if(!r.ok||!data.success)throw Error(data.message||'读取失败');items=data.items;page=data.page;totalPages=data.totalPages;timezone=data.timezone||timezone;const select=document.getElementById('historyType'),v=select.value;select.innerHTML='<option value="">全部订阅类型</option>'+data.types.map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join('');select.value=v;table.tBodies[0].innerHTML=items.map((e,i)=>'<tr>'+columns.map(([c])=>{let v=['occurredAt','source','createdAt'].includes(c)?e[c]:e.snapshot[c];if(c==='source')v=sources[v]||v;if(['occurredAt','startDate','expiryDate','createdAt'].includes(c))v=date(v,c==='createdAt');return '<td>'+esc(v??'—')+'</td>';}).join('')+'<td><button data-detail="'+i+'" class="text-indigo-600">查看快照</button></td></tr>').join('');msg.textContent=items.length?'':'没有匹配记录';document.getElementById('historyCount').textContent='共 '+data.total+' 条 · 第 '+page+' / '+Math.max(totalPages,1)+' 页';document.getElementById('historyPrev').disabled=page<=1;document.getElementById('historyNext').disabled=page>=totalPages;}catch(e){msg.textContent='读取失败：'+e.message;}}
+document.getElementById('historyFilters').onsubmit=e=>{e.preventDefault();page=1;load();};document.getElementById('historyClear').onclick=()=>{document.getElementById('historyFilters').reset();subscriptionId='';page=1;load();};document.getElementById('historyPrev').onclick=()=>{if(page>1){page--;load();}};document.getElementById('historyNext').onclick=()=>{if(page<totalPages){page++;load();}};document.getElementById('historyPageSize').onchange=()=>{page=1;load();};table.onclick=e=>{const b=e.target.closest('[data-detail]');if(!b)return;document.getElementById('historyDetailText').textContent=JSON.stringify(items[Number(b.dataset.detail)],null,2);document.getElementById('historyDetail').showModal();};document.getElementById('historyDetailClose').onclick=()=>document.getElementById('historyDetail').close();load();
+})();
+</script><script>document.querySelectorAll('nav a[href]').forEach(a=>{a.setAttribute('aria-current',a.getAttribute('href')===location.pathname?'page':'false');});</script></body></html>

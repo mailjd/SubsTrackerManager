@@ -1,147 +1,302 @@
 [
   {
-    "path": ".github/workflows/deploy.yml",
-    "status": "modified",
-    "sha256": "cf92689c6c9eb7fc03ff611b53ac635b93a62bd9df455374e37c4b207b84170f"
+    "file": ".github/workflows/deploy.yml",
+    "kind": "modified",
+    "sha256": "ef987151a17d3b346b6962fa8589524d573837a84a6f25d91c319da6a8f99173"
   },
   {
-    "path": ".github/workflows/test.yml",
-    "status": "modified",
-    "sha256": "e5fd190c7e3e404520b0eeee1f8e506bfbe32bb86fc214f767a5d9d07d50f042"
+    "file": ".github/workflows/test.yml",
+    "kind": "modified",
+    "sha256": "6a9ce2a5687e8ee24f4d253f57e2c01de85595ed8d960d416db41c78d96d94b8"
   },
   {
-    "path": "DEPLOY_CHECKLIST.md",
-    "status": "modified",
-    "sha256": "0b3e58d938d1aec25084a05d08486bac846875a4490fa06c42347d1f4f97e5bc"
+    "file": "DEPLOY_CHECKLIST.md",
+    "kind": "modified",
+    "sha256": "ee0a82c82875da2b406db8157ea1661f3e3927f0e1983e345c0db1ecb7b8c2b2"
   },
   {
-    "path": "GITHUB_DEPLOY.md",
-    "status": "modified",
-    "sha256": "b489a501cd83acf9566d895872ace516c2855d4b303225090ad9759642c22454"
+    "file": "GITHUB_DEPLOY.md",
+    "kind": "modified",
+    "sha256": "b6670f042c58ceabf5f7ba00a69c20a82b23915d74fd8d675bc39a258afa7d7c"
   },
   {
-    "path": "README.md",
-    "status": "modified",
-    "sha256": "d7e91931ebe875637662006cd9d79be10c73e39b9bbb97288e6146712a1b8b7c"
+    "file": "README.md",
+    "kind": "modified",
+    "sha256": "16e9c09073cc3325afed1c45054d72ed34fa515dae5eb8b82c993f2e9e305773"
   },
   {
-    "path": "TABLE_SAVE_AUDIT_3.3.18.md",
-    "status": "added",
-    "sha256": "e7285d0e53aef5df54196b0dd2ffeef6f86e2dbd394699372c70e76ed62d7f8a"
+    "file": "RELEASE_3.3.19.md",
+    "kind": "new",
+    "sha256": "eb35208eef67cbec605106bb1753e4925452e638d8b4ce5655a9fbb29d90358c"
   },
   {
-    "path": "package-lock.json",
-    "status": "modified",
-    "sha256": "8a6a4f05c116fe986506d444ce79a89a2ca5cb6f724e4951b575baf509c78a1e"
+    "file": "VERIFICATION_3.3.19.md",
+    "kind": "new",
+    "sha256": "605f89e1d9b44e80e7f2805ab214b69a291014ed7d4e5140337c04940f172dba"
   },
   {
-    "path": "package.json",
-    "status": "modified",
-    "sha256": "c6dd859ba662c5937a9ed143896bbf0df956b17600efe9a48c494e278211bb14"
+    "file": "migrations/0007_subscription_business_ledger.sql",
+    "kind": "new",
+    "sha256": "3d10b2d8dc09a11cc2bf16a78dd7c92bd757cf7c262f366bf3ee6a20ac463497"
   },
   {
-    "path": "src/api/admin.js",
-    "status": "modified",
-    "sha256": "709a8229b781e795c4841a8cb6306f61d43b8cf00397fa3ccfab4f04198ebaad"
+    "file": "package-lock.json",
+    "kind": "modified",
+    "sha256": "0c42807df34ab9bb52632187d2f739979aee51712b375645b0e248fe47651b25"
   },
   {
-    "path": "src/api/handlers/extras.js",
-    "status": "modified",
-    "sha256": "b6df474494229529e0b0b0a8a2dd4cf74c4624a3a31dfedab6d75a12fe6b2566"
+    "file": "package.json",
+    "kind": "modified",
+    "sha256": "9ee0ce53c099c343b537d6af95a9a5fb36988737cf2421dc17e58b03e9f3d28e"
   },
   {
-    "path": "src/api/handlers/subscriptions.js",
-    "status": "modified",
-    "sha256": "a71abcb1545ba000e43642af41de131f2cbac63aa61f5fadbd5f479080bef71c"
+    "file": "src/api/admin.js",
+    "kind": "modified",
+    "sha256": "7ac9fc830987447a15ebf43121081bee0d99e53f92bf962f6a5cbb9a99091325"
   },
   {
-    "path": "src/data/subscription-history.repo.js",
-    "status": "modified",
-    "sha256": "a193b7504eaffc1f8cc0b359a48f740be9ea18f5e631685fd328266479e13060"
+    "file": "src/api/handlers/accounts.js",
+    "kind": "modified",
+    "sha256": "77511fede1950cac0604e7cba6d9117f39f003829bbb04e7039da7737465d136"
   },
   {
-    "path": "src/data/subscriptions.js",
-    "status": "modified",
-    "sha256": "3cc8d85e219aa3cc7ab038f1bed3f2a749b95487cfb8f8c2fa2dc3ce4a90d45e"
+    "file": "src/api/handlers/backup.js",
+    "kind": "modified",
+    "sha256": "74542e2585580164c09f387c4b255a1e2cf63551dd487eb59d463a64b94d0c47"
   },
   {
-    "path": "src/data/table-edit-contract.js",
-    "status": "added",
-    "sha256": "2e36babc552ee1dbcc7bc908048c78ca49fa82e7995d9bfe483d332fffbecdf6"
+    "file": "src/api/handlers/dashboard.js",
+    "kind": "modified",
+    "sha256": "75b9ca45c1d1bf3930cbbf29cb7215b36e4036ad893cd9328d5dd45157153008"
   },
   {
-    "path": "src/services/scheduler.js",
-    "status": "modified",
-    "sha256": "4348f6f45696dd3064c445415286e4cd644c46ca9cb23ee326846f9e98123312"
+    "file": "src/api/handlers/extras.js",
+    "kind": "modified",
+    "sha256": "a5e3a57eb5ab4aa718ad298d764b9db102cf422d0a4f210aeb69ebeea388e84a"
   },
   {
-    "path": "src/version.js",
-    "status": "added",
-    "sha256": "ea9e4fdb9e1b103aa7d4ca261e7bbcdcc84ee7d0e2a2a7b8599b331c53a7afbb"
+    "file": "src/api/handlers/subscription-history.js",
+    "kind": "new",
+    "sha256": "d5be7de2df3a5f3fa07754492cbf5987946782ba1dcbae051f9c775b8f2fbf18"
   },
   {
-    "path": "src/views/adminPage.html",
-    "status": "modified",
-    "sha256": "3c7a0b6bf1e2894a6745b7b6a3cedb4ce7b683d6937c40f075dbde3ae2fb6725"
+    "file": "src/api/handlers/subscriptions.js",
+    "kind": "modified",
+    "sha256": "549166c7d26afdf09362eb1e535413a53d6096b9b6c3faa1bd4bb165d3e1fc39"
   },
   {
-    "path": "tests/api/subscriptions-table-edit.test.js",
-    "status": "modified",
-    "sha256": "4404052ed715f99549618aee84f7ccad53055150c478afece4ec80c007718c4e"
+    "file": "src/api/router.js",
+    "kind": "modified",
+    "sha256": "a3aa85e939092041d365e0027c363353c0da156a9fae6bcd8a6a3b62ad2c63a1"
   },
   {
-    "path": "tests/data/reminders.test.js",
-    "status": "modified",
-    "sha256": "e86ac48e9bac918a6175e775d1497ba6ee543926af3518296e3d7d2e4659c3b6"
+    "file": "src/core/currency.js",
+    "kind": "modified",
+    "sha256": "98f3b02da7d9edcf0e2c76a56746658b50c6205a3212b2d31d6b72fd472651ba"
   },
   {
-    "path": "tests/regression/README.md",
-    "status": "added",
-    "sha256": "1413971792f2fa7fd993f72b002b9ae0c2a41602b04ada50a16bed7b44946c19"
+    "file": "src/data/account-database-backups.repo.js",
+    "kind": "modified",
+    "sha256": "06a79da50e5d4fa03f6c73e0a9b7a92438cc94b209c06fa2d8e014301f6adc3c"
   },
   {
-    "path": "tests/regression/api-regression.py",
-    "status": "added",
-    "sha256": "edc79008c4aaa38e4c6c4ef804f9e2b145cc10e8f7330ec8c4e060c222cc354e"
+    "file": "src/data/account-import-template.js",
+    "kind": "modified",
+    "sha256": "e368a3031c1707f76f674693b1df7ddc1a6d0c87f341b9389e28245f92d9c559"
   },
   {
-    "path": "tests/regression/browser-regression.py",
-    "status": "added",
-    "sha256": "9ecdaec3321d277c61a3c91f69d5186b4ff216860c4df20a1d092e716422d08c"
+    "file": "src/data/accounts.repo.js",
+    "kind": "modified",
+    "sha256": "dea59951566426bfd833e6f1c80fe44f009056bb3702196b9b0a77e88f9c5740"
   },
   {
-    "path": "tests/regression/contract.node.mjs",
-    "status": "added",
-    "sha256": "f4cb3d6caea333de09d299f105345aba9779587c539ba325eeea0659e3d21533"
+    "file": "src/data/d1-schema.js",
+    "kind": "modified",
+    "sha256": "eb62389f788e0aa89b346bbffcdb2369cad47216458f2314190215c0aa32b297"
   },
   {
-    "path": "tests/regression/local-server.mjs",
-    "status": "added",
-    "sha256": "c864a23af4ac2d94378b649b40184407277ef142a3f28c9cbcb83ee473ffbef6"
+    "file": "src/data/menu-options.js",
+    "kind": "modified",
+    "sha256": "1ce2527498baf406c216837614d908041a0fa341653b43a40718380b98cafebc"
   },
   {
-    "path": "tests/regression/results/api-results.json",
-    "status": "added",
+    "file": "src/data/subscription-history.repo.js",
+    "kind": "modified",
+    "sha256": "36e70f3c407ec410a04db76cdf84eebd82b08196e547ccb4a386f1fcc83cb1c6"
+  },
+  {
+    "file": "src/data/subscription-ledger.js",
+    "kind": "new",
+    "sha256": "4bc6a35d07471f9653c8e2a600412c41a6a59c18c930cb7e9d5d3f46c5dedc3a"
+  },
+  {
+    "file": "src/data/subscription-workflow.js",
+    "kind": "new",
+    "sha256": "43c75ca2652140457b4afd3e1d66a1d9d1485f2cdded1858b5e540f731010a05"
+  },
+  {
+    "file": "src/data/subscriptions.js",
+    "kind": "modified",
+    "sha256": "226151d29d7f24b061ebb59519ee11cf912024b7a95717380807ba5e8ac853d5"
+  },
+  {
+    "file": "src/services/scheduler.js",
+    "kind": "modified",
+    "sha256": "2cb7427f63ee209c3fca2edaecced6c8e25c4a5990fe05eeaffc84669a6f755d"
+  },
+  {
+    "file": "src/version.js",
+    "kind": "modified",
+    "sha256": "fb29a1a15fba370a00dfc47816fdc37f59899d4005f260e555761174fcc039ac"
+  },
+  {
+    "file": "src/views/adminPage.html",
+    "kind": "modified",
+    "sha256": "e11353788f1875be74fe80174840838b6c618c574c489956b3cdccb8f7e75af3"
+  },
+  {
+    "file": "src/views/baseDatabasePanel.html",
+    "kind": "new",
+    "sha256": "567284efe97bd864c7820f1c9355bdb46445817f3f9b7f670c6308a86c0d79e3"
+  },
+  {
+    "file": "src/views/baseDatabaseScript.html",
+    "kind": "new",
+    "sha256": "d6d4ca86a9b3f382631ade43b4eb8395cceb767543089c12e0cfa3f177267dad"
+  },
+  {
+    "file": "src/views/configPage.html",
+    "kind": "modified",
+    "sha256": "d7306c504036b27208c66b7135fa799e0488c41427f85edbde6df2bd6fe928c2"
+  },
+  {
+    "file": "src/views/dashboardPage.html",
+    "kind": "modified",
+    "sha256": "babac692bbaf6a663488b293b54fa370923629fe619a204b76d15541d0d5509e"
+  },
+  {
+    "file": "src/views/databasePage.html",
+    "kind": "modified",
+    "sha256": "5790492a67c4458d8c0cfe3b87d77787a7641f58fa65ceffc5923bee084eb3e1"
+  },
+  {
+    "file": "src/views/loginPage.html",
+    "kind": "modified",
+    "sha256": "9dab2279c7e34ecf7460fb327b00a157487c89d97bbe5d5ce2207f5afa8b8ee0"
+  },
+  {
+    "file": "src/views/notifyLogsPage.html",
+    "kind": "modified",
+    "sha256": "11ff254e0a8ab7660fe12921c20c7c70f9040b556d4f2a567d9dd4a459e6469c"
+  },
+  {
+    "file": "src/views/pages.js",
+    "kind": "modified",
+    "sha256": "2a700680a3fd10778bae35df119c105cc340afd160e363078f73e19c45b7a2b5"
+  },
+  {
+    "file": "src/views/subscriptionHistoryPage.html",
+    "kind": "new",
+    "sha256": "868cf026c541b6a618d27560716a4fa6138172a4ed374a018b78e3d01d4758d3"
+  },
+  {
+    "file": "src/views/theme-resources.html",
+    "kind": "modified",
+    "sha256": "41309bb79d5a5da163a70f2ee6789ae4062b0d99f7f92bb3d4fd6961c4f975f2"
+  },
+  {
+    "file": "templates/SubsTracker_账号数据库批量导入模板.xlsx",
+    "kind": "new",
+    "sha256": "4dc9239a0d382e24a53ece40b9b67cf6e5d5320fba76aa5110c57fec568b8ff3"
+  },
+  {
+    "file": "tests/api/extras-routes.test.js",
+    "kind": "modified",
+    "sha256": "541fc748ef9a3b908fbc7b5c6d643c68f77cbcdd5520741296e8c0f8009f02e0"
+  },
+  {
+    "file": "tests/api/subscriptions-table-edit.test.js",
+    "kind": "modified",
+    "sha256": "f24fe9c6f46a996ebd677941f2bc55504b270d2af24db4a2224ff786dabd6ad7"
+  },
+  {
+    "file": "tests/regression/README.md",
+    "kind": "modified",
+    "sha256": "f49b39d9a99459786b13b0679fc82962c28556c2cbdae99a2cd848171c2f1af8"
+  },
+  {
+    "file": "tests/regression/api-regression.py",
+    "kind": "modified",
+    "sha256": "c228d1196be051a1ac26a13cc5ea63a1630bd4584599746be17e2a8e27c02d91"
+  },
+  {
+    "file": "tests/regression/browser-regression.py",
+    "kind": "modified",
+    "sha256": "90b0945405212e57c77a77186fcdc85960b81d3d1c01bebeebc1af867fc9a02e"
+  },
+  {
+    "file": "tests/regression/local-server.mjs",
+    "kind": "modified",
+    "sha256": "9ed1796ce111c2fbf6b79f034c4c9a439edaeaad6e0a449b2fa5d665f43cc70e"
+  },
+  {
+    "file": "tests/regression/results/contract-tests.tap",
+    "kind": "modified",
+    "sha256": "dc95d8c9bcd99c7056ff31e208cef8aa051d3996dfc0471990f1786c458a5c32"
+  },
+  {
+    "file": "tests/regression/results/syntax-results.json",
+    "kind": "modified",
+    "sha256": "15f4fea5c3f041db65ead392599d0426c2aafc825c7c1a7a7187d90ed41c8ae0"
+  },
+  {
+    "file": "tests/regression/results/v3.3.18/api-results.json",
+    "kind": "new",
     "sha256": "513a4688609b4ea5fca41b73c2e6667b1674718e01f6d66a73163a7ae9ff7b3b"
   },
   {
-    "path": "tests/regression/results/baseline-outdated-assertion.log",
-    "status": "added",
+    "file": "tests/regression/results/v3.3.18/baseline-outdated-assertion.log",
+    "kind": "new",
     "sha256": "abff7226feb56762df723d8976440c82d9b2606aaad6e8a03fdc355c9f211750"
   },
   {
-    "path": "tests/regression/results/browser-results.json",
-    "status": "added",
+    "file": "tests/regression/results/v3.3.18/browser-results.json",
+    "kind": "new",
     "sha256": "547223bf5114aa9ec7df375cc2dd6b52892f870a99256619b7ee4b3bfe10cbf2"
   },
   {
-    "path": "tests/regression/results/contract-tests.tap",
-    "status": "added",
+    "file": "tests/regression/results/v3.3.18/changed-files.json",
+    "kind": "new",
+    "sha256": "c3a149d5f439a1857d0a9d51b1ae9b3dfb8ac2bb0d70e7aca5e94ca22defa887"
+  },
+  {
+    "file": "tests/regression/results/v3.3.18/contract-tests.tap",
+    "kind": "new",
     "sha256": "7b3a123a6ca2b8e3e4d64deeb2bf09b8f8d6414d30a4368c6baf04136914f5d5"
   },
   {
-    "path": "tests/regression/results/syntax-results.json",
-    "status": "added",
+    "file": "tests/regression/results/v3.3.18/syntax-results.json",
+    "kind": "new",
     "sha256": "27cf33cffa795f0b1921358dd5e5861aa088bb3d05371b99f07de4f493771868"
+  },
+  {
+    "file": "tests/regression/results/workflow-browser-results.json",
+    "kind": "new",
+    "sha256": "9a4818d4abbbbe1328024db2f50dc385f3f67f51b205ebf28bb0f9a62176b5fd"
+  },
+  {
+    "file": "tests/regression/results/workflow-results.json",
+    "kind": "new",
+    "sha256": "9c7f145f0c95c3cb8945dab6388579528a22d921d238f3aa64ae29cf837b43bf"
+  },
+  {
+    "file": "tests/regression/workflow-browser3319.py",
+    "kind": "new",
+    "sha256": "090f817944d676f638529b30de1335b4edd9cb2f8537a8850a8edea2fa8ac386"
+  },
+  {
+    "file": "tests/regression/workflow3319.py",
+    "kind": "new",
+    "sha256": "62ddaa813fb7a3cc5f7fce047db2b63955630d5d4b5c08a3b3dcb56e71ffdef9"
   }
 ]

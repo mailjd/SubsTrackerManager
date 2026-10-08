@@ -16,6 +16,7 @@ export default defineWorkersConfig({
   assetsInclude: ['**/*.html'],
   test: {
     include: ['tests/**/*.test.js'],
+    setupFiles: ['./tests/worker-setup.js'],
     poolOptions: {
       workers: {
         miniflare: {

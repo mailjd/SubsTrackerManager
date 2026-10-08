@@ -1,0 +1,50 @@
+{
+  "version": "3.3.20",
+  "date": "2026-09-28",
+  "environment": {
+    "node": "v22.16.0",
+    "python": "3.13.5",
+    "sqlite": "node:sqlite + Python SQLite",
+    "browser": "local Chromium/Playwright"
+  },
+  "suites": [
+    {
+      "name": "safe-upgrade Node tests",
+      "passed": 56,
+      "failed": 0
+    },
+    {
+      "name": "table API regression",
+      "passed": 37,
+      "failed": 0
+    },
+    {
+      "name": "table Chromium interaction",
+      "passed": 16,
+      "failed": 0
+    },
+    {
+      "name": "contract/reminder/scheduler",
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "name": "database/history API workflows",
+      "passed": 69,
+      "failed": 0
+    },
+    {
+      "name": "database/history Chromium workflows",
+      "passed": 27,
+      "failed": 0
+    }
+  ],
+  "cross_version_scenarios": 7,
+  "syntax_checks": 91,
+  "unverified": [
+    "Cloudflare Workers Vitest: dependencies unavailable",
+    "project typecheck: Workers types unavailable",
+    "real Cloudflare deployment and user database: not accessed"
+  ],
+  "note": "Final results only; synthetic fixtures and isolated local storage. These are not full production-environment tests."
+}

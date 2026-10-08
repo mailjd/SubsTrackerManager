@@ -1,3 +1,4 @@
+import {collectSubscriptionInventory} from './upgrade-reconcile.js';
 // @ts-check
 import { ensureD1Schema } from './d1-schema.js';
 /**
@@ -35,7 +36,7 @@ export function toSafeSnapshot(subscription) {
  * @param {D1Database} db
  * @param {any} subscription
  */
-function buildUpsertStatement(db, subscription) {
+export function buildUpsertStatement(db, subscription) {
   const safe = toSafeSnapshot(subscription);
   const syncedAt = new Date().toISOString();
   return db.prepare(`
@@ -238,12 +239,13 @@ export async function ensureD1Seed(env) {
     }
 
     const subRepo = await import('./subscriptions.repo.js');
-    const subscriptions = await subRepo.listAll(env);
-    await syncCurrentSubscriptions(env, subscriptions, {
+    const subscriptions = (await collectSubscriptionInventory(env)).current;
+    const seedSaved = await syncCurrentSubscriptions(env, subscriptions, {
       replace: false,
       recordHistory: true,
       action: 'initial_import'
     });
+    if(!seedSaved)throw new Error('D1 镜像初始写入失败，未标记完成');
     await db.prepare(`
       INSERT INTO schema_meta (key, value, updated_at)
       VALUES ('kv_seed_v1', ?, ?)

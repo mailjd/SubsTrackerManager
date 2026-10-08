@@ -1,7 +1,7 @@
 import { getConfig } from '../data/config.js';
 import { verifyJWT } from '../core/auth.js';
 import { getCookieValue } from './utils.js';
-import { loginPage, adminPage, configPage, dashboardPage, notifyLogsPage, databasePage } from '../views/pages.js';
+import { loginPage, adminPage, configPage, dashboardPage, notifyLogsPage, databasePage, subscriptionHistoryPage } from '../views/pages.js';
 
 async function handleAdminRequest(request, env) {
   try {
@@ -25,6 +25,8 @@ async function handleAdminRequest(request, env) {
         headers: { 'Location': '/' }
       });
     }
+
+    if (pathname === '/admin/history' || pathname === '/admin/history/') return new Response(subscriptionHistoryPage, {headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
 
     if (pathname === '/admin/config') {
       return new Response(configPage, {

@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="substracker-build" content="3.3.18">
+  <meta name="substracker-build" content="3.3.20">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>订阅管理系统</title>
@@ -532,6 +532,9 @@
           <a href="/admin" class="text-indigo-600 border-b-2 border-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition">
             <i class="fas fa-list mr-1"></i>订阅记录
           </a>
+<a href="/admin/history" class="text-indigo-600 border-b-2 border-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition">
+            <i class="fas fa-history mr-1"></i>订阅历史
+          </a>
           <a href="/admin/database" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition">
             <i class="fas fa-database mr-1"></i>Database
           </a>
@@ -562,6 +565,9 @@
         </a>
         <a href="/admin" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100 transition-colors">
           <i class="fas fa-list w-6 text-center mr-2"></i>订阅记录
+        </a>
+<a href="/admin/history" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100 transition-colors">
+          <i class="fas fa-history w-6 text-center mr-2"></i>订阅历史
         </a>
         <a href="/admin/database" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100 transition-colors">
           <i class="fas fa-database w-6 text-center mr-2"></i>Database
@@ -693,7 +699,7 @@
     </div>
     
     <details id="tableSaveDiagnosticDetails" class="text-xs text-gray-500 mb-3" style="padding:6px 0">
-      <summary style="cursor:pointer">保存诊断 · 页面版本 3.3.18</summary>
+      <summary style="cursor:pointer">保存诊断 · 页面版本 3.3.19</summary>
       <pre id="tableSaveDiagnostic" style="white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;padding:8px">尚未发起保存。诊断仅记录版本、请求编号、字段名与校验状态，不记录账号密码或单格内容。</pre>
     </details>
     <!-- 原始模式：保持历史版本的摘要表格布局不变 -->
@@ -801,6 +807,7 @@
         </div>
       </div>
       
+      <div class="mx-6 mt-4 p-3 text-sm rounded-lg border border-indigo-200 text-indigo-700">开会员：更新同名订阅 + 同账号的当前记录；找不到则新增。其他订阅类型只累计到「订阅历史」。每次新增/导入操作均保留独立历史，表格编辑不会重复计入支出。</div>
       <form id="subscriptionForm" class="p-6 space-y-5">
         <!-- 第1排：订阅名称 / 账号 / 账号序号 -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1234,7 +1241,7 @@
 
         <div class="border border-emerald-200 bg-emerald-50 rounded-lg p-4">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div><label for="bulkImportFile" class="block text-sm font-semibold text-emerald-900">直接选择 Excel 表单</label><p class="text-xs text-emerald-700 mt-1">支持 .xlsx / .xls / .csv / .tsv；导入模式固定为“只新增、不覆盖原有订阅”。</p></div>
+            <div><label for="bulkImportFile" class="block text-sm font-semibold text-emerald-900">直接选择 Excel 表单</label><p class="text-xs text-emerald-700 mt-1">支持 .xlsx / .xls / .csv / .tsv；导入规则：“开会员”更新同订阅名称+账号的当前记录；其他类型仅写入历史；每次操作累计保留历史”。</p></div>
             <input id="bulkImportFile" type="file" accept=".xlsx,.xls,.csv,.tsv" class="block text-sm text-gray-600 file:mr-3 file:px-3 file:py-2 file:rounded-md file:border-0 file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
           </div>
         </div>
@@ -2646,7 +2653,7 @@ const lunarBiz = {
             '<div class="action-buttons-wrapper">' +
               '<button class="edit btn-primary text-white px-2 py-1 rounded text-xs whitespace-nowrap" data-id="' + subscription.id + '"><i class="fas fa-edit mr-1"></i>编辑</button>' +
               '<button class="clone btn-clone text-white px-2 py-1 rounded text-xs whitespace-nowrap" data-id="' + subscription.id + '" title="克隆为新订阅"><i class="fas fa-copy mr-1"></i>克隆</button>' +
-              '<button class="view-history btn-history text-white px-2 py-1 rounded text-xs whitespace-nowrap" data-id="' + subscription.id + '" title="查看支付历史"><i class="fas fa-history mr-1"></i>历史</button>' +
+              '<button class="view-history btn-history text-white px-2 py-1 rounded text-xs whitespace-nowrap" data-id="' + subscription.id + '" title="在独立页面查看订阅历史"><i class="fas fa-history mr-1"></i>历史</button>' +
               '<button class="test-notify btn-info text-white px-2 py-1 rounded text-xs whitespace-nowrap" data-id="' + subscription.id + '"><i class="fas fa-paper-plane mr-1"></i>测试</button>' +
               (subscription.periodUnit === 'single' ? '' : '<button class="renew-now btn-success text-white px-2 py-1 rounded text-xs whitespace-nowrap" data-id="' + subscription.id + '" title="立即续订一个周期"><i class="fas fa-sync-alt mr-1"></i>续订</button>') +
               '<button class="delete btn-danger text-white px-2 py-1 rounded text-xs whitespace-nowrap" data-id="' + subscription.id + '"><i class="fas fa-trash-alt mr-1"></i>删除</button>' +
@@ -3128,28 +3135,8 @@ const lunarBiz = {
     };
 
     async function viewPaymentHistory(e) {
-        const button = e.target.tagName === 'BUTTON' ? e.target : e.target.parentElement;
-        const id = button.dataset.id;
-
-        try {
-            const response = await apiFetch('/api/subscriptions/' + id + '/payments');
-            const result = await response.json();
-
-            if (!result.success) {
-                showToast(result.message || '获取支付历史失败', 'error');
-                return;
-            }
-
-            const payments = result.payments || [];
-            const subscriptionResponse = await apiFetch('/api/subscriptions/' + id);
-            const subscriptionData = await subscriptionResponse.json();
-            const subscription = subscriptionData;
-
-            showPaymentHistoryModal(subscription, payments);
-        } catch (error) {
-            console.error('获取支付历史失败:', error);
-            showToast('获取支付历史时发生错误', 'error');
-        }
+      const button=e.target.closest('[data-id]');
+      if(button?.dataset.id) location.href='/admin/history?subscriptionId='+encodeURIComponent(button.dataset.id);
     }
 
     function showPaymentHistoryModal(subscription, payments) {
@@ -3495,6 +3482,7 @@ const lunarBiz = {
       document.getElementById('subscriptionForm').reset();
       document.getElementById('currency').value = 'CNY'; // 默认设置为CNY
       document.getElementById('subscriptionId').value = '';
+      window.subscriptionCreateOperationId = window.newWorkflowOperationId();
       const syncDbWrap = document.getElementById('syncAccountDatabaseOnCreateWrap');
       const syncDbCheckbox = document.getElementById('syncAccountDatabaseOnCreate');
       if (syncDbWrap) syncDbWrap.classList.remove('hidden');
@@ -3507,7 +3495,9 @@ const lunarBiz = {
       document.getElementById('reminderValue').value = '1';
       document.getElementById('reminderUnit').value = 'day';
       document.getElementById('isActive').checked = true;
-      document.getElementById('autoRenew').checked = true;
+      document.getElementById('autoRenew').checked = document.getElementById('subscriptionMode').value === 'cycle';
+      document.getElementById('customType').value = '开会员';
+      loadMenuOptions(false);
       const endOfMonthEl = document.getElementById('endOfMonth');
       if (endOfMonthEl) endOfMonthEl.checked = false;
 
@@ -3541,6 +3531,7 @@ const lunarBiz = {
           clearFieldErrors();
 
         document.getElementById('subscriptionId').value = '';
+      window.subscriptionCreateOperationId = window.newWorkflowOperationId();
         const syncDbWrap = document.getElementById('syncAccountDatabaseOnCreateWrap');
         const syncDbCheckbox = document.getElementById('syncAccountDatabaseOnCreate');
         if (syncDbWrap) syncDbWrap.classList.remove('hidden');
@@ -3584,7 +3575,7 @@ const lunarBiz = {
         if (rules && rules.length > 0) {
           const cloned = rules.map(function (r) {
             return Object.assign({}, r, {
-              id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : ('r-' + Math.random().toString(36).slice(2))
+              id: (crypto && crypto.randomUUID) ? window.newWorkflowOperationId() : ('r-' + Math.random().toString(36).slice(2))
             });
           });
           window.__pendingReminderRules = cloned;
@@ -4629,6 +4620,13 @@ const lunarBiz = {
     }
 
     function setupModalEventListeners() {     
+      const modeSelect = document.getElementById('subscriptionMode');
+      if (modeSelect && !modeSelect.dataset.autoRenewModeBound) {
+        modeSelect.dataset.autoRenewModeBound = '1';
+        modeSelect.addEventListener('change', () => {
+          document.getElementById('autoRenew').checked = modeSelect.value === 'cycle' && document.getElementById('periodUnit').value !== 'single';
+        });
+      }
       const calculateExpiryBtn = document.getElementById('calculateExpiryBtn'); // 获取DOM元素
       const useLunar = document.getElementById('useLunar');
       const showLunar = document.getElementById('showLunar');
@@ -4885,6 +4883,7 @@ const lunarBiz = {
       };
 
       if (!id) {
+        subscription.__operationId = window.subscriptionCreateOperationId || (window.subscriptionCreateOperationId=window.newWorkflowOperationId());
         const syncDbCheckbox = document.getElementById('syncAccountDatabaseOnCreate');
         subscription.importAccountToDatabase = !!(syncDbCheckbox && syncDbCheckbox.checked);
       }
@@ -5242,7 +5241,7 @@ const lunarBiz = {
 
       function uuid() {
         return (crypto && crypto.randomUUID)
-          ? crypto.randomUUID()
+          ? window.newWorkflowOperationId()
           : 'r-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
       }
 
@@ -5817,7 +5816,7 @@ const lunarBiz = {
         let useLunar = parseBoolean(valueByKey(cells, mapping, 'useLunar'), false, '农历周期', errors);
         let endOfMonth = parseBoolean(valueByKey(cells, mapping, 'endOfMonth'), false, '每月最后一天', errors);
         const isActive = parseBoolean(valueByKey(cells, mapping, 'isActive'), true, '启用订阅', errors);
-        let autoRenew = parseBoolean(valueByKey(cells, mapping, 'autoRenew'), true, '自动续订', errors);
+        let autoRenew = parseBoolean(valueByKey(cells, mapping, 'autoRenew'), subscriptionMode === 'cycle', '自动续订', errors);
         if (periodUnit === 'single') {
           useLunar = false;
           endOfMonth = false;
@@ -5833,6 +5832,7 @@ const lunarBiz = {
 
         const data = {
           __sourceRow: sourceRow,
+          __operationId: window.newWorkflowOperationId(),
           name,
           account: String(valueByKey(cells, mapping, 'account') || '').trim(),
           accountSerial: String(valueByKey(cells, mapping, 'accountSerial') || '').trim(),
@@ -6012,7 +6012,7 @@ const lunarBiz = {
             }
 
             // 极端情况下仍碰到 Cloudflare 单次调用上限时，把受影响行拆成
-            // 单条新 invocation 自动重试。服务端会先做“只新增”指纹检查，
+            // 单条新 invocation 自动重试。服务端根据本行操作编号做幂等检查，
             // 因此前一次若已部分写入也不会重复创建。
             for (const retryRow of apiLimitRows) {
               await new Promise((resolve) => setTimeout(resolve, 80));
@@ -7028,6 +7028,11 @@ const lunarBiz = {
       if(!pendingEdits[id]) pendingEdits[id]={};
       pendingEdits[id][col]=String(display);
     }
+    if(autoExpiry && col==='subscriptionMode') {
+      const mode=String(display);
+      const enabled=(mode==='cycle'||mode==='循环订阅')&&effectiveStoredValue(sub,'periodUnit')!=='single';
+      setPendingCellValue(sub,'autoRenew',enabled?'是':'否',false);
+    }
     if(autoExpiry) autoStageExpiryForRow(sub,col);
     if(autoExpiry && (col==='account' || col==='accountSerial')){
       try {
@@ -7626,5 +7631,5 @@ const lunarBiz = {
   });
 })();
 </script>
-</body>
+<script>document.querySelectorAll('nav a[href]').forEach(a=>{a.setAttribute('aria-current',a.getAttribute('href')===location.pathname?'page':'false');});</script></body>
 </html>

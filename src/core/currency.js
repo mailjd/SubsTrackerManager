@@ -71,7 +71,7 @@ function calculateMonthlyExpense(subscriptions, timezone, rates) {
       const paymentDate = new Date(payment.date);
       const paymentParts = getTimezoneDateParts(paymentDate, timezone);
       if (paymentParts.year === currentYear && paymentParts.month === currentMonth) {
-        amount += convertToCNY(payment.amount, sub.currency, rates);
+        amount += convertToCNY(Number(payment.amount), payment.currency || sub.currency, rates);
       }
     });
   });
@@ -86,7 +86,7 @@ function calculateMonthlyExpense(subscriptions, timezone, rates) {
       const paymentDate = new Date(payment.date);
       const paymentParts = getTimezoneDateParts(paymentDate, timezone);
       if (paymentParts.year === lastMonthYear && paymentParts.month === lastMonth) {
-        lastMonthAmount += convertToCNY(payment.amount, sub.currency, rates);
+        lastMonthAmount += convertToCNY(Number(payment.amount), payment.currency || sub.currency, rates);
       }
     });
   });
@@ -117,7 +117,7 @@ function calculateYearlyExpense(subscriptions, timezone, rates) {
       const paymentDate = new Date(payment.date);
       const paymentParts = getTimezoneDateParts(paymentDate, timezone);
       if (paymentParts.year === currentYear) {
-        amount += convertToCNY(payment.amount, sub.currency, rates);
+        amount += convertToCNY(Number(payment.amount), payment.currency || sub.currency, rates);
       }
     });
   });
@@ -178,7 +178,7 @@ function getExpenseByType(subscriptions, timezone, rates) {
   const now = getCurrentTimeInTimezone(timezone);
   const parts = getTimezoneDateParts(now, timezone);
   const currentYear = parts.year;
-  const typeMap = {};
+  const typeMap = Object.create(null);
   let total = 0;
   subscriptions.forEach(sub => {
     const paymentHistory = sub.paymentHistory || [];
@@ -188,7 +188,7 @@ function getExpenseByType(subscriptions, timezone, rates) {
       const paymentParts = getTimezoneDateParts(paymentDate, timezone);
       if (paymentParts.year === currentYear) {
         const type = sub.customType || '未分类';
-        const amountCNY = convertToCNY(payment.amount, sub.currency, rates);
+        const amountCNY = convertToCNY(Number(payment.amount), payment.currency || sub.currency, rates);
         typeMap[type] = (typeMap[type] || 0) + amountCNY;
         total += amountCNY;
       }
@@ -209,7 +209,7 @@ function getExpenseByCategory(subscriptions, timezone, rates) {
   const parts = getTimezoneDateParts(now, timezone);
   const currentYear = parts.year;
 
-  const categoryMap = {};
+  const categoryMap = Object.create(null);
   let total = 0;
   subscriptions.forEach(sub => {
     const paymentHistory = sub.paymentHistory || [];
@@ -219,7 +219,7 @@ function getExpenseByCategory(subscriptions, timezone, rates) {
       const paymentParts = getTimezoneDateParts(paymentDate, timezone);
       if (paymentParts.year === currentYear) {
         const categories = sub.category ? sub.category.split(CATEGORY_SEPARATOR_REGEX).filter(c => c.trim()) : ['未分类'];
-        const amountCNY = convertToCNY(payment.amount, sub.currency, rates);
+        const amountCNY = convertToCNY(Number(payment.amount), payment.currency || sub.currency, rates);
 
         categories.forEach(category => {
           const cat = category.trim() || '未分类';
@@ -250,3 +250,9 @@ export {
   getExpenseByType,
   getExpenseByCategory
 };
+
+/** Year-to-date spend grouped by immutable receipt subscription name. */
+export function getExpenseByName(subscriptions,timezone,rates){
+  const named=subscriptions.map(s=>({...s,customType:s.name||'未命名'}));
+  return getExpenseByType(named,timezone,rates).map(r=>({name:r.type,amount:r.amount,percentage:r.percentage}));
+}

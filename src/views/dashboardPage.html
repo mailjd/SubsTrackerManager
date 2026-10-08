@@ -87,6 +87,9 @@
           <a href="/admin" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition">
             <i class="fas fa-list mr-1"></i>订阅记录
           </a>
+<a href="/admin/history" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition">
+            <i class="fas fa-history mr-1"></i>订阅历史
+          </a>
           <a href="/admin/database" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition">
             <i class="fas fa-database mr-1"></i>Database
           </a>
@@ -117,6 +120,9 @@
         </a>
         <a href="/admin" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100 transition-colors">
           <i class="fas fa-list w-6 text-center mr-2"></i>订阅记录
+        </a>
+<a href="/admin/history" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100 transition-colors">
+          <i class="fas fa-history w-6 text-center mr-2"></i>订阅历史
         </a>
         <a href="/admin/database" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100 transition-colors">
           <i class="fas fa-database w-6 text-center mr-2"></i>Database
@@ -166,6 +172,34 @@
       <div class="loading-skeleton"></div>
     </div>
 
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-chart-bar text-purple-500"></i>
+            <h3 class="text-lg font-medium text-gray-900">按类型支出排行</h3>
+          </div>
+          <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">年度统计 (折合CNY)</span>
+        </div>
+        <div class="p-6" id="expenseByType">
+          <div class="loading-skeleton"></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-folder text-green-500"></i>
+            <h3 class="text-lg font-medium text-gray-900">按订阅名称支出统计</h3>
+          </div>
+          <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">年度统计 (折合CNY)</span>
+        </div>
+        <div class="p-6" id="expenseByName">
+          <div class="loading-skeleton"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
       <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -204,36 +238,11 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <i class="fas fa-chart-bar text-purple-500"></i>
-            <h3 class="text-lg font-medium text-gray-900">按类型支出排行</h3>
-          </div>
-          <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">年度统计 (折合CNY)</span>
-        </div>
-        <div class="p-6" id="expenseByType">
-          <div class="loading-skeleton"></div>
-        </div>
-      </div>
 
-      <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <i class="fas fa-folder text-green-500"></i>
-            <h3 class="text-lg font-medium text-gray-900">按分类支出统计</h3>
-          </div>
-          <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">年度统计 (折合CNY)</span>
-        </div>
-        <div class="p-6" id="expenseByCategory">
-          <div class="loading-skeleton"></div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <script>
+    function escapeDashboardText(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
     // 统一 API 请求封装：401 自动跳转登录页
     async function apiFetch(url, options) {
       const response = await fetch(url, options);
@@ -430,7 +439,7 @@
         data.expenseByType.map((item,i)=>`
           <div class="ranking-item">
             <div class="ranking-item-header">
-              <div class="ranking-item-name">${item.type}</div>
+              <div class="ranking-item-name">${escapeDashboardText(item.type)}</div>
               <div class="ranking-item-value">
                 <span class="ranking-item-amount">¥${item.amount.toFixed(2)}</span>
                 <span class="ranking-item-percentage">${item.percentage}%</span>
@@ -442,12 +451,12 @@
           </div>
         `).join('');
         
-        const ec=document.getElementById('expenseByCategory');
-        ec.innerHTML=data.expenseByCategory.length===0?'<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-text">暂无支出数据</div></div>':
-        data.expenseByCategory.map((item,i)=>`
+        const ec=document.getElementById('expenseByName');
+        ec.innerHTML=data.expenseByName.length===0?'<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-text">暂无支出数据</div></div>':
+        data.expenseByName.map((item,i)=>`
           <div class="ranking-item">
             <div class="ranking-item-header">
-              <div class="ranking-item-name">${item.category}</div>
+              <div class="ranking-item-name">${escapeDashboardText(item.name)}</div>
               <div class="ranking-item-value">
                 <span class="ranking-item-amount">¥${item.amount.toFixed(2)}</span>
                 <span class="ranking-item-percentage">${item.percentage}%</span>
@@ -536,5 +545,5 @@
       syncMobileMenuState();
     }
   </script>
-</body>
+<script>document.querySelectorAll('nav a[href]').forEach(a=>{a.setAttribute('aria-current',a.getAttribute('href')===location.pathname?'page':'false');});</script></body>
 </html>

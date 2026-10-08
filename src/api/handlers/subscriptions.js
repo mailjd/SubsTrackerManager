@@ -1,3 +1,5 @@
+import { acceptSubscriptionRecord } from '../../data/subscription-workflow.js';
+import { ensureLedgerSeed } from '../../data/subscription-ledger.js';
 import { VERSION, TABLE_EDIT_PROTOCOL } from '../../version.js';
 import { normalizeTableChanges, mismatchedTableFields, canonicalRules } from '../../data/table-edit-contract.js';
 import {
@@ -341,7 +343,9 @@ async function handleSubscriptions(request, env, path) {
     let accountDbSkipped = 0;
     let accountDbFailed = 0;
     const accountDbResults = [];
-    const existingFingerprints = await loadExistingImportFingerprints(env);
+    // v3.3.19: each accepted row is a business event; membership updates current,
+    // other types append to history only. Do not skip same name/account anymore.
+    const batchId=String(payload?.batchId || crypto.randomUUID());
 
     async function collectAccountDatabaseResult(subscription, sourceRow, sourceStatus) {
       if (!importAccountsToDatabase) return null;
@@ -365,35 +369,20 @@ async function handleSubscriptions(request, env, path) {
 
       const { __sourceRow: _sourceRow, ...rawSubscription } = raw;
       const subscription = await applyImportReminderLegacy(rawSubscription);
-      const fingerprint = makeSubscriptionImportFingerprint(subscription);
-      if (existingFingerprints.has(fingerprint)) {
-        skipped += 1;
-        const accountDatabase = await collectAccountDatabaseResult(subscription, sourceRow, 'subscription_exists');
-        results.push({
-          row: sourceRow,
-          success: false,
-          skipped: true,
-          name: subscription.name || '',
-          message: '检测到原有订阅记录，按“只新增、不覆盖”规则跳过',
-          ...(accountDatabase ? { accountDatabase } : {})
-        });
-        continue;
-      }
-
-      const result = await createSubscription(subscription, env, {
-        historyAction: 'import',
-        historyMetadata: { source: 'excel_paste', sourceRow }
+      const result = await acceptSubscriptionRecord(subscription, env, {
+        source: 'import', operationId: raw.__operationId || `${batchId}:${sourceRow}`
       });
 
       if (result.success && result.subscription) {
-        await persistCreatedReminderRules(env, result.subscription.id, subscription.reminderRules, { syncLegacy: false });
+        // Reminder snapshot is committed with the workflow; history-only rows have no active reminder.
         imported += 1;
-        existingFingerprints.add(fingerprint);
+
         const accountDatabase = await collectAccountDatabaseResult(result.subscription, sourceRow, 'subscription_created');
         results.push({
           row: sourceRow,
           success: true,
           id: result.subscription.id,
+          historyId: result.historyId, historyOnly: result.historyOnly, updated: result.updated, replayed: !!result.replayed,
           name: result.subscription.name,
           ...(accountDatabase ? { accountDatabase } : {})
         });
@@ -614,6 +603,7 @@ async function handleSubscriptions(request, env, path) {
 
   if (path === '/subscriptions') {
     if (method === 'GET') {
+      await ensureLedgerSeed(env);
       const subscriptions = await getAllSubscriptions(env);
       const safeSubscriptions = subscriptions.map(sanitizeSubscription);
       return new Response(JSON.stringify(safeSubscriptions), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
@@ -631,11 +621,13 @@ async function handleSubscriptions(request, env, path) {
       }
       const importAccountToDatabase = subscription?.importAccountToDatabase === true;
       const { importAccountToDatabase: _importAccountToDatabase, ...subscriptionData } = subscription || {};
-      const result = await createSubscription(subscriptionData, env);
+      const result = await acceptSubscriptionRecord(subscriptionData, env, {
+        operationId:request.headers.get('Idempotency-Key') || subscriptionData.__operationId,source:'create'
+      });
       // 创建成功后写入提醒规则，并同步 legacy 提醒字段（列表展示依赖）
       let accountDatabase = null;
       if (result.success && result.subscription) {
-        await persistCreatedReminderRules(env, result.subscription.id, subscriptionData.reminderRules, { syncLegacy: false });
+        // Active reminder configuration is part of the workflow commit.
         if (importAccountToDatabase) {
           accountDatabase = await importMissingAccountFromSubscription(env, result.subscription, { sourceStatus: 'manual_create' });
         }

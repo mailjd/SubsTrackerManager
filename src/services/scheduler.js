@@ -1,3 +1,4 @@
+import {ensureLedgerSeed,makeLedgerEntry,hashInput,commitLedgerAndCurrent} from '../data/subscription-ledger.js';
 // 注：本文件暂不启用 // @ts-check，因 lunar 库返回类型分支较多，类型清理推迟到后续 Task。
 /**
  * 定时任务调度器
@@ -115,6 +116,7 @@ export async function checkExpiringSubscriptions(env) {
       normalizedHours.includes('ALL') ||
       normalizedHours.includes(now.hourString);
 
+    await ensureLedgerSeed(env);
     const subscriptions = await getAllSubscriptions(env);
     let activeCount = 0;
     let matchedCount = 0;
@@ -128,6 +130,7 @@ export async function checkExpiringSubscriptions(env) {
 
     /** @type {Array<any>} */
     const updatedSubsToSave = [];
+    const renewalEntries = new Map();
 
     for (const subscription of subscriptions) {
       if (!subscription.isActive) continue;
@@ -151,6 +154,14 @@ export async function checkExpiringSubscriptions(env) {
         });
         if (renewed) {
           updatedSubsToSave.push(renewed.next);
+          if(subscription.autoRenew !== false){
+            const entries=[];
+            for(const p of renewed.periods||[]){
+              const id='renew:'+subscription.id+':'+p.start+':'+p.end;
+              entries.push(makeLedgerEntry({...renewed.next,startDate:p.start,expiryDate:p.end},{id,source:'auto_renew',occurredAt:p.start,inputHash:await hashInput({id})}));
+            }
+            renewalEntries.set(String(subscription.id),entries);
+          }
           autoRenewedCount++;
           // 推进后重算 diff
           expiryDate = new Date(renewed.next.expiryDate);
@@ -202,7 +213,11 @@ export async function checkExpiringSubscriptions(env) {
     // 持久化生命周期更新。按订阅 ID 去重，确保同一轮调度最多写一次同一记录。
     if (updatedSubsToSave.length > 0) {
       const uniqueUpdatedSubs = Array.from(new Map(updatedSubsToSave.map((sub) => [String(sub.id), sub])).values());
-      await subRepo.saveMany(env, uniqueUpdatedSubs);
+      for(const sub of uniqueUpdatedSubs){
+        const entries=renewalEntries.get(String(sub.id))||[];
+        if(entries.length)await commitLedgerAndCurrent(env,entries,{...sub,workflowVersion:3319});
+        else await subRepo.save(env,sub);
+      }
       await Promise.all(uniqueUpdatedSubs.map((sub) => {
         const expired = String(sub.memberLevel || '') === 'Free' && getDaysBetween(now.utc, new Date(sub.expiryDate), timezone) < 0;
         const action = expired ? 'expire_to_free' : ((sub.subscriptionMode || 'cycle') === 'cycle' ? 'cycle_rollover' : 'auto_renew');
@@ -389,6 +404,7 @@ function autoRenew(sub, now, timezone, config, options = {}) {
   let expiryDate = new Date(sub.expiryDate);
   let cycleStartDate = new Date(sub.expiryDate);
   let periodsAdded = 0;
+  const periods=[];
   const nowMidnight = getTimezoneMidnightTimestamp(now, tz);
 
   /**
@@ -414,6 +430,8 @@ function autoRenew(sub, now, timezone, config, options = {}) {
       const solar = lunarBiz.lunar2solar(lunar);
       if (!solar) break;
       expiryDate = atTimezoneMidnight(solar.year, solar.month, solar.day);
+      if(expiryDate.getTime()<=cycleStartDate.getTime())throw new Error('周期必须为正值');
+      periods.push({start:cycleStartDate.toISOString(),end:expiryDate.toISOString()});
       periodsAdded++;
       if (periodsAdded > 60) break;
     }
@@ -432,6 +450,8 @@ function autoRenew(sub, now, timezone, config, options = {}) {
         tz,
         { endOfMonth: !!sub.endOfMonth }
       );
+      if(expiryDate.getTime()<=cycleStartDate.getTime())throw new Error('周期必须为正值');
+      periods.push({start:cycleStartDate.toISOString(),end:expiryDate.toISOString()});
       periodsAdded++;
       if (periodsAdded > 120) break;
     }
@@ -444,8 +464,9 @@ function autoRenew(sub, now, timezone, config, options = {}) {
   const recordPayment = options.recordPayment !== false;
 
   const paymentRecord = {
-    id: Date.now().toString(),
+    id: crypto.randomUUID(),
     date: now.toISOString(),
+    currency: sub.currency || 'CNY',
     amount: sub.amount || 0,
     type: 'auto',
     note: `自动续订 (${mode === 'reset' ? '重置模式' : '接续模式'}${
@@ -460,8 +481,10 @@ function autoRenew(sub, now, timezone, config, options = {}) {
   const trimmed = ph.length > paymentHistoryLimit ? ph.slice(-paymentHistoryLimit) : ph;
 
   return {
+    periods,
     next: {
       ...sub,
+      workflowVersion:3319,
       startDate: newStartDate.toISOString(),
       expiryDate: newExpiryDate.toISOString(),
       ...(recordPayment ? { lastPaymentDate: now.toISOString(), paymentHistory: trimmed } : {}),

@@ -1,3 +1,4 @@
+import {ensureLedgerSeed,allLedgerEntries} from '../../data/subscription-ledger.js';
 // 注：dashboard 业务逻辑较多，此处不启用 // @ts-check（依赖外部 currency 模块的复杂返回类型）
 /**
  * 仪表盘统计 handler
@@ -16,14 +17,17 @@ import {
   getRecentPayments,
   getUpcomingRenewals,
   getExpenseByType,
-  getExpenseByCategory
+  getExpenseByName
 } from '../../core/currency.js';
 import { getCurrentTimeInTimezone, MS_PER_DAY } from '../../core/time.js';
 import * as schedulerLogsRepo from '../../data/scheduler-logs.repo.js';
 
 async function handleDashboardStats(env, config) {
   try {
+    await ensureLedgerSeed(env);
     const subscriptions = await getAllSubscriptions(env);
+    const ledger=await allLedgerEntries(env);
+    const spendRows=ledger.map(e=>({...e.snapshot,paymentHistory:[{date:e.occurredAt,amount:e.snapshot.amount,currency:e.snapshot.currency||'CNY'}]}));
     const timezone = (config && config.TIMEZONE) || 'UTC';
 
     /** 本次：从结构化日志库读最新调度状态 */
@@ -57,12 +61,12 @@ async function handleDashboardStats(env, config) {
     }
 
     const rates = await getDynamicRates(env);
-    const monthlyExpense = calculateMonthlyExpense(subscriptions, timezone, rates);
-    const yearlyExpense = calculateYearlyExpense(subscriptions, timezone, rates);
-    const recentPayments = getRecentPayments(subscriptions, timezone);
+    const monthlyExpense = calculateMonthlyExpense(spendRows, timezone, rates);
+    const yearlyExpense = calculateYearlyExpense(spendRows, timezone, rates);
+    const recentPayments = getRecentPayments(spendRows, timezone);
     const upcomingRenewals = getUpcomingRenewals(subscriptions, timezone);
-    const expenseByType = getExpenseByType(subscriptions, timezone, rates);
-    const expenseByCategory = getExpenseByCategory(subscriptions, timezone, rates);
+    const expenseByType = getExpenseByType(spendRows, timezone, rates);
+    const expenseByName = getExpenseByName(spendRows, timezone, rates);
 
     const activeSubscriptions = subscriptions.filter((s) => s.isActive);
     const now = getCurrentTimeInTimezone(timezone);
@@ -86,7 +90,7 @@ async function handleDashboardStats(env, config) {
           recentPayments,
           upcomingRenewals,
           expenseByType,
-          expenseByCategory,
+          expenseByName,
           schedulerStatus,
           schedulerStatusHistory,
           /** 新增：用户时区（前端可据此显示） */

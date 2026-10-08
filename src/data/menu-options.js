@@ -6,6 +6,7 @@ const MAX_OPTION_LENGTH = 120;
 const MAX_OPTIONS_PER_GROUP = 500;
 
 export const MENU_DEFAULTS = Object.freeze({
+  accountTypes: ['手机号', '邮箱', '微信', 'QQ'],
   subscriptionNames: [
     'Tapnow', 'LibTV', '即梦', '豆包', '小云雀', 'SUNO', '剪映', 'AdobeCC',
     'ChatGPT', 'Gemini', 'higgsfield', 'LovArt', 'Askgo', 'Midjourney',
@@ -279,4 +280,37 @@ export async function setMenuOptions(env, value) {
   }
   await db.batch(statements);
   return getD1Menus(env);
+}
+
+
+/** All editors (Database and existing 管理菜单) write these same records. */
+export async function listBaseData(env) {
+  const menus = await getMenuOptions(env);
+  if (!hasD1Binding(env)) {
+    return Object.entries(menus).flatMap(([group, items]) => items.map(value => ({ group, value, updatedAt: '' })));
+  }
+  const result = await env.SUBSCRIPTIONS_DB.prepare('SELECT group_key, value, updated_at FROM menu_options ORDER BY group_key, sort_order, rowid').all();
+  return (result.results || []).map(r => ({group:r.group_key, value:r.value, updatedAt:r.updated_at}));
+}
+
+export async function renameMenuOption(env, group, oldValue, newValue) {
+  if (!isValidMenuGroup(group)) throw new Error('无效的基础资料分组');
+  const old = cleanOption(oldValue), value = cleanOption(newValue);
+  if (!old || !value) throw new Error('菜单内容不能为空');
+  const menus = await getMenuOptions(env);
+  if (!menus[group].includes(old)) throw new Error('原菜单项已变更，请刷新后重试');
+  if (old === value) return menus;
+  if (menus[group].includes(value)) throw new Error('此分组已存在相同内容');
+  if (!hasD1Binding(env)) {
+    menus[group] = menus[group].map(v => v === old ? value : v);
+    await putKVJson(env, LEGACY_KEY, menus);
+    return menus;
+  }
+  const now = new Date().toISOString();
+  const results = await env.SUBSCRIPTIONS_DB.batch([
+    env.SUBSCRIPTIONS_DB.prepare('UPDATE menu_options SET value=?, updated_at=? WHERE group_key=? AND value=?').bind(value, now, group, old),
+    env.SUBSCRIPTIONS_DB.prepare('UPDATE menu_option_groups SET updated_at=? WHERE group_key=?').bind(now, group)
+  ]);
+  if (Number(results[0]?.meta?.changes || 0) !== 1) throw new Error('菜单项已被其他操作修改，请刷新重试');
+  return getMenuOptions(env);
 }

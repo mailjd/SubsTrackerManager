@@ -49,18 +49,22 @@ if(!kv.config){
  ].map(s=>({account:'',accountSerial:'',memberLevel:'Pro',points:100,users:'Test user',category:'Test',amount:10,currency:'CNY',subscriptionMode:'reset',startDate:'2030-09-24T16:00:00.000Z',expiryDate:'2030-10-24T16:00:00.000Z',periodValue:1,periodUnit:'month',useLunar:false,endOfMonth:false,reminderUnit:'day',reminderValue:1,notes:'Original note',isActive:true,autoRenew:false,paymentHistory:[],createdAt:'2026-09-20T00:00:00.000Z',updatedAt:'2026-09-20T00:00:00.000Z',...s}));
  kv.sub_index=JSON.stringify(samples.map(s=>s.id));samples.forEach(s=>kv['sub:'+s.id]=JSON.stringify(s));flush();
 }
+if(!kv.SYSTEM_EXCHANGE_RATES){kv.SYSTEM_EXCHANGE_RATES=JSON.stringify({ts:Date.now(),rates:{CNY:1,USD:0.14}});flush();}
 await ensureMigrations(env);
 const token=await generateJWT('regression',JSON.parse(kv.config).JWT_SECRET);
 const utilityCss=`*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}.flex,.inline-flex{display:flex}.flex-wrap{flex-wrap:wrap}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-between{justify-content:space-between}.justify-end{justify-content:flex-end}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.px-4{padding-left:1rem;padding-right:1rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.w-full{width:100%}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.relative{position:relative}.fixed{position:fixed}.inset-0{inset:0}.bg-white{background:#fff}.border{border:1px solid #aaa}.rounded-lg{border-radius:.5rem}table{border-collapse:collapse}.text-sm{font-size:14px}.text-xs{font-size:12px}.max-w-7xl{max-width:1280px}.mx-auto{margin:auto}button:disabled{opacity:.5;cursor:default}`;
 http.createServer(async(req,res)=>{try{
  const url=new URL(req.url,`http://127.0.0.1:${port}`);const buffers=[];for await(const c of req)buffers.push(c);const body=Buffer.concat(buffers).toString();
  if(url.pathname==='/__test__/login'){res.writeHead(200,{'Set-Cookie':`token=${token}; Path=/; SameSite=Lax`,'Content-Type':'application/json'});return res.end('{"success":true}');}
+ if(url.pathname==='/__test__/cron'){const {checkExpiringSubscriptions}=await import(pathToFileURL(path.join(root,'src/services/scheduler.js')));const result=await checkExpiringSubscriptions(env);res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({success:true,result:result??null}));}
  if(url.pathname==='/__test__/state'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify(kv));}
  if(url.pathname==='/__test__/controls' && req.method==='POST'){Object.assign(controls,JSON.parse(body||'{}'));if(controls.staleReads)controls.stale=new Map(Object.entries(kv));res.setHeader('Content-Type','application/json');return res.end('{}');}
  if(url.pathname==='/__test__/trace'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify(fs.existsSync(tracePath)?fs.readFileSync(tracePath,'utf8').trim().split('\n').filter(Boolean).map(JSON.parse):[]));}
  if(url.pathname==='/__test__/utility.css'){res.setHeader('Content-Type','text/css');return res.end(utilityCss);}
- if(url.pathname==='/admin' || url.pathname==='/'){
-  let html=fs.readFileSync(path.join(root,'src/views/adminPage.html'),'utf8').replace(/\$\{themeResources\}/g,()=>fs.readFileSync(path.join(root,'src/views/theme-resources.html'),'utf8'));
+ if(['/admin','/','/admin/database','/admin/dashboard','/admin/history','/login-test'].includes(url.pathname)){
+  const pageFile=({'/admin/database':'databasePage.html','/admin/dashboard':'dashboardPage.html','/admin/history':'subscriptionHistoryPage.html','/login-test':'loginPage.html'})[url.pathname]||'adminPage.html';
+  let html=fs.readFileSync(path.join(root,'src/views',pageFile),'utf8').replace(/\$\{themeResources\}/g,()=>fs.readFileSync(path.join(root,'src/views/theme-resources.html'),'utf8'));
+  if(pageFile==='databasePage.html') html=html.replace('${baseDatabasePanel}',()=>fs.readFileSync(path.join(root,'src/views/baseDatabasePanel.html'),'utf8')).replace('</body>',()=>fs.readFileSync(path.join(root,'src/views/baseDatabaseScript.html'),'utf8')+'</body>');
   html=html.replace(/<link[^>]+href="https:[^"]+"[^>]*>/g,'').replace(/<script[^>]+src="https:[^"]+"[^>]*><\/script>/g,'');
   html=html.replace('</head>','<link rel="stylesheet" href="/__test__/utility.css"></head>');
   res.setHeader('Content-Type','text/html; charset=utf-8');return res.end(html);

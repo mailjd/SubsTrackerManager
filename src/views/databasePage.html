@@ -21,6 +21,8 @@
     .table-wrap { box-shadow: 0 4px 10px rgba(15,23,42,.06); }
     html.dark .table-wrap { box-shadow: 0 4px 14px rgba(0,0,0,.35); }
     .db-grid-table { table-layout: fixed; min-width: 1280px; }
+    #baseTable thead { position:sticky;top:0;z-index:5;background:#f8fafc; }
+    html.dark #baseTable thead {background:#111827;}
     .db-grid-table th { position: relative; user-select: none; white-space: nowrap; overflow: visible; }
     .db-grid-table th[data-col] { cursor: grab; padding-right: 2rem; }
     .db-grid-table th[data-col="select"], .db-grid-table th[data-col="actions"] { cursor: default; }
@@ -40,13 +42,24 @@
     .db-table-sort-menu { position:fixed; z-index:9999; min-width:150px; background:white; border:1px solid #e5e7eb; border-radius:.5rem; box-shadow:0 12px 30px rgba(15,23,42,.18); padding:.35rem; }
     .db-table-sort-menu button { display:block; width:100%; text-align:left; padding:.5rem .65rem; border-radius:.35rem; font-size:.8rem; }
     .db-table-sort-menu button:hover { background:#f3f4f6; }
-    @media (max-width: 768px) {
+    @media (max-width: 0px) {
       .responsive-table thead { display:none; }
       .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display:block; width:100%; }
       .responsive-table tr { border-bottom:1px solid #e5e7eb; padding:.5rem 0; }
       .responsive-table td { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.65rem 1rem; }
       .responsive-table td::before { content:attr(data-label); font-weight:600; color:#6b7280; flex:0 0 5.5rem; }
     }
+    html.dark .db-cell-editable:hover { background:#273449; }
+    html.dark .db-cell-selected { background:#253247!important;color:#f3f4f6;box-shadow:inset 0 0 0 1px #818cf8; }
+    html.dark .db-cell-pending, html.dark .db-cell-pending.db-cell-selected { background:#493919!important;color:#fde68a; }
+    html.dark .db-cell-anchor { background:#2b3952!important;color:#fff!important;box-shadow:inset 0 0 0 2px #818cf8!important; }
+    html.dark .db-cell-pending.db-cell-anchor { background:#493919!important;color:#fde68a!important;box-shadow:inset 0 0 0 2px #f59e0b!important; }
+    html.dark .db-cell-editor, html.dark .db-cell-editor option, html.dark .db-table-sort-menu { background:#182235;color:#e5e7eb;border-color:#475569; }
+    html.dark .db-table-sort-menu button:hover, html.dark .db-sort-btn:hover, html.dark .db-sort-btn.active { background:#334155;color:#c7d2fe; }
+    .db-sort-btn { width:22px!important;min-width:22px!important;max-width:22px!important; }
+    .db-resize-grip { min-width:7px!important;max-width:7px!important; }
+    [role="tab"][aria-selected="true"] { background:#4f46e5!important;color:white!important; }
+    .db-grid-table td { height:48px; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -62,6 +75,7 @@
         <div class="hidden md:flex items-center space-x-3 ml-auto">
           <a href="/admin/dashboard" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-chart-line mr-1"></i>仪表盘</a>
           <a href="/admin" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-list mr-1"></i>订阅记录</a>
+<a href="/admin/history" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-history mr-1"></i>订阅历史</a>
           <a href="/admin/database" class="text-indigo-600 border-b-2 border-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-database mr-1"></i>Database</a>
           <a href="/admin/notify-logs" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-history mr-1"></i>通知历史</a>
           <a href="/admin/config" class="text-gray-700 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fas fa-cog mr-1"></i>系统配置</a>
@@ -76,6 +90,7 @@
       <div class="px-4 pt-2 pb-4 space-y-2">
         <a href="/admin/dashboard" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-chart-line w-6 text-center mr-2"></i>仪表盘</a>
         <a href="/admin" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-list w-6 text-center mr-2"></i>订阅记录</a>
+<a href="/admin/history" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-history w-6 text-center mr-2"></i>订阅历史</a>
         <a href="/admin/database" class="block px-3 py-3 rounded-md text-base font-medium text-indigo-700 bg-indigo-50"><i class="fas fa-database w-6 text-center mr-2"></i>Database</a>
         <a href="/admin/notify-logs" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-history w-6 text-center mr-2"></i>通知历史</a>
         <a href="/admin/config" class="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-cog w-6 text-center mr-2"></i>系统配置</a>
@@ -85,6 +100,12 @@
   </nav>
 
   <main data-app-content class="app-content-shell px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+    <div class="flex gap-2 mb-6" role="tablist" aria-label="Database 分页">
+      <button id="baseDatabaseTab" type="button" role="tab" aria-selected="true" aria-controls="baseTabPanel" class="px-5 py-3 rounded-lg bg-indigo-600 text-white">1. 基礎資料庫</button>
+      <button id="accountDatabaseTab" type="button" role="tab" aria-selected="false" aria-controls="accountTabPanel" class="px-5 py-3 rounded-lg bg-white text-gray-700">2. 帳號密碼</button>
+    </div>
+    ${baseDatabasePanel}
+    <div id="accountTabPanel" class="hidden" role="tabpanel" aria-labelledby="accountDatabaseTab">
     <section class="db-card bg-white border border-gray-200 shadow-sm p-6 sm:p-7 mb-6">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div class="flex items-start gap-4">
@@ -151,13 +172,14 @@
           <select id="databaseTableTemplateSelect" class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"><option value="">显示模板</option></select>
           <button id="saveDatabaseTableTemplateBtn" type="button" class="px-3 py-2 text-sm border border-indigo-200 text-indigo-700 rounded-lg bg-white hover:bg-indigo-50"><i class="fas fa-bookmark mr-1"></i>保存模板</button>
           <button id="deleteDatabaseTableTemplateBtn" type="button" disabled class="px-3 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40"><i class="fas fa-trash-alt mr-1"></i>删除模板</button>
+          <button id="displayDatabaseColumnsBtn" type="button" class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white">显示/隐藏列</button>
           <button id="resetDatabaseTableLayoutBtn" type="button" class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-50"><i class="fas fa-table mr-1"></i>重置Layout</button>
           <button id="cancelDatabaseTableEditsBtn" type="button" disabled class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white disabled:bg-gray-100 disabled:text-gray-400"><i class="fas fa-undo mr-1"></i>取消</button>
           <button id="saveDatabaseTableEditsBtn" type="button" disabled class="px-3 py-2 text-sm bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-lg"><i class="fas fa-save mr-1"></i>保存</button>
           <button id="bulkDeleteAccountsBtn" type="button" disabled class="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white rounded-lg"><i class="fas fa-trash-alt mr-1"></i>批量删除</button>
         </div>
       </div>
-      <div class="text-xs text-gray-500 mt-2">支持拖动资料表头位置、双击表头自动排序、表头右侧箭头设置排序顺序、拖动列边缘调整宽度、最多 5 个显示模板、双击资料单格编辑、复制/粘贴与暂存修改。选择列固定最左、操作列固定最右，避免更新时间右侧出现异常勾选/输入栏。密码列维持安全状态显示，不开放表格内明文编辑。</div>
+      <div class="text-xs text-gray-500 mt-2">支持拖动资料表头位置、双击表头自动排序、表头右侧箭头设置排序顺序、拖动列边缘调整宽度、最多 5 个显示模板、双击资料单格编辑、复制/粘贴与暂存修改。选择列固定最左、操作列固定最右，避免最後修改時間右侧出现异常勾选/输入栏。密码列维持安全状态显示，不开放表格内明文编辑。</div>
     </div>
 
     <div class="table-wrap bg-white rounded-lg overflow-hidden border border-gray-200">
@@ -169,12 +191,13 @@
               <th data-col="accountSerial" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">账号序号</th>
               <th data-col="account" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">账号</th>
               <th data-col="realName" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">实名人</th>
+              <th data-col="ownerType" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500">公/私</th>
               <th data-col="accountType" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">账号类型</th>
               <th data-col="tapnow" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tapnow 密码</th>
               <th data-col="jimeng" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">即梦密码</th>
               <th data-col="wechat" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">微信密码</th>
               <th data-col="qq" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">QQ 密码</th>
-              <th data-col="updatedAt" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">更新时间</th>
+              <th data-col="updatedAt" draggable="true" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">最後修改時間</th>
               <th data-col="actions" draggable="true" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">操作</th>
             </tr>
           </thead>
@@ -199,6 +222,7 @@
         </div>
       </div>
     </div>
+    </div>
   </main>
 
   <div id="accountImportModal" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-50 overflow-y-auto">
@@ -206,7 +230,7 @@
       <div class="px-6 py-5 border-b border-gray-200 flex items-start justify-between gap-4">
         <div>
           <h2 class="text-xl font-semibold text-gray-900"><i class="fas fa-file-import text-emerald-600 mr-2"></i>账号数据库批量导入</h2>
-          <p class="text-sm text-gray-500 mt-1">支持直接选择 Excel 文件导入，也支持从 Excel 复制并粘贴。默认列顺序：账号序号、账号、实名人、账号类型、Tapnow密码、即梦密码、微信密码、QQ密码。</p>
+          <p class="text-sm text-gray-500 mt-1">支持直接选择 Excel 文件导入，也支持从 Excel 复制并粘贴。默认列顺序：账号序号、账号、实名人、账号类型、Tapnow密码、即梦密码、微信密码、QQ密码、公/私。旧版 8 列模板仍兼容。</p>
         </div>
         <button id="closeAccountImportModal" type="button" class="text-gray-400 hover:text-gray-600 p-1" aria-label="关闭批量导入"><i class="fas fa-times text-xl"></i></button>
       </div>
@@ -242,7 +266,7 @@
         <div>
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
             <label for="accountImportPaste" class="text-sm font-semibold text-gray-700">或粘贴 Excel 数据</label>
-            <span class="text-xs text-gray-500">支持带表头；也支持按 8 列默认顺序直接粘贴</span>
+            <span class="text-xs text-gray-500">支持带表头；默认 9 列，最后一列为公/私；兼容旧版 8 列</span>
           </div>
           <textarea id="accountImportPaste" rows="8" class="w-full px-3 py-3 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 bg-white" placeholder="账号序号	账号	实名人	账号类型	Tapnow密码	即梦密码	微信密码	QQ密码
 001	user@example.com	张三	邮箱	pass1	pass2	pass3	pass4"></textarea>
@@ -310,9 +334,10 @@
       <form id="accountForm" class="p-6 space-y-6">
         <input type="hidden" id="originalAccount">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div><label for="ownerType" class="block text-sm font-medium text-gray-700 mb-1">公/私 *</label><select id="ownerType" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white"><option value="公司">公司</option><option value="个人">个人</option></select><p class="text-xs text-gray-500 mt-1">新增时自动生成独立编号；保存时再次检查，避免重复。</p></div>
           <div>
             <label for="accountSerial" class="block text-sm font-medium text-gray-700 mb-1">账号序号 *</label>
-            <input id="accountSerial" type="text" required placeholder="例如：001 / A-001" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
+            <input id="accountSerial" type="text" required placeholder="自动生成：公司01号 / 个人01号" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
             <p class="text-xs text-gray-500 mt-1">按文本保存，001 不会变成 1；账号序号为“配音供应商”时允许多个不同账号重复使用。</p>
           </div>
           <div>
@@ -325,7 +350,7 @@
           </div>
           <div>
             <label for="accountType" class="block text-sm font-medium text-gray-700 mb-1">账号类型</label>
-            <input id="accountType" type="text" list="accountTypeOptions" placeholder="例如：手机号 / 邮箱 / 微信 / QQ" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white">
+            <select id="accountType" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white"><option value="">未设置</option></select>
             <datalist id="accountTypeOptions"></datalist>
           </div>
         </div>
@@ -532,11 +557,12 @@
     }
 
     async function loadAccounts() {
-      bodyEl.innerHTML = '<tr><td colspan="11" class="px-5 py-10 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在加载...</td></tr>';
+      bodyEl.innerHTML = '<tr><td colspan="12" class="px-5 py-10 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>正在加载...</td></tr>';
       emptyEl.classList.add('hidden');
       try {
         const params = new URLSearchParams({ page: String(state.page), pageSize: String(state.pageSize), sortKey: state.sortKey || 'updatedAt', sortDir: state.sortDir || 'desc' });
         if (state.q) params.set('q', state.q);
+        if (state.filters) params.set('filters', JSON.stringify(state.filters));
         const data = await api('/api/accounts?' + params.toString());
         state.page = data.page || 1;
         state.totalPages = data.totalPages || 0;
@@ -548,7 +574,7 @@
         renderPagination();
         if (superAdminState.unlocked) await revealVisiblePasswords(items);
       } catch (error) {
-        bodyEl.innerHTML = '<tr><td colspan="11" class="px-5 py-10 text-center text-red-600">' + escapeHtml(error.message) + '</td></tr>';
+        bodyEl.innerHTML = '<tr><td colspan="12" class="px-5 py-10 text-center text-red-600">' + escapeHtml(error.message) + '</td></tr>';
       }
     }
 
@@ -565,12 +591,10 @@
       if (!items.length) {
         bodyEl.innerHTML = '';
         emptyEl.classList.remove('hidden');
-        document.getElementById('accountTypeOptions').innerHTML = '';
+
         return;
       }
       emptyEl.classList.add('hidden');
-      const accountTypes = [...new Set(items.map((item) => String(item.accountType || '').trim()).filter(Boolean))].sort();
-      document.getElementById('accountTypeOptions').innerHTML = accountTypes.map((value) => '<option value="' + escapeHtml(value) + '"></option>').join('');
       bodyEl.innerHTML = items.map((item) => {
         const serial = escapeHtml(item.accountSerial);
         const encoded = encodeURIComponent(item.account);
@@ -582,12 +606,13 @@
           '<td data-col="accountSerial" data-editable="1" data-label="账号序号" class="db-cell-editable px-4 py-4 text-sm font-semibold text-gray-900 font-mono whitespace-nowrap">' + serial + '</td>' +
           '<td data-col="account" data-editable="1" data-label="账号" class="db-cell-editable px-4 py-4 text-sm text-gray-700 break-all min-w-48">' + escapeHtml(item.account) + legacyBadge + '</td>' +
           '<td data-col="realName" data-editable="1" data-label="实名人" class="db-cell-editable px-4 py-4 text-sm text-gray-700 whitespace-nowrap">' + (escapeHtml(item.realName) || '<span class="text-gray-400">—</span>') + '</td>' +
+          '<td data-col="ownerType" data-editable="1" data-label="公/私" class="db-cell-editable px-4 py-4 text-sm text-gray-700">'+escapeHtml(item.ownerType || '')+'</td>' +
           '<td data-col="accountType" data-editable="1" data-label="账号类型" class="db-cell-editable px-4 py-4 text-sm text-gray-700 whitespace-nowrap">' + (escapeHtml(item.accountType) || '<span class="text-gray-400">—</span>') + '</td>' +
           '<td data-col="tapnow" data-label="Tapnow 密码" class="px-4 py-4 text-sm min-w-36" data-password-cell="tapnow:' + encoded + '">' + passwordStatusCell(item, 'tapnow', 'Tapnow') + '</td>' +
           '<td data-col="jimeng" data-label="即梦密码" class="px-4 py-4 text-sm min-w-36" data-password-cell="jimeng:' + encoded + '">' + passwordStatusCell(item, 'jimeng', '即梦') + '</td>' +
           '<td data-col="wechat" data-label="微信密码" class="px-4 py-4 text-sm min-w-36" data-password-cell="wechat:' + encoded + '">' + passwordStatusCell(item, 'wechat', '微信') + '</td>' +
           '<td data-col="qq" data-label="QQ 密码" class="px-4 py-4 text-sm min-w-36" data-password-cell="qq:' + encoded + '">' + passwordStatusCell(item, 'qq', 'QQ') + '</td>' +
-          '<td data-col="updatedAt" data-label="更新时间" class="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">' + escapeHtml(formatTime(item.updatedAt)) + '</td>' +
+          '<td data-col="updatedAt" data-label="最後修改時間" class="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">' + escapeHtml(formatTime(item.updatedAt)) + '</td>' +
           '<td data-col="actions" data-label="操作" class="px-4 py-4 text-sm text-right whitespace-nowrap">' +
             '<button class="edit-account text-indigo-600 hover:text-indigo-800 mr-4" data-account="' + encoded + '"><i class="fas fa-edit mr-1"></i>编辑</button>' +
             '<button class="delete-account text-red-600 hover:text-red-800" data-account="' + encoded + '"><i class="fas fa-trash mr-1"></i>删除</button>' +
@@ -665,7 +690,26 @@
       document.getElementById('clearLegacyPasswordWrap').classList.add('hidden');
     }
 
-    function openCreateModal() {
+    let accountTypeValues = [];
+    let serialGeneration = 0;
+    async function loadAccountTypeValues(current = '') {
+      const data = await api('/api/accounts/types');
+      accountTypeValues = [...new Set([...(data.items || []), ...(current ? [current] : [])])];
+      const el = document.getElementById('accountType');
+      el.innerHTML = '<option value="">未设置</option>' + accountTypeValues.map(v => '<option value="'+escapeHtml(v)+'">'+escapeHtml(v)+'</option>').join('');
+      el.value = current;
+    }
+    async function refreshGeneratedSerial() {
+      if (document.getElementById('originalAccount').value) return;
+      const serial = document.getElementById('accountSerial'), token = ++serialGeneration;
+      serial.value = ''; serial.readOnly = true;
+      try {
+        const data = await api('/api/accounts/next-serial?ownerType='+encodeURIComponent(document.getElementById('ownerType').value));
+        if (token === serialGeneration) serial.value = data.accountSerial;
+      } catch (error) { showToast(error.message, 'error'); }
+    }
+    document.getElementById('ownerType').addEventListener('change', refreshGeneratedSerial);
+    async function openCreateModal() {
       document.getElementById('modalTitle').textContent = '新增账号';
       document.getElementById('originalAccount').value = '';
       document.getElementById('accountSerial').value = '';
@@ -676,7 +720,9 @@
       document.getElementById('modalError').classList.add('hidden');
       document.getElementById('accountModal').classList.remove('hidden');
       document.body.classList.add('overflow-hidden');
-      document.getElementById('accountSerial').focus();
+      document.getElementById('ownerType').value = '公司';
+      await Promise.all([refreshGeneratedSerial(), loadAccountTypeValues()]).catch(e => showToast(e.message,'error'));
+      document.getElementById('account').focus();
     }
 
     async function openEditModal(accountKey) {
@@ -686,6 +732,9 @@
         document.getElementById('modalTitle').textContent = '编辑账号';
         document.getElementById('originalAccount').value = item.account;
         document.getElementById('accountSerial').value = item.accountSerial;
+        document.getElementById('accountSerial').readOnly = false;
+        document.getElementById('ownerType').value = item.ownerType || '';
+        await loadAccountTypeValues(item.accountType || '');
         document.getElementById('account').value = item.account;
         document.getElementById('realName').value = item.realName || '';
         document.getElementById('accountType').value = item.accountType || '';
@@ -723,6 +772,8 @@
       event.preventDefault();
       const originalAccount = document.getElementById('originalAccount').value.trim();
       const payload = {
+        ownerType: document.getElementById('ownerType').value,
+        autoSerial: !originalAccount,
         accountSerial: document.getElementById('accountSerial').value.trim(),
         account: document.getElementById('account').value.trim(),
         realName: document.getElementById('realName').value.trim(),
@@ -992,6 +1043,7 @@
         account: ['账号', '账户', '用户名', 'account'],
         realName: ['实名人', '实名认证人', 'realname'],
         accountType: ['账号类型', '账户类型', 'accounttype'],
+        ownerType: ['公/私','公私','归属','ownerType','ownertype'],
         tapnowPassword: ['Tapnow密码', 'tapnow密码', 'tapnowpassword'],
         jimengPassword: ['即梦密码', 'jimeng密码', 'jimengpassword'],
         wechatPassword: ['微信密码', 'wechat密码', 'wechatpassword'],
@@ -1011,7 +1063,7 @@
         mapping.account = 1;
         if (maxCols <= 3) mapping.legacyPassword = 2;
         else {
-          mapping.realName = 2; mapping.accountType = 3; mapping.tapnowPassword = 4; mapping.jimengPassword = 5; mapping.wechatPassword = 6; mapping.qqPassword = 7;
+          mapping.realName = 2; mapping.accountType = 3; mapping.tapnowPassword = 4; mapping.jimengPassword = 5; mapping.wechatPassword = 6; mapping.qqPassword = 7; if(maxCols>=9)mapping.ownerType=8;
         }
       }
 
@@ -1025,15 +1077,17 @@
           const account = String(item.cells[mapping.account] == null ? '' : item.cells[mapping.account]).trim();
           const realName = String(item.cells[mapping.realName] == null ? '' : item.cells[mapping.realName]).trim();
           const accountType = String(item.cells[mapping.accountType] == null ? '' : item.cells[mapping.accountType]).trim();
+          const ownerType = String(item.cells[mapping.ownerType] == null ? '' : item.cells[mapping.ownerType]).trim().replace('個人','个人');
           const tapnowPassword = String(item.cells[mapping.tapnowPassword] == null ? '' : item.cells[mapping.tapnowPassword]);
           const jimengPassword = String(item.cells[mapping.jimengPassword] == null ? '' : item.cells[mapping.jimengPassword]);
           const wechatPassword = String(item.cells[mapping.wechatPassword] == null ? '' : item.cells[mapping.wechatPassword]);
           const qqPassword = String(item.cells[mapping.qqPassword] == null ? '' : item.cells[mapping.qqPassword]);
           const legacyPassword = String(item.cells[mapping.legacyPassword] == null ? '' : item.cells[mapping.legacyPassword]);
           const errors = [];
+          if(ownerType && !['公司','个人'].includes(ownerType))errors.push('公/私只能填写公司或个人');
           if (!serial) errors.push('账号序号不能为空');
           if (!account) errors.push('账号不能为空');
-          return { sourceRow: item.sourceRow, data: { __sourceRow: item.sourceRow, accountSerial: serial, account, realName, accountType, tapnowPassword, jimengPassword, wechatPassword, qqPassword, legacyPassword }, errors };
+          return { sourceRow: item.sourceRow, data: { __sourceRow: item.sourceRow, accountSerial: serial, account, realName, accountType, ownerType, tapnowPassword, jimengPassword, wechatPassword, qqPassword, legacyPassword }, errors };
         });
 
       // 文件内部重复也在前端先拦截；全覆盖后端还会再次验证。
@@ -1246,23 +1300,25 @@
     {id:'accountSerial',label:'账号序号',editable:true,sortable:true,width:135},
     {id:'account',label:'账号',editable:true,sortable:true,width:210},
     {id:'realName',label:'实名人',editable:true,sortable:true,width:120},
+    {id:'ownerType',label:'公/私',editable:true,sortable:true,width:100},
     {id:'accountType',label:'账号类型',editable:true,sortable:true,width:130},
     {id:'tapnow',label:'Tapnow 密码',editable:false,sortable:true,width:145},
     {id:'jimeng',label:'即梦密码',editable:false,sortable:true,width:135},
     {id:'wechat',label:'微信密码',editable:false,sortable:true,width:135},
     {id:'qq',label:'QQ 密码',editable:false,sortable:true,width:135},
-    {id:'updatedAt',label:'更新时间',editable:false,sortable:true,width:175},
+    {id:'updatedAt',label:'最後修改時間',editable:false,sortable:true,width:175},
     {id:'actions',label:'操作',editable:false,sortable:false,width:160}
   ];
   const IDS=COLS.map(c=>c.id), DATA_IDS=COLS.filter(c=>!['select','actions'].includes(c.id)).map(c=>c.id), DEF=Object.fromEntries(COLS.map(c=>[c.id,c]));
   const LAYOUT_KEY='databaseTableLayoutV1', TEMPLATE_KEY='databaseTableTemplatesV1', TEMPLATE_API='/api/ui-preferences/table-templates/database', EDIT_KEY='databaseTablePendingEditsV1';
   let selectedAccounts=new Set();
+  let saving=false;
   let dragCol='';
   let activeSortCol='';
   let activeEditor=null;
   let cellAnchor=null, cellRange=null, selecting=false;
-  function defaultLayout(){return {order:['select',...DATA_IDS,'actions'],widths:Object.fromEntries(COLS.map(c=>[c.id,c.width])),sort:{column:'updatedAt',direction:'desc'}};}
-  function normalizeLayout(raw){const d=defaultLayout(),seen=new Set(),dataOrder=[];(raw&&Array.isArray(raw.order)?raw.order:[]).forEach(id=>{if(DATA_IDS.includes(id)&&!seen.has(id)){seen.add(id);dataOrder.push(id);}});DATA_IDS.forEach(id=>{if(!seen.has(id))dataOrder.push(id);});const order=['select',...dataOrder,'actions'];const widths={...d.widths};if(raw&&raw.widths)IDS.forEach(id=>{const n=Number(raw.widths[id]);if(Number.isFinite(n))widths[id]=Math.max(id==='select'?44:70,Math.min(700,n));});const c=raw?.sort?.column&&DEF[raw.sort.column]?.sortable?raw.sort.column:'updatedAt';const dir=['asc','desc','none'].includes(raw?.sort?.direction)?raw.sort.direction:'desc';return {order,widths,sort:{column:c,direction:dir}};}
+  function defaultLayout(){return {order:['select',...DATA_IDS,'actions'],widths:Object.fromEntries(COLS.map(c=>[c.id,c.width])),sort:{column:'updatedAt',direction:'desc'},hidden:[],filters:{}};}
+  function normalizeLayout(raw){const d=defaultLayout(),seen=new Set(),dataOrder=[];(raw&&Array.isArray(raw.order)?raw.order:[]).forEach(id=>{if(DATA_IDS.includes(id)&&!seen.has(id)){seen.add(id);dataOrder.push(id);}});DATA_IDS.forEach(id=>{if(!seen.has(id))dataOrder.push(id);});const order=['select',...dataOrder,'actions'];const widths={...d.widths};if(raw&&raw.widths)IDS.forEach(id=>{const n=Number(raw.widths[id]);if(Number.isFinite(n))widths[id]=Math.max(id==='select'?44:70,Math.min(700,n));});const c=raw?.sort?.column&&DEF[raw.sort.column]?.sortable?raw.sort.column:'updatedAt';const dir=['asc','desc','none'].includes(raw?.sort?.direction)?raw.sort.direction:'desc';return {order,widths,sort:{column:c,direction:dir},hidden:(raw?.hidden||[]).filter(id=>DATA_IDS.includes(id)),filters:Object.fromEntries(Object.entries(raw?.filters||{}).filter(([k,v])=>DATA_IDS.includes(k)&&Array.isArray(v)))};}
   function loadLayout(){try{return normalizeLayout(JSON.parse(localStorage.getItem(LAYOUT_KEY)||'null'));}catch(_){return defaultLayout();}}
   let layout=loadLayout();
   function saveLayout(){localStorage.setItem(LAYOUT_KEY,JSON.stringify(layout));}
@@ -1274,27 +1330,27 @@
   function itemFor(key){return (databaseCurrentItems||[]).find(x=>String(x.account)===String(key))||null;}
   function baseValue(item,col){if(!item)return ''; if(col==='updatedAt')return formatTime(item.updatedAt); if(['tapnow','jimeng','wechat','qq'].includes(col))return item.credentialStatus?.[col]?'已设置':'未设置'; return item[col]??'';}
   function effectiveValue(key,col){return edits[key]&&Object.prototype.hasOwnProperty.call(edits[key],col)?edits[key][col]:baseValue(itemFor(key),col);}
-  function stageValue(key,col,value){const item=itemFor(key);if(!item||!DEF[col]?.editable)return;const base=String(baseValue(item,col)??'');const next=String(value??'').trim();if(next===base){if(edits[key]){delete edits[key][col];if(!Object.keys(edits[key]).length)delete edits[key];}}else{if(!edits[key])edits[key]={};edits[key][col]=next;}saveEdits();enhanceRows();}
-  function updateActionState(){const has=editCount()>0;const save=document.getElementById('saveDatabaseTableEditsBtn'),cancel=document.getElementById('cancelDatabaseTableEditsBtn'),del=document.getElementById('bulkDeleteAccountsBtn');if(save)save.disabled=!has;if(cancel)cancel.disabled=!has;if(del)del.disabled=selectedAccounts.size===0;const count=document.getElementById('selectedAccountCount');if(count)count.textContent=`已选 ${selectedAccounts.size} 条`;const all=document.getElementById('selectAllAccountsPage');if(all){const keys=(databaseCurrentItems||[]).map(x=>String(x.account));all.checked=keys.length>0&&keys.every(k=>selectedAccounts.has(k));all.indeterminate=keys.some(k=>selectedAccounts.has(k))&&!all.checked;}}
-  function applyLayout(){const table=document.getElementById('accountsTable');if(!table)return;const head=table.tHead?.rows?.[0];if(head){const map=Object.fromEntries([...head.cells].map(c=>[c.dataset.col,c]));layout.order.forEach(id=>{if(map[id])head.appendChild(map[id]);});} [...table.tBodies[0]?.rows||[]].forEach(tr=>{const map=Object.fromEntries([...tr.cells].map(c=>[c.dataset.col,c]));layout.order.forEach(id=>{if(map[id])tr.appendChild(map[id]);});});const desktop=window.innerWidth>768;layout.order.forEach(id=>{const w=Number(layout.widths[id]||DEF[id]?.width||120);table.querySelectorAll(`[data-col="${id}"]`).forEach(el=>{el.style.width=desktop?w+'px':'';el.style.minWidth=desktop?w+'px':'';el.style.maxWidth=desktop?w+'px':'';});});}
-  function ensureHeaders(){document.querySelectorAll('#accountsTable thead th[data-col]').forEach(th=>{const col=th.dataset.col,def=DEF[col];if(!def)return;if(th.dataset.enhanced!=='1'){th.dataset.enhanced='1';th.draggable=DATA_IDS.includes(col);const label=document.createElement('span');label.className='db-header-label';label.textContent=def.label;th.textContent='';th.appendChild(label);if(def.sortable){th.title='双击自动排序；点击右侧箭头选择排序顺序';const btn=document.createElement('button');btn.type='button';btn.className='db-sort-btn';btn.dataset.col=col;btn.title='设置排序顺序';btn.setAttribute('aria-label',def.label+' 排序设置');btn.innerHTML='<i class="fas fa-caret-down"></i>';th.appendChild(btn);}const grip=document.createElement('span');grip.className='db-resize-grip';grip.dataset.col=col;th.appendChild(grip);}const active=layout.sort?.column===col&&layout.sort.direction!=='none';const btn=th.querySelector('.db-sort-btn');if(btn){btn.classList.toggle('active',!!active);btn.innerHTML=active?(layout.sort.direction==='asc'?'<i class="fas fa-sort-up"></i>':'<i class="fas fa-sort-down"></i>'):'<i class="fas fa-caret-down"></i>';}});}
+  function stageValue(key,col,value){const item=itemFor(key);if(!item||!DEF[col]?.editable)return;const base=String(baseValue(item,col)??'');const next=String(value??'').trim();if(col==='ownerType' && !['公司','个人',''].includes(next)){showToast('公/私只能填写公司或个人','error');return;}if(next===base){if(edits[key]){delete edits[key][col];if(!Object.keys(edits[key]).length)delete edits[key];}}else{if(!edits[key])edits[key]={};edits[key][col]=next;}saveEdits();enhanceRows();}
+  function updateActionState(){const has=editCount()>0;const save=document.getElementById('saveDatabaseTableEditsBtn'),cancel=document.getElementById('cancelDatabaseTableEditsBtn'),del=document.getElementById('bulkDeleteAccountsBtn');if(save)save.disabled=saving||!has;if(cancel)cancel.disabled=saving||!has;if(del)del.disabled=saving||selectedAccounts.size===0;const count=document.getElementById('selectedAccountCount');if(count)count.textContent=`已选 ${selectedAccounts.size} 条`;const all=document.getElementById('selectAllAccountsPage');if(all){const keys=(databaseCurrentItems||[]).map(x=>String(x.account));all.checked=keys.length>0&&keys.every(k=>selectedAccounts.has(k));all.indeterminate=keys.some(k=>selectedAccounts.has(k))&&!all.checked;}}
+  function applyLayout(){const table=document.getElementById('accountsTable');if(!table)return;const head=table.tHead?.rows?.[0];if(head){const map=Object.fromEntries([...head.cells].map(c=>[c.dataset.col,c]));layout.order.forEach(id=>{if(map[id])head.appendChild(map[id]);});} [...table.tBodies[0]?.rows||[]].forEach(tr=>{const map=Object.fromEntries([...tr.cells].map(c=>[c.dataset.col,c]));layout.order.forEach(id=>{if(map[id])tr.appendChild(map[id]);});});const desktop=true;layout.order.forEach(id=>{const w=Number(layout.widths[id]||DEF[id]?.width||120);table.querySelectorAll(`th[data-col="${id}"],td[data-col="${id}"]`).forEach(el=>{el.style.display=layout.hidden.includes(id)?'none':'';el.style.width=desktop?w+'px':'';el.style.minWidth=desktop?w+'px':'';el.style.maxWidth=desktop?w+'px':'';});});}
+  function ensureHeaders(){document.querySelectorAll('#accountsTable thead th[data-col]').forEach(th=>{const col=th.dataset.col,def=DEF[col];if(!def)return;if(th.dataset.enhanced!=='1'){th.dataset.enhanced='1';th.draggable=DATA_IDS.includes(col);const label=document.createElement('span');label.className='db-header-label';label.textContent=def.label;th.textContent='';th.appendChild(label);if(def.sortable){th.title='双击自动排序；点击右侧箭头选择排序顺序';const btn=document.createElement('button');btn.type='button';btn.className='db-sort-btn';btn.dataset.col=col;btn.title='设置排序顺序';btn.setAttribute('aria-label',def.label+' 排序设置');btn.innerHTML='<i class="fas fa-caret-down"></i>';th.appendChild(btn);}const grip=document.createElement('span');grip.className='db-resize-grip';grip.dataset.col=col;th.appendChild(grip);}const active=layout.sort?.column===col&&layout.sort.direction!=='none';const btn=th.querySelector('.db-sort-btn');if(btn){btn.classList.toggle('active',!!active||Object.hasOwn(layout.filters,col));btn.title=Object.hasOwn(layout.filters,col)?'已筛选 · 排序/筛选':'排序/筛选';btn.innerHTML=active?(layout.sort.direction==='asc'?'<i class="fas fa-sort-up"></i>':'<i class="fas fa-sort-down"></i>'):'<i class="fas fa-caret-down"></i>';}});}
   function enhanceRows(){document.querySelectorAll('#accountsBody tr[data-account-key]').forEach(tr=>{const key=decodeKey(tr);const cb=tr.querySelector('.account-row-select');if(cb)cb.checked=selectedAccounts.has(key);tr.querySelectorAll('td[data-col]').forEach(td=>{const col=td.dataset.col;if(DEF[col]?.editable){td.classList.add('db-cell-editable');td.classList.toggle('db-cell-pending',!!(edits[key]&&Object.prototype.hasOwnProperty.call(edits[key],col)));if(!td.querySelector('.db-cell-editor')){const value=effectiveValue(key,col);const pending=!!(edits[key]&&Object.prototype.hasOwnProperty.call(edits[key],col));const item=itemFor(key);if(col==='account'&&!pending&&item?.hasLegacyPassword){td.innerHTML=escapeHtml(String(value||''))+'<div class="mt-1"><span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs"><i class="fas fa-exclamation-triangle mr-1"></i>旧版密码待归类</span></div>';}else{td.textContent=value===''?'—':String(value);}td.title=String(value||'');}}});});applyCellSelection();updateActionState();}
   function enhance(){ensureHeaders();applyLayout();enhanceRows();}
-  function openSortMenu(btn){closeSortMenu();activeSortCol=btn.dataset.col;const rect=btn.getBoundingClientRect();const menu=document.createElement('div');menu.id='dbTableSortMenu';menu.className='db-table-sort-menu';menu.style.left=Math.min(rect.left,window.innerWidth-170)+'px';menu.style.top=(rect.bottom+5)+'px';menu.innerHTML='<button data-dir="asc"><i class="fas fa-sort-up mr-2"></i>升序</button><button data-dir="desc"><i class="fas fa-sort-down mr-2"></i>降序</button><button data-dir="none"><i class="fas fa-times mr-2"></i>清除排序</button>';document.body.appendChild(menu);}
+  async function openSortMenu(btn){closeSortMenu();activeSortCol=btn.dataset.col;const col=activeSortCol,rect=btn.getBoundingClientRect(),menu=document.createElement('div');menu.id='dbTableSortMenu';menu.className='db-table-sort-menu';menu.style.cssText='width:280px;max-height:80vh;overflow:auto;left:'+Math.max(8,Math.min(rect.left,innerWidth-295))+'px;top:'+Math.min(rect.bottom+5,innerHeight-440)+'px';menu.innerHTML='<button data-dir="asc">↑ 升序</button><button data-dir="desc">↓ 降序</button><button data-dir="none">清除排序</button><hr><input aria-label="搜索筛选值" placeholder="搜索筛选值" class="db-filter-search db-cell-editor"><div class="flex"><button data-all="1">全选</button><button data-all="0">全不选</button></div><div class="db-filter-values" style="max-height:200px;overflow:auto">读取全库选项…</div><button data-apply>应用筛选</button><button data-clear>清除该栏筛选</button>';document.body.append(menu);let values=[],chosen=new Set(layout.filters[col]||[]),search='';const list=menu.querySelector('.db-filter-values');function draw(){list.innerHTML='';values.filter(v=>v.toLowerCase().includes(search)).forEach(v=>{const label=document.createElement('label');label.style.cssText='display:flex;gap:8px;padding:6px';const cb=document.createElement('input');cb.type='checkbox';cb.checked=chosen.has(v);cb.addEventListener('change',()=>cb.checked?chosen.add(v):chosen.delete(v));label.append(cb,document.createTextNode(v||'(空白)'));list.append(label);});}menu.querySelector('input').oninput=e=>{search=e.target.value.toLowerCase();draw();};menu.querySelectorAll('[data-all]').forEach(b=>b.onclick=()=>{values.filter(v=>v.toLowerCase().includes(search)).forEach(v=>b.dataset.all==='1'?chosen.add(v):chosen.delete(v));draw();});menu.querySelector('[data-apply]').onclick=()=>{layout.filters[col]=[...chosen];state.filters=layout.filters;saveLayout();state.page=1;closeSortMenu();loadAccounts();};menu.querySelector('[data-clear]').onclick=()=>{delete layout.filters[col];state.filters=layout.filters;saveLayout();state.page=1;closeSortMenu();loadAccounts();};try{const data=await api('/api/accounts/options');const items=data.accounts||data.items||[];values=[...new Set(items.map(x=>['tapnow','jimeng','wechat','qq'].includes(col)?(x.credentialStatus?.[col]?'已设置':'未设置'):String(x[col]??'')))].sort((a,b)=>a.localeCompare(b,'zh-CN',{numeric:true}));if(!Object.hasOwn(layout.filters,col))chosen=new Set(values);draw();}catch(e){list.textContent=e.message;menu.querySelector('[data-apply]').disabled=true;}}
   function closeSortMenu(){document.getElementById('dbTableSortMenu')?.remove();activeSortCol='';}
   function setSort(col,dir){layout.sort={column:col,direction:dir};saveLayout();state.sortKey=dir==='none'?'updatedAt':col;state.sortDir=dir==='none'?'desc':dir;state.page=1;loadAccounts();}
   function startResize(e){e.preventDefault();e.stopPropagation();const grip=e.target.closest('.db-resize-grip');const col=grip?.dataset.col;if(!col)return;const startX=e.clientX,start=Number(layout.widths[col]||DEF[col].width);function move(ev){layout.widths[col]=Math.max(col==='select'?44:70,Math.min(700,start+ev.clientX-startX));applyLayout();}function up(){document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);saveLayout();}document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);}
-  function beginEdit(td){if(!td||td.querySelector('.db-cell-editor')||!DEF[td.dataset.col]?.editable)return;commitEditor();const tr=td.closest('tr[data-account-key]'),key=decodeKey(tr),col=td.dataset.col;const input=document.createElement('input');input.type='text';input.className='db-cell-editor';input.value=String(effectiveValue(key,col)||'');td.textContent='';td.appendChild(input);activeEditor={td,input,key,col,initial:input.value};input.focus();input.select();}
+  async function beginEdit(td){if(saving||!td||td.querySelector('.db-cell-editor')||!DEF[td.dataset.col]?.editable)return;commitEditor();const tr=td.closest('tr[data-account-key]'),key=decodeKey(tr),col=td.dataset.col;const input=document.createElement(['ownerType','accountType'].includes(col)?'select':'input');if(col==='accountType'){try{await loadAccountTypeValues();}catch(e){showToast(e.message,'error');return;}}if(input.tagName==='SELECT'){const values=col==='ownerType'?['公司','个人']:['',...accountTypeValues];const current=String(effectiveValue(key,col)||'');if(!values.includes(current))values.unshift(current);input.innerHTML=values.map(v=>'<option value="'+escapeHtml(v)+'">'+escapeHtml(v||'未设置')+'</option>').join('');}else input.type='text';input.className='db-cell-editor';input.value=String(effectiveValue(key,col)||'');td.textContent='';td.appendChild(input);activeEditor={td,input,key,col,initial:input.value};input.addEventListener('input',()=>stageValue(key,col,input.value));input.addEventListener('change',()=>stageValue(key,col,input.value));input.focus();input.select?.();}
   function commitEditor(){if(!activeEditor)return true;const {td,input,key,col,initial}=activeEditor;activeEditor=null;const val=input.value.trim();stageValue(key,col,val);td.textContent=val||'—';return true;}
   function cancelEditor(){if(!activeEditor)return;const {td,key,col}=activeEditor;activeEditor=null;const val=effectiveValue(key,col);td.textContent=val===''?'—':String(val);}
-  async function saveAllEdits(){commitEditor();const keys=Object.keys(edits);if(!keys.length)return;const btn=document.getElementById('saveDatabaseTableEditsBtn');const old=btn?.innerHTML;if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin mr-1"></i>保存中...';}let ok=0,fail=0;const msgs=[];for(const key of keys){let item=itemFor(key);try{if(!item){const fetched=await api('/api/accounts/item?account='+encodeURIComponent(key));item=fetched.account||null;}if(!item)throw new Error('账号记录不存在');const row=edits[key]||{};const payload={accountSerial:Object.prototype.hasOwnProperty.call(row,'accountSerial')?row.accountSerial:item.accountSerial,account:Object.prototype.hasOwnProperty.call(row,'account')?row.account:item.account,realName:Object.prototype.hasOwnProperty.call(row,'realName')?row.realName:item.realName,accountType:Object.prototype.hasOwnProperty.call(row,'accountType')?row.accountType:item.accountType};const data=await api('/api/accounts/item?account='+encodeURIComponent(key),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(data.success===false)throw new Error(data.message||'保存失败');delete edits[key];ok++;}catch(err){fail++;msgs.push(`${key}：${err.message||'保存失败'}`);}}saveEdits();if(btn)btn.innerHTML=old;if(ok)showToast(`已保存 ${ok} 条账号资料${fail?`，${fail} 条失败`:''}`,fail?'error':'success');else if(fail)showToast('保存失败：'+msgs.slice(0,2).join('；'),'error');await loadAccounts();}
-  function cancelAllEdits(){cancelEditor();edits={};saveEdits();cellRange=null;cellAnchor=null;loadAccounts();showToast('已还原编辑前内容，并清除所有暂存修改','info');}
-  function cellCoords(td){const tr=td.closest('tr[data-account-key]');const rows=[...document.querySelectorAll('#accountsBody tr[data-account-key]')];const editable=layout.order.filter(id=>DEF[id]?.editable);return {r:rows.indexOf(tr),c:editable.indexOf(td.dataset.col),rows,editable};}
+  async function saveAllEdits(){if(saving)return;commitEditor();const submitted=JSON.parse(JSON.stringify(edits)),keys=Object.keys(submitted);if(!keys.length)return;saving=true;updateActionState();let ok=0;const errors=[];try{for(const key of keys){try{const fetched=await api('/api/accounts/item?account='+encodeURIComponent(key));const item=fetched.account;if(!item)throw new Error('账号不存在');const row=submitted[key];const payload=Object.fromEntries(['accountSerial','account','realName','accountType','ownerType'].map(k=>[k,Object.hasOwn(row,k)?row[k]:(item[k]||'')]));const data=await api('/api/accounts/item?account='+encodeURIComponent(key),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});for(const [field,value] of Object.entries(row)){if(String(data.account?.[field]??'')!==String(value))throw new Error('保存值不一致：'+field);}delete edits[key];if(selectedAccounts.delete(key))selectedAccounts.add(String(data.account.account));ok++;}catch(e){errors.push(key+'：'+e.message);}}}finally{saving=false;saveEdits();await loadAccounts();updateActionState();}showToast('已保存 '+ok+' 条'+(errors.length?'；失败 '+errors.length+' 条：'+errors.slice(0,2).join('；'):''),errors.length?'error':'success');}
+  function cancelAllEdits(){if(saving)return;cancelEditor();edits={};saveEdits();cellRange=null;cellAnchor=null;loadAccounts();showToast('已还原编辑前内容，并清除所有暂存修改','info');}
+  function cellCoords(td){const tr=td.closest('tr[data-account-key]');const rows=[...document.querySelectorAll('#accountsBody tr[data-account-key]')];const editable=layout.order.filter(id=>DEF[id]?.editable&&!layout.hidden.includes(id));return {r:rows.indexOf(tr),c:editable.indexOf(td.dataset.col),rows,editable};}
   function selectRange(td,extend){const x=cellCoords(td);if(x.r<0||x.c<0)return;if(!extend||!cellAnchor)cellAnchor={r:x.r,c:x.c};cellRange={r1:Math.min(cellAnchor.r,x.r),r2:Math.max(cellAnchor.r,x.r),c1:Math.min(cellAnchor.c,x.c),c2:Math.max(cellAnchor.c,x.c)};applyCellSelection();}
-  function applyCellSelection(){document.querySelectorAll('#accountsBody td.db-cell-selected,#accountsBody td.db-cell-anchor').forEach(td=>td.classList.remove('db-cell-selected','db-cell-anchor'));if(!cellRange)return;const rows=[...document.querySelectorAll('#accountsBody tr[data-account-key]')],editable=layout.order.filter(id=>DEF[id]?.editable);for(let r=cellRange.r1;r<=cellRange.r2;r++){for(let c=cellRange.c1;c<=cellRange.c2;c++){const td=rows[r]?.querySelector(`td[data-col="${editable[c]}"]`);if(td)td.classList.add('db-cell-selected');}}const a=rows[cellAnchor?.r]?.querySelector(`td[data-col="${editable[cellAnchor?.c]}"]`);if(a)a.classList.add('db-cell-anchor');}
-  function clipboardText(){if(!cellRange)return '';const rows=[...document.querySelectorAll('#accountsBody tr[data-account-key]')],editable=layout.order.filter(id=>DEF[id]?.editable),out=[];for(let r=cellRange.r1;r<=cellRange.r2;r++){const key=decodeKey(rows[r]);const vals=[];for(let c=cellRange.c1;c<=cellRange.c2;c++)vals.push(String(effectiveValue(key,editable[c])??''));out.push(vals.join('\t'));}return out.join('\n');}
+  function applyCellSelection(){document.querySelectorAll('#accountsBody td.db-cell-selected,#accountsBody td.db-cell-anchor').forEach(td=>td.classList.remove('db-cell-selected','db-cell-anchor'));if(!cellRange)return;const rows=[...document.querySelectorAll('#accountsBody tr[data-account-key]')],editable=layout.order.filter(id=>DEF[id]?.editable&&!layout.hidden.includes(id));for(let r=cellRange.r1;r<=cellRange.r2;r++){for(let c=cellRange.c1;c<=cellRange.c2;c++){const td=rows[r]?.querySelector(`td[data-col="${editable[c]}"]`);if(td)td.classList.add('db-cell-selected');}}const a=rows[cellAnchor?.r]?.querySelector(`td[data-col="${editable[cellAnchor?.c]}"]`);if(a)a.classList.add('db-cell-anchor');}
+  function clipboardText(){if(!cellRange)return '';const rows=[...document.querySelectorAll('#accountsBody tr[data-account-key]')],editable=layout.order.filter(id=>DEF[id]?.editable&&!layout.hidden.includes(id)),out=[];for(let r=cellRange.r1;r<=cellRange.r2;r++){const key=decodeKey(rows[r]);const vals=[];for(let c=cellRange.c1;c<=cellRange.c2;c++)vals.push(String(effectiveValue(key,editable[c])??''));out.push(vals.join('\t'));}return out.join('\n');}
   function parseMatrix(text){return String(text??'').replace(/\r/g,'').split('\n').filter((x,i,a)=>!(i===a.length-1&&x==='')).map(x=>x.split('\t'));}
-  function pasteMatrix(matrix){if(!cellRange||!matrix.length)return;const rows=[...document.querySelectorAll('#accountsBody tr[data-account-key]')],editable=layout.order.filter(id=>DEF[id]?.editable);const one=matrix.length===1&&matrix[0].length===1;for(let r=cellRange.r1;r<=(one?cellRange.r2:Math.min(rows.length-1,cellRange.r1+matrix.length-1));r++){for(let c=cellRange.c1;c<=(one?cellRange.c2:Math.min(editable.length-1,cellRange.c1+(matrix[r-cellRange.r1]?.length||0)-1));c++){const value=one?matrix[0][0]:(matrix[r-cellRange.r1]?.[c-cellRange.c1]??'');const key=decodeKey(rows[r]);stageValue(key,editable[c],value);}}enhanceRows();}
+  function pasteMatrix(matrix){if(saving||!cellRange||!matrix.length)return;const rows=[...document.querySelectorAll('#accountsBody tr[data-account-key]')],editable=layout.order.filter(id=>DEF[id]?.editable&&!layout.hidden.includes(id));const one=matrix.length===1&&matrix[0].length===1;for(let r=cellRange.r1;r<=(one?cellRange.r2:Math.min(rows.length-1,cellRange.r1+matrix.length-1));r++){for(let c=cellRange.c1;c<=(one?cellRange.c2:Math.min(editable.length-1,cellRange.c1+(matrix[r-cellRange.r1]?.length||0)-1));c++){const value=one?matrix[0][0]:(matrix[r-cellRange.r1]?.[c-cellRange.c1]??'');const key=decodeKey(rows[r]);stageValue(key,editable[c],value);}}enhanceRows();}
   function normalizeTemplateList(list){const out=[],seen=new Set();(Array.isArray(list)?list:[]).forEach(raw=>{if(!raw||typeof raw!=='object'||out.length>=5)return;const name=String(raw.name||'').trim();if(!name)return;const key=name.toLowerCase();if(seen.has(key))return;seen.add(key);out.push({id:String(raw.id||('dbtpl_'+Date.now().toString(36)+'_'+out.length)),name,layout:raw.layout&&typeof raw.layout==='object'?raw.layout:{},updatedAt:String(raw.updatedAt||'')||new Date().toISOString()});});return out;}
   function loadTemplates(){try{return normalizeTemplateList(JSON.parse(localStorage.getItem(TEMPLATE_KEY)||'[]'));}catch(_){return [];}}
   function saveTemplatesLocal(x){const safe=normalizeTemplateList(x);localStorage.setItem(TEMPLATE_KEY,JSON.stringify(safe));return safe;}
@@ -1302,11 +1358,11 @@
   function saveTemplates(x){const safe=saveTemplatesLocal(x);persistTemplatesToServer(safe).catch(err=>console.warn('[Database显示模板] 云端同步失败，已保留本地副本:',err));return safe;}
   function mergeTemplateLists(localList,remoteList){const byName=new Map();[...normalizeTemplateList(remoteList),...normalizeTemplateList(localList)].forEach(item=>{const key=item.name.toLowerCase(),prev=byName.get(key);if(!prev){byName.set(key,item);return;}const a=Date.parse(prev.updatedAt||'')||0,b=Date.parse(item.updatedAt||'')||0;if(b>a)byName.set(key,item);});return normalizeTemplateList([...byName.values()].sort((a,b)=>(Date.parse(b.updatedAt||'')||0)-(Date.parse(a.updatedAt||'')||0)));}
   async function syncTemplatesWithServer(){const local=loadTemplates();try{const data=await api(TEMPLATE_API,{cache:'no-store'});const remote=normalizeTemplateList(data.templates||[]),merged=mergeTemplateLists(local,remote);saveTemplatesLocal(merged);refreshTemplates();if(JSON.stringify(merged)!==JSON.stringify(remote))await persistTemplatesToServer(merged);}catch(err){console.warn('[Database显示模板] 云端读取失败，继续使用本地模板:',err);refreshTemplates();}}
-  function refreshTemplates(selected=''){const sel=document.getElementById('databaseTableTemplateSelect');if(!sel)return;const list=loadTemplates();sel.innerHTML='<option value="">显示模板</option>'+list.map(x=>`<option value="${x.id}">${escapeHtml(x.name)}</option>`).join('');sel.value=selected;document.getElementById('deleteDatabaseTableTemplateBtn').disabled=!sel.value;}
-  function saveTemplate(){const name=prompt('请输入显示模板名称（最多保存 5 个）');if(name===null)return;const n=name.trim();if(!n)return showToast('模板名称不能为空','error');const list=loadTemplates(),ex=list.find(x=>x.name===n);if(ex){if(!confirm(`已存在模板“${n}”，是否覆盖？`))return;ex.layout=JSON.parse(JSON.stringify(layout));ex.updatedAt=new Date().toISOString();saveTemplates(list);refreshTemplates(ex.id);return showToast('显示模板已更新','success');}if(list.length>=5)return showToast('最多只能保存 5 个显示模板','error');const item={id:'dbtpl_'+Date.now().toString(36),name:n,layout:JSON.parse(JSON.stringify(layout)),updatedAt:new Date().toISOString()};list.push(item);saveTemplates(list);refreshTemplates(item.id);showToast('显示模板已保存','success');}
-  function applyTemplate(id){if(!id){document.getElementById('deleteDatabaseTableTemplateBtn').disabled=true;return;}const item=loadTemplates().find(x=>x.id===id);if(!item)return;layout=normalizeLayout(item.layout);saveLayout();state.sortKey=layout.sort.direction==='none'?'updatedAt':layout.sort.column;state.sortDir=layout.sort.direction==='none'?'desc':layout.sort.direction;state.page=1;document.getElementById('deleteDatabaseTableTemplateBtn').disabled=false;loadAccounts();}
-  function deleteTemplate(){const sel=document.getElementById('databaseTableTemplateSelect'),id=sel?.value;if(!id)return;const list=loadTemplates(),item=list.find(x=>x.id===id);if(!item)return;if(!confirm(`确定删除显示模板“${item.name}”吗？`))return;saveTemplates(list.filter(x=>x.id!==id));refreshTemplates();showToast('显示模板已删除','success');}
-  function resetLayout(){layout=defaultLayout();saveLayout();state.sortKey='updatedAt';state.sortDir='desc';state.page=1;loadAccounts();showToast('已恢复 Database 默认 Layout','success');}
+  function refreshTemplates(selected=''){const sel=document.getElementById('databaseTableTemplateSelect');if(!sel)return;const list=loadTemplates();sel.innerHTML='<option value="">显示模板</option><option value="__default__">默认模板</option>'+list.map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(x.name)}</option>`).join('');sel.value=selected;document.getElementById('deleteDatabaseTableTemplateBtn').disabled=!sel.value||sel.value==='__default__';}
+  async function saveTemplate(){const name=prompt('请输入显示模板名称（最多保存 5 个）');if(name===null)return;const n=name.trim();if(!n)return showToast('模板名称不能为空','error');const list=loadTemplates(),ex=list.find(x=>x.name===n);if(ex&&!confirm(`已存在模板“${n}”，是否覆盖？`))return;if(!ex&&list.length>=5)return showToast('最多只能保存 5 个显示模板','error');const item=ex||{id:window.newWorkflowOperationId(),name:n};item.layout=JSON.parse(JSON.stringify(layout));item.updatedAt=new Date().toISOString();if(!ex)list.push(item);try{await persistTemplatesToServer(list);refreshTemplates(item.id);showToast('显示模板已保存到数据库','success');}catch(e){showToast('模板未保存到服务器：'+e.message,'error');}}
+  function applyTemplate(id){if(id==='__default__'){resetLayout();refreshTemplates(id);return;}if(!id){document.getElementById('deleteDatabaseTableTemplateBtn').disabled=true;return;}const item=loadTemplates().find(x=>x.id===id);if(!item)return;layout=normalizeLayout(item.layout);state.filters=layout.filters;saveLayout();state.sortKey=layout.sort.direction==='none'?'updatedAt':layout.sort.column;state.sortDir=layout.sort.direction==='none'?'desc':layout.sort.direction;state.page=1;document.getElementById('deleteDatabaseTableTemplateBtn').disabled=false;loadAccounts();}
+  async function deleteTemplate(){const id=document.getElementById('databaseTableTemplateSelect')?.value;if(!id||id==='__default__')return;const list=loadTemplates(),item=list.find(x=>x.id===id);if(!item||!confirm(`确定删除显示模板“${item.name}”吗？`))return;try{await persistTemplatesToServer(list.filter(x=>x.id!==id));refreshTemplates();showToast('显示模板已删除','success');}catch(e){showToast('模板删除失败：'+e.message,'error');}}
+  function resetLayout(){layout=defaultLayout();state.filters={};saveLayout();state.sortKey='updatedAt';state.sortDir='desc';state.page=1;loadAccounts();showToast('已恢复 Database 默认 Layout','success');}
   async function bulkDelete(){const keys=[...selectedAccounts];if(!keys.length)return;if(!confirm(`第一次确认：即将批量删除 ${keys.length} 条账号记录。
 仍被订阅引用的账号会自动拒绝删除。是否继续？`))return;if(!confirm(`第二次确认：确定永久删除所选 ${keys.length} 条账号？
 系统会一次处理全部选中项，不会在中途停止。`))return;const btn=document.getElementById('bulkDeleteAccountsBtn'),old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin mr-1"></i>删除中 0/'+keys.length+'...';try{const data=await api('/api/accounts/bulk-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accounts:keys})});const results=Array.isArray(data.results)?data.results:[];const failed=[];for(const item of results){const key=String(item.account||'');if(item.success){selectedAccounts.delete(key);}else{failed.push(`${key||'(未知账号)'}：${item.message||'删除失败'}`);}}const ok=Number(data.deleted??results.filter(x=>x.success).length)||0;const fail=Number(data.failed??failed.length)||0;btn.innerHTML='<i class="fas fa-check mr-1"></i>已处理 '+(ok+fail)+'/'+keys.length;showToast(`批量删除完成：成功 ${ok} 条，失败 ${fail} 条`,fail?'error':'success');if(failed.length){console.warn('[Database批量删除失败明细]',failed);const preview=failed.slice(0,8).join('\n');alert(`批量删除已处理全部 ${keys.length} 条。
@@ -1317,7 +1373,7 @@
 失败原因：
 ${preview}${failed.length>8?`
 ……另有 ${failed.length-8} 条，请查看浏览器 Console`:''}`);}}catch(err){showToast('批量删除失败：'+(err.message||'请求异常'),'error');}finally{btn.innerHTML=old;await loadAccounts();updateActionState();}}
-  async function downloadTemplateByLayout(e){e.preventDefault();if(typeof XLSX==='undefined'){location.href='/api/accounts/import-template';return;}try{const res=await fetch('/api/accounts/import-template',{credentials:'same-origin'});if(!res.ok)throw new Error('模板读取失败');const wb=XLSX.read(await res.arrayBuffer(),{type:'array'}),name=wb.SheetNames[0],ws=wb.Sheets[name],rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});const defs={accountSerial:'账号序号',account:'账号',realName:'实名人',accountType:'账号类型',tapnow:'Tapnow密码',jimeng:'即梦密码',wechat:'微信密码',qq:'QQ密码'};const headers=layout.order.filter(id=>defs[id]).map(id=>defs[id]);const src=(rows[0]||[]).map(x=>String(x).replace(/\s+/g,''));const reordered=[headers,...rows.slice(1).map(row=>headers.map(h=>{const i=src.indexOf(String(h).replace(/\s+/g,''));return i>=0?(row[i]??''):'';}))];wb.Sheets[name]=XLSX.utils.aoa_to_sheet(reordered);XLSX.writeFile(wb,'SubsTracker_账号数据库批量导入模板_当前表头.xlsx',{compression:true});showToast('已按当前 Database 表头顺序下载模板','success');}catch(err){console.warn(err);location.href='/api/accounts/import-template';}}
+  async function downloadTemplateByLayout(e){e.preventDefault();if(typeof XLSX==='undefined'){location.href='/api/accounts/import-template';return;}try{const res=await fetch('/api/accounts/import-template',{credentials:'same-origin'});if(!res.ok)throw new Error('模板读取失败');const wb=XLSX.read(await res.arrayBuffer(),{type:'array'}),name=wb.SheetNames[0],ws=wb.Sheets[name],rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});const defs={ownerType:'公/私',accountSerial:'账号序号',account:'账号',realName:'实名人',accountType:'账号类型',tapnow:'Tapnow密码',jimeng:'即梦密码',wechat:'微信密码',qq:'QQ密码'};const headers=layout.order.filter(id=>defs[id]).map(id=>defs[id]);const src=(rows[0]||[]).map(x=>String(x).replace(/\s+/g,''));const reordered=[headers,...rows.slice(1).map(row=>headers.map(h=>{const i=src.indexOf(String(h).replace(/\s+/g,''));return i>=0?(row[i]??''):'';}))];wb.Sheets[name]=XLSX.utils.aoa_to_sheet(reordered);XLSX.writeFile(wb,'SubsTracker_账号数据库批量导入模板_当前表头.xlsx',{compression:true});showToast('已按当前 Database 表头顺序下载模板','success');}catch(err){console.warn(err);location.href='/api/accounts/import-template';}}
 
   document.addEventListener('click',e=>{const sort=e.target.closest('#accountsTable .db-sort-btn');if(sort){e.preventDefault();e.stopPropagation();return openSortMenu(sort);}const choice=e.target.closest('#dbTableSortMenu button[data-dir]');if(choice&&activeSortCol){const col=activeSortCol,dir=choice.dataset.dir;closeSortMenu();return setSort(col,dir);}if(!e.target.closest('#dbTableSortMenu'))closeSortMenu();if(e.target.closest('#saveDatabaseTableTemplateBtn'))saveTemplate();if(e.target.closest('#deleteDatabaseTableTemplateBtn'))deleteTemplate();if(e.target.closest('#resetDatabaseTableLayoutBtn'))resetLayout();if(e.target.closest('#saveDatabaseTableEditsBtn'))saveAllEdits();if(e.target.closest('#cancelDatabaseTableEditsBtn'))cancelAllEdits();if(e.target.closest('#bulkDeleteAccountsBtn'))bulkDelete();if(e.target.closest('#clearAccountSelection')){selectedAccounts.clear();enhanceRows();}const cb=e.target.closest('.account-row-select');if(cb){const key=decodeURIComponent(cb.dataset.account||'');if(cb.checked)selectedAccounts.add(key);else selectedAccounts.delete(key);updateActionState();}});
   document.addEventListener('change',e=>{if(e.target.id==='databaseTableTemplateSelect')applyTemplate(e.target.value);if(e.target.id==='selectAllAccountsPage'){(databaseCurrentItems||[]).forEach(item=>{if(e.target.checked)selectedAccounts.add(String(item.account));else selectedAccounts.delete(String(item.account));});enhanceRows();}});
@@ -1326,17 +1382,20 @@ ${preview}${failed.length>8?`
   document.addEventListener('focusout',e=>{if(activeEditor&&e.target===activeEditor.input)setTimeout(()=>{if(activeEditor&&document.activeElement!==activeEditor.input)commitEditor();},0);});
   document.addEventListener('mousedown',e=>{const grip=e.target.closest('#accountsTable .db-resize-grip');if(grip)return startResize(e);const td=e.target.closest('#accountsBody td[data-editable="1"]');if(td&&!e.target.closest('.db-cell-editor')){if(activeEditor&&activeEditor.td!==td)commitEditor();selectRange(td,e.shiftKey);selecting=true;}});
   document.addEventListener('mouseover',e=>{if(!selecting||!(e.buttons&1))return;const td=e.target.closest('#accountsBody td[data-editable="1"]');if(td)selectRange(td,true);});document.addEventListener('mouseup',()=>selecting=false);
-  document.addEventListener('copy',e=>{const tag=document.activeElement?.tagName||'';if(['INPUT','TEXTAREA','SELECT'].includes(tag)||activeEditor||!cellRange)return;const t=clipboardText();if(!t)return;e.preventDefault();e.clipboardData?.setData('text/plain',t);showToast('已复制所选 Database 单格','success');});
-  document.addEventListener('paste',e=>{const tag=document.activeElement?.tagName||'';if(['INPUT','TEXTAREA','SELECT'].includes(tag)||activeEditor||!cellRange)return;const t=e.clipboardData?.getData('text/plain');if(t==null)return;e.preventDefault();pasteMatrix(parseMatrix(t));});
+  document.addEventListener('copy',e=>{const tag=document.activeElement?.tagName||'';if(document.getElementById('accountTabPanel').classList.contains('hidden')||['INPUT','TEXTAREA','SELECT'].includes(tag)||activeEditor||!cellRange)return;const t=clipboardText();if(!t)return;e.preventDefault();e.clipboardData?.setData('text/plain',t);showToast('已复制所选 Database 单格','success');});
+  document.addEventListener('paste',e=>{const tag=document.activeElement?.tagName||'';if(document.getElementById('accountTabPanel').classList.contains('hidden')||['INPUT','TEXTAREA','SELECT'].includes(tag)||activeEditor||!cellRange)return;const t=e.clipboardData?.getData('text/plain');if(t==null)return;e.preventDefault();pasteMatrix(parseMatrix(t));});
   document.addEventListener('dragstart',e=>{const th=e.target.closest('#accountsTable thead th[data-col]');if(!th||e.target.closest('.db-resize-grip,.db-sort-btn'))return;const col=th.dataset.col;if(!DATA_IDS.includes(col)){e.preventDefault();return;}dragCol=col;th.classList.add('db-dragging');e.dataTransfer.effectAllowed='move';});
   document.addEventListener('dragover',e=>{const th=e.target.closest('#accountsTable thead th[data-col]');if(dragCol&&th&&DATA_IDS.includes(th.dataset.col))e.preventDefault();});
   document.addEventListener('drop',e=>{const th=e.target.closest('#accountsTable thead th[data-col]');if(!dragCol||!th||!DATA_IDS.includes(th.dataset.col))return;e.preventDefault();const target=th.dataset.col;if(target!==dragCol){const dataOrder=layout.order.filter(x=>DATA_IDS.includes(x)&&x!==dragCol);let idx=dataOrder.indexOf(target);const rect=th.getBoundingClientRect();if(e.clientX>rect.left+rect.width/2)idx+=1;dataOrder.splice(Math.max(0,idx),0,dragCol);layout.order=['select',...dataOrder,'actions'];saveLayout();applyLayout();ensureHeaders();}dragCol='';});
   document.addEventListener('dragend',()=>{document.querySelectorAll('#accountsTable th.db-dragging').forEach(x=>x.classList.remove('db-dragging'));dragCol='';});
   document.getElementById('downloadAccountTemplateBtn')?.addEventListener('click',downloadTemplateByLayout);
+  window.commitDatabaseTableEditor=()=>{commitEditor();};
+  document.getElementById('displayDatabaseColumnsBtn').onclick=(e)=>{e.stopPropagation();closeSortMenu();const menu=document.createElement('div');menu.id='dbTableSortMenu';menu.className='db-table-sort-menu';const rect=document.getElementById('displayDatabaseColumnsBtn').getBoundingClientRect();menu.style.cssText='left:'+Math.min(rect.left,innerWidth-240)+'px;top:'+(rect.bottom+4)+'px;max-height:70vh;overflow:auto';DATA_IDS.forEach(col=>{const label=document.createElement('label');label.style.cssText='display:flex;gap:8px;padding:8px';const cb=document.createElement('input');cb.type='checkbox';cb.checked=!layout.hidden.includes(col);cb.onchange=()=>{layout.hidden=cb.checked?layout.hidden.filter(x=>x!==col):[...new Set([...layout.hidden,col])];cellRange=null;saveLayout();enhance();};label.append(cb,document.createTextNode(DEF[col].label));menu.append(label);});const all=document.createElement('button');all.textContent='全部显示';all.onclick=()=>{layout.hidden=[];saveLayout();enhance();closeSortMenu();};menu.append(all);document.body.append(menu);};
   const observer=new MutationObserver(()=>setTimeout(enhance,0));observer.observe(document.getElementById('accountsBody'),{childList:true});
+  state.filters=layout.filters;
   state.sortKey=layout.sort.direction==='none'?'updatedAt':layout.sort.column;state.sortDir=layout.sort.direction==='none'?'desc':layout.sort.direction;
   refreshTemplates();syncTemplatesWithServer();updateActionState();setTimeout(enhance,100);
 })();
 </script>
-</body>
+<script>document.querySelectorAll('nav a[href]').forEach(a=>{a.setAttribute('aria-current',a.getAttribute('href')===location.pathname?'page':'false');});</script></body>
 </html>

@@ -1,3 +1,4 @@
+import {upgradeReady} from './data/upgrade-gate.js';
 // @ts-check
 /**
  * Worker 入口
@@ -23,10 +24,12 @@ export default {
    */
   async scheduled(event, env, ctx) {
     void ctx;
+    if(!await upgradeReady(env)){console.log("[upgrade] 验收前暂停定时任务");return;}
     try {
       await ensureMigrations(env);
     } catch (err) {
       console.error('[index] scheduled 迁移失败:', err);
+      return;
     }
     console.log(
       '[Workers] 定时任务触发',

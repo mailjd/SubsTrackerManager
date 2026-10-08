@@ -1,3 +1,4 @@
+import { VERSION } from '../../src/version.js';
 // @ts-check
 import { describe, it, expect, beforeEach } from 'vitest';
 // @ts-ignore
@@ -97,7 +98,7 @@ describe('表格保存输入值契约回归', () => {
       createdAt:'2026-01-01T00:00:00.000Z',updatedAt:'2026-01-01T00:00:00.000Z'});
     return (changes)=>app.request('/api/subscriptions/intent-regression/table-edit',{
       method:'PATCH',headers:{'Content-Type':'application/json',Cookie:cookie},
-      body:JSON.stringify({changes,clientVersion:'3.3.18'})
+      body:JSON.stringify({changes,clientVersion:VERSION})
     },env);
   }
   it('空订阅类型不回填旧值',async()=>{

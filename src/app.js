@@ -1,3 +1,4 @@
+import {handleUpgradeGate} from './data/upgrade-gate.js';
 // @ts-check
 /**
  * Hono 应用装配
@@ -33,10 +34,13 @@ const app = new Hono();
 // 全局中间件：迁移检查（首次访问透明触发）
 // ─────────────────────────────────────────────────────────────
 app.use('*', async (c, next) => {
+  const upgradeResponse=await handleUpgradeGate(c.req.raw,c.env);
+  if(upgradeResponse)return upgradeResponse;
   try {
     await ensureMigrations(c.env);
   } catch (err) {
-    console.error('[app] 迁移失败，回退继续处理请求:', err);
+    console.error('[app] 迁移失败，已阻止继续处理请求:', err);
+    return c.json({success:false,code:'MIGRATION_BLOCKED',message:'数据迁移未完成，已保留原数据并停止业务写入'},503);
   }
   await next();
 });

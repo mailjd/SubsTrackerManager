@@ -103,6 +103,20 @@ test('encrypted backup download works from a new local directory without a deplo
  assert.ok(!f.trace().slice(before).some(x=>x.method==='PUT'||x.path.endsWith('/apply')||x.path.endsWith('/commit')));
 });
 
-test('required bundle failure stops before ANY Cloudflare request or checkpoint write',async t=>{
- const f=await setup(t);const r=f.run({FAKE_TEST_FAILURE:'test:bundle'});assert.equal(r.status,1);assert.match(r.stderr,/ST_SPLIT_TEST.*test:bundle/);assert.equal(f.trace().length,0);assert.ok(!fs.existsSync(path.join(f.state,'deployed')));assert.ok(!fs.existsSync(path.join(f.root,'.upgrade/state.stbackup')));
+test('required bundle failure stops before any Cloudflare WRITE or checkpoint; only read-only binding preflight may run',async t=>{
+ const f=await setup(t);const r=f.run({FAKE_TEST_FAILURE:'test:bundle'});assert.equal(r.status,1);assert.match(r.stderr,/ST_SPLIT_TEST.*test:bundle/);assert.deepEqual(f.trace().map(x=>({method:x.method,path:x.path})),[{method:'GET',path:'/client/v4/accounts/'+ 'a'.repeat(32) +'/workers/scripts/synthetic-existing-worker/settings'}]);assert.ok(!fs.existsSync(path.join(f.state,'deployed')));assert.ok(!fs.existsSync(path.join(f.root,'.upgrade/state.stbackup')));
+});
+
+test('a real KV-only Worker stops BEFORE the expensive release suite and never alters remote state',async t=>{
+  const f=await setup(t);const original=fs.readFileSync(path.join(f.state,'kv.json'),'utf8');
+  const result=f.run({FAKE_ONLINE_KV_ONLY:'1'});
+  assert.notEqual(result.status,0);
+  assert.match(result.stdout,/ST_SPLIT_BINDING_PROBE.*atomicLeaseReady\":false/);
+  assert.match(result.stderr,/ST_SPLIT_D1_REQUIRED/);
+  assert.match(result.stderr,/KV-only|没有 D1/);
+  assert.equal(fs.existsSync(path.join(f.state,'required-tests.log')),false,'release suite must not run first');
+  assert.deepEqual(f.trace().map(x=>x.method),['GET'],'no remote mutation even attempted');
+  assert.ok(!fs.existsSync(path.join(f.root,'.upgrade/state.stbackup')));
+  assert.ok(!fs.existsSync(path.join(f.state,'deployed')));
+  assert.equal(fs.readFileSync(path.join(f.state,'kv.json'),'utf8'),original);
 });

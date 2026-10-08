@@ -28,6 +28,29 @@ function privateWrite(file,bytes) {
   fs.mkdirSync(path.dirname(file),{recursive:true,mode:0o700});
   fs.writeFileSync(file+'.tmp',bytes,{mode:0o600});fs.renameSync(file+'.tmp',file);
 }
+/** A read-only, non-secret diagnostic for the REAL Worker's D1 binding. Never guess
+ * a database from a name or create one: KV has no atomic compare-and-swap lease. */
+export function assertSplitBindingsReady({worker,settings,bindings}) {
+  const all = Array.isArray(settings?.bindings) ? settings.bindings : [];
+  const kv = all.filter(b=>b.type==='kv_namespace').map(b=>b.name);
+  const d1 = all.filter(b=>b.type==='d1').map(b=>({name:b.name,idVisible:!!(b.database_id||b.id)}));
+  const inventory={worker,kvBindings:kv,d1Bindings:d1,atomicLeaseReady:!!bindings?.dbId,probe:'read-only',storage:'D1_KV_ONLY'};
+  console.log('[upgrade] ST_SPLIT_BINDING_PROBE '+JSON.stringify(inventory));
+  if (!bindings?.dbId) {
+    const why=d1.length===0
+      ? 'Cloudflare API 返回的这个 Worker 没有 D1 绑定（当前为 KV-only）'
+      : 'Cloudflare API 返回了 D1 绑定，但没有可核实的 database_id/id';
+    throw new Error(
+      'ST_SPLIT_D1_REQUIRED：'+why+'；目标 Worker='+worker+'。\n'+
+      '此状态不能用 Cloudflare Workers Builds 分段续跑：KV 最终一致，无法代替 D1 原子发布锁。\n'+
+      '方案 A（不添加数据库）：断开该 Worker 的 Cloudflare Builds Git 直连，改用现有 GitHub Actions「Safe upgrade」长流程；KV-only 可用（可选择推送自动运行），工作流会先备份及校验。\n'+
+      '方案 B（仅原本就有 D1）：核实是否选错 SUBSTRACKER_WORKER_NAME / Cloudflare Account；在正确 Worker 的 Bindings 核对原 D1 的 SUBSCRIPTIONS_DB 绑定。不要新建、猜测或改绑一个空 D1。\n'+
+      '未启动发布，未创建数据库或写入远端记录。参阅 KV_ONLY_DEPLOY_3.3.29.md。'
+    );
+  }
+  return inventory;
+}
+
 export class CloudflareCheckpoints {
   constructor(cf,{worker,bindings,password}) {
     if(!bindings.dbId)throw new Error('ST_SPLIT_D1_REQUIRED：Cloudflare 分段部署需要原有 D1 作原子协调；不会新建 D1。KV-only 请使用原 Safe upgrade。');

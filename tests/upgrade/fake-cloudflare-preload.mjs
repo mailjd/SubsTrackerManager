@@ -21,7 +21,7 @@ globalThis.fetch=async(input,opt={})=>{
  }
  if(url.host!=='api.cloudflare.com')throw new Error('Synthetic transport refuses real network: '+url.host);
  const p=url.pathname;
- if(p.endsWith('/settings'))return ok({bindings:[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)},{name:'SUBSCRIPTIONS_DB',type:'d1',database_id:'12345678-1234-1234-1234-123456789abc'},{name:'KEEP_SECRET',type:'secret_text'},{name:'ENVIRONMENT',type:'plain_text',text:'production'}]});
+ if(p.endsWith('/settings'))return ok({bindings:[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)},...(process.env.FAKE_ONLINE_KV_ONLY==='1'?[]:[{name:'SUBSCRIPTIONS_DB',type:'d1',database_id:'12345678-1234-1234-1234-123456789abc'}]),{name:'KEEP_SECRET',type:'secret_text'},{name:'ENVIRONMENT',type:'plain_text',text:'production'}]});
  if(p.endsWith('/schedules'))return ok({schedules:[{cron:'0 * * * *'}]});
  if(p.endsWith('/subdomain'))return ok({enabled:true,subdomain:'existing'});
  if(p.includes('/storage/kv/namespaces/')){

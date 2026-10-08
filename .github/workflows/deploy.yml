@@ -2,6 +2,8 @@ name: Safe upgrade
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main, master]
 
 permissions:
   contents: read
@@ -13,6 +15,9 @@ concurrency:
 jobs:
   deploy:
     name: Verified storage-preserving upgrade
+    # Push publishing is opt-in. Enable ONLY after disconnecting Cloudflare Builds
+    # and setting the GitHub Actions repository variable SUBSTRACKER_AUTO_DEPLOY=true.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && vars.SUBSTRACKER_AUTO_DEPLOY == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -83,10 +88,10 @@ jobs:
           UPGRADE_JOB_STATUS: ${{ job.status }}
         run: |
           {
-            echo '## SubsTracker Safe upgrade 3.3.27'
+            echo '## SubsTracker Safe upgrade 3.3.29'
             echo 'Release runner: GitHub Actions. Cloudflare split Builds is an alternative; never run two publishers concurrently.'
             echo "Job status: $UPGRADE_JOB_STATUS"
             echo 'Deployment is complete ONLY after the acceptance step succeeds and /api/upgrade/status reports maintenance:false.'
             echo 'Download encrypted artifacts below; keep the backup password separately.'
-            echo 'If the job stopped after staging, preserve recovery artifacts and follow SAFE_UPGRADE_3.3.27.md. Do not clear storage or bypass the guard.'
+            echo 'If the job stopped after staging, preserve recovery artifacts and follow KV_ONLY_DEPLOY_3.3.29.md. Do not clear storage or bypass the guard.'
           } >> "$GITHUB_STEP_SUMMARY"

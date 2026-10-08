@@ -34,7 +34,8 @@ test('split and GitHub release require storage regression, not a bypass',()=>{
  assert.ok(RELEASE_CHECKS.includes('test:storage'));
  assert.match(runner,/import \{verifyReleaseChecks\} from '\.\/upgrade\/release-checks\.mjs'/);
  const call=runner.indexOf('if(!downloadOnly)verifyReleaseChecks(ROOT,deadline)');
- assert.ok(call>=0 && call<runner.indexOf('await cf.settings('), 'shared mandatory checks execute before any Cloudflare request');
+ const probe=runner.indexOf('await cf.settings('),ready=runner.indexOf('assertSplitBindingsReady('),lease=runner.indexOf('await store.acquire()');
+ assert.ok(probe>=0 && probe<ready && ready<call && call<lease, 'only read-only Worker-settings probe is allowed before mandatory checks; no remote write/lease until every test passes');
  const workflow=fs.readFileSync(path.join(root,'.github/workflows/deploy.yml'),'utf8');
  const check=workflow.indexOf('npm run test:storage');
  assert.ok(check>=0 && check<workflow.indexOf('npm run upgrade:prepare'));

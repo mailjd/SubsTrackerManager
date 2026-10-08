@@ -4,7 +4,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {checkDeploymentEnvironment} from './upgrade/deploy-environment.mjs';
 import {Cloudflare,protectBindings} from './upgrade/cloudflare.mjs';
-import {CloudflareCheckpoints,sourceFingerprint} from './upgrade/cloudflare-checkpoints.mjs';
+import {CloudflareCheckpoints,sourceFingerprint,assertSplitBindingsReady} from './upgrade/cloudflare-checkpoints.mjs';
 import {prepare,stage,finish,saveState,writeGenerated,readConfig,workerCall} from './safe-upgrade.mjs';
 import {VERSION} from '../src/version.js';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -16,9 +16,14 @@ export async function runSplitDeployment({downloadOnly=false}={}) {
   const budget=()=>{if(Date.now()+5000>=deadline)throw new Error('ST_SPLIT_BUDGET：本次构建预算不足；保留检查点，重试同一提交');};
   checkDeploymentEnvironment(ROOT,process.env,options);
   console.log('[upgrade] ST_DEPLOY_ENTRY '+JSON.stringify({version:VERSION,entry:'deploy:cloudflare',storage:'D1_KV_ONLY',continuation:'manual-retry'}));
-  if(!downloadOnly)verifyReleaseChecks(ROOT,deadline);
+  // Read-only real Worker binding probe MUST run before expensive release tests.
+  // It never creates a database or writes to KV/D1; a KV-only Worker cannot
+  // acquire the atomic D1 lease required by Cloudflare split deployments.
   const config=readConfig(),cf=new Cloudflare({accountId:process.env.CLOUDFLARE_ACCOUNT_ID,token:process.env.CLOUDFLARE_API_TOKEN});
-  const bindings=protectBindings(config,await cf.settings(config.name));
+  const remoteSettings=await cf.settings(config.name);
+  const bindings=protectBindings(config,remoteSettings);
+  assertSplitBindingsReady({worker:config.name,settings:remoteSettings,bindings});
+  if(!downloadOnly)verifyReleaseChecks(ROOT,deadline);
   const store=new CloudflareCheckpoints(cf,{worker:config.name,bindings,password:process.env.SUBSTRACKER_BACKUP_PASSWORD});
   if(downloadOnly){
     const state=await store.load(ROOT,{write:true});

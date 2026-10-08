@@ -1,3 +1,9 @@
+# SubsTracker v3.3.25｜ExecutionContext 相容修補
+
+最新更新及操作：**[DEPLOY_REPAIR_3.3.25.md](DEPLOY_REPAIR_3.3.25.md)**。針對額外 `src/pages-handler.js` 缺 `props` 的 TS2345；保留 D1＋KV、原綁定與全部安全檢查。先依新版說明更新完整檔案，控制台命令及備份密碼保持不變。下方保留原有使用手冊和歷史說明。
+
+---
+
 # SubsTracker v3.3.24｜部署預檢與依賴核對修正版
 
 基於原v3.3.23，保留D1＋KV限定、原業務資料、備份、維護等待、恢復與驗收。沒有R2。

@@ -1,6 +1,6 @@
 {
   "name": "subscription-manager",
-  "version": "3.3.24",
+  "version": "3.3.25",
   "description": "订阅管理系统 - 基于 Cloudflare Workers + Hono",
   "main": "src/index.js",
   "type": "module",
@@ -30,7 +30,10 @@
     "test:storage": "node --test tests/storage/*.test.mjs",
     "test:toolchain": "node scripts/check-toolchain.mjs",
     "test:bundle": "node scripts/check-bundle.mjs",
-    "deploy:doctor": "node scripts/check-toolchain.mjs --report-only"
+    "deploy:doctor": "node scripts/check-toolchain.mjs --report-only",
+    "prelint": "node scripts/repair-pages-context.mjs",
+    "repair:context": "node scripts/repair-pages-context.mjs",
+    "test:context": "node --test tests/compat/*.test.mjs"
   },
   "dependencies": {
     "hono": "4.12.22"

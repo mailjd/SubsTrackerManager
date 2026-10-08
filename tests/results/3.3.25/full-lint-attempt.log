@@ -1,0 +1,12 @@
+
+> subscription-manager@3.3.25 prelint
+> node scripts/repair-pages-context.mjs
+
+[compat] ST_CONTEXT_ABSENT：没有旧 src/pages-handler.js；无需修补，继续完整类型检查。
+
+> subscription-manager@3.3.25 lint
+> tsc --noEmit -p jsconfig.json
+
+error TS2688: Cannot find type definition file for '@cloudflare/workers-types'.
+  The file is in the program because:
+    Entry point of type library '@cloudflare/workers-types' specified in compilerOptions

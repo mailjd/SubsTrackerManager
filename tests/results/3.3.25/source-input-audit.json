@@ -1,0 +1,28 @@
+{
+  "baseZip": "SubsTracker-GitHub-Cloudflare-Ready_v3.3.24_DeploymentPreflightFix_20261008.zip",
+  "baseZipSha256": "62b0f48935e977499c143592dc98bcceff3f93fbf102a464976dd16a59bbe015",
+  "baseFileCount": 330,
+  "containsReportedSource": false,
+  "localSyntaxCheckedBeforePatch": 105,
+  "userLogSyntaxChecked": 204,
+  "conclusion": "The user build has sources not in the available ZIP. No claim to have reproduced the exact private pages-handler file. Context diagnostics were reconstructed as explicitly labelled fixtures.",
+  "modifiedExistingFiles": [
+    ".github/workflows/deploy.yml",
+    ".github/workflows/test.yml",
+    ".gitignore",
+    "README.md",
+    "package-lock.json",
+    "package.json",
+    "scripts/build.mjs",
+    "scripts/upgrade/release-checks.mjs",
+    "src/upgrade-release.js",
+    "src/version.js",
+    "src/views/adminPage.html",
+    "tests/deploy/environment.test.mjs",
+    "tests/deploy/repair3324.test.mjs",
+    "tests/deploy/split-runner.test.mjs"
+  ],
+  "compilerConfigUnchanged": true,
+  "dependencyVersionsUnchanged": true,
+  "wranglerConfigUnchanged": true
+}

@@ -38,3 +38,6 @@ FULL_AUDIT_REPORT.md
 .upgrade/
 upgrade-backups/
 wrangler.upgrade.json
+
+# Local-only legacy source repair snapshots (never production records)
+.compat-backups/

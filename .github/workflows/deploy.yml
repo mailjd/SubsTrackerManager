@@ -40,6 +40,7 @@ jobs:
           npm run test:bundle
           npm run lint
           npm run test:syntax
+          npm run test:context
           npm run test:storage
           npm run test:deploy
           npm run test:upgrade
@@ -81,10 +82,10 @@ jobs:
           UPGRADE_JOB_STATUS: ${{ job.status }}
         run: |
           {
-            echo '## SubsTracker Safe upgrade 3.3.24'
+            echo '## SubsTracker Safe upgrade 3.3.25'
             echo 'Release runner: GitHub Actions. Cloudflare split Builds is an alternative; never run two publishers concurrently.'
             echo "Job status: $UPGRADE_JOB_STATUS"
             echo 'Deployment is complete ONLY after the acceptance step succeeds and /api/upgrade/status reports maintenance:false.'
             echo 'Download encrypted artifacts below; keep the backup password separately.'
-            echo 'If the job stopped after staging, preserve recovery artifacts and follow SAFE_UPGRADE_3.3.24.md. Do not clear storage or bypass the guard.'
+            echo 'If the job stopped after staging, preserve recovery artifacts and follow SAFE_UPGRADE_3.3.25.md. Do not clear storage or bypass the guard.'
           } >> "$GITHUB_STEP_SUMMARY"

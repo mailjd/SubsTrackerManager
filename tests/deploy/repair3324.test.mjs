@@ -58,10 +58,10 @@ test('public deploy:check still rejects Pages and missing build secrets',()=>{
  const missing=run('scripts/check-deploy-environment.mjs',{SUBSTRACKER_BACKUP_PASSWORD:''});assert.equal(missing.status,1);assert.match(missing.stderr,/ST_DEPLOY_CONFIG/);
 });
 test('raw Wrangler remains blocked: no fake-success workaround or clearing of protection',()=>{
- const r=run('scripts/require-safe-upgrade.mjs');assert.equal(r.status,1);assert.match(r.stderr,/ST_DEPLOY_COMMAND/);assert.match(r.stderr,/控制台设置尚未生效/);assert.match(r.stderr,/v3\.3\.24/);assert.doesNotMatch(r.stderr,/v3\.3\.22|ExperimentalWarning/);
+ const r=run('scripts/require-safe-upgrade.mjs');assert.equal(r.status,1);assert.match(r.stderr,/ST_DEPLOY_COMMAND/);assert.match(r.stderr,/控制台设置尚未生效/);assert.ok(r.stderr.includes('v'+VERSION));assert.doesNotMatch(r.stderr,/v3\.3\.22|ExperimentalWarning/);
 });
 test('error help points at Deploy command and current documentation, not obsolete version',()=>{
- const help=deploymentRouteHelp('cloudflare-workers-builds');assert.match(help,new RegExp('v'+VERSION.replaceAll('.','\\.')));assert.match(help,/DEPLOY_REPAIR_3\.3\.24\.md/);assert.match(help,/不是 Build command/);assert.match(help,/不必 Disconnect/);
+ const help=deploymentRouteHelp('cloudflare-workers-builds');assert.match(help,new RegExp('v'+VERSION.replaceAll('.','\\.')));assert.ok(help.includes('DEPLOY_REPAIR_'+VERSION+'.md'));assert.match(help,/不是 Build command/);assert.match(help,/不必 Disconnect/);
 });
 test('build is no longer an echo-only success and no build script calls production deployment',()=>{
  const pkg=JSON.parse(fs.readFileSync(path.join(source,'package.json')));assert.equal(pkg.scripts.build,'node scripts/build.mjs');const s=fs.readFileSync(path.join(source,'scripts/build.mjs'),'utf8');for(const x of ['check-toolchain.mjs','check-syntax.mjs','check-bundle.mjs'])assert.ok(s.includes(x));assert.doesNotMatch(s,/runSplitDeployment|safe-upgrade\.mjs/);
@@ -82,7 +82,7 @@ test('bundle child failure is propagated, not presented as successful build (FAK
  const root=fixture(t);fs.writeFileSync(localWrangler(root).entry,'process.exit(9);');assert.throws(()=>checkBundle(root),/exit 9/);
 });
 test('release list retains ALL original checks and adds toolchain + actual bundle',()=>{
- assert.deepEqual(RELEASE_CHECKS,['test:toolchain','lint','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:table-contract','test:workflow','test']);
+ assert.deepEqual(RELEASE_CHECKS,['test:toolchain','lint','test:context','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:table-contract','test:workflow','test']);
  assert.throws(()=>verifyReleaseChecks(source,Date.now()-1),/ST_SPLIT_BUDGET/);
  const safe=fs.readFileSync(path.join(source,'scripts/safe-upgrade.mjs'),'utf8');assert.match(safe,/cmd==='all'\).*verifyReleaseChecks\(ROOT/);assert.doesNotMatch(safe,/spawnSync\(npx/);
 });

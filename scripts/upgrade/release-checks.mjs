@@ -1,6 +1,6 @@
 /** Shared required release checks. No environment variable can skip this list. */
 import {spawnSync} from 'node:child_process';
-export const RELEASE_CHECKS=Object.freeze(['test:toolchain','lint','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:table-contract','test:workflow','test']);
+export const RELEASE_CHECKS=Object.freeze(['test:toolchain','lint','test:context','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:table-contract','test:workflow','test']);
 export function verifyReleaseChecks(root,deadline=Date.now()+15*60*1000){
  const npm=process.platform==='win32'?'npm.cmd':'npm';
  for(const script of RELEASE_CHECKS){

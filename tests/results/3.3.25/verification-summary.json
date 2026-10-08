@@ -1,0 +1,67 @@
+{
+  "version": "3.3.25",
+  "date": "2026-10-08",
+  "suites": [
+    {
+      "suite": "context",
+      "total": 20,
+      "passed": 20,
+      "failed": 0,
+      "evidence": "context-fixtures.tap"
+    },
+    {
+      "suite": "deploy",
+      "total": 59,
+      "passed": 59,
+      "failed": 0,
+      "evidence": "deploy-final.tap"
+    },
+    {
+      "suite": "storage",
+      "total": 36,
+      "passed": 36,
+      "failed": 0,
+      "evidence": "storage.tap"
+    },
+    {
+      "suite": "contract",
+      "total": 8,
+      "passed": 8,
+      "failed": 0,
+      "evidence": "contract.tap"
+    },
+    {
+      "suite": "subscription-api",
+      "total": 37,
+      "passed": 37,
+      "failed": 0,
+      "evidence": "api-results.json"
+    },
+    {
+      "suite": "database-history",
+      "total": 69,
+      "passed": 69,
+      "failed": 0,
+      "evidence": "workflow-results.json"
+    }
+  ],
+  "passed": 229,
+  "syntax": {
+    "checked": 107,
+    "passed": 107,
+    "failed": 0
+  },
+  "testCompiler": "5.8.3 (available local compiler; not the pinned release 5.9.3)",
+  "requiredReleaseCompiler": "5.9.3",
+  "fullLockedLintPassed": false,
+  "fullWorkersVitestPassed": false,
+  "realWranglerBundleThisTurnPassed": false,
+  "liveCloudflareDeployed": false,
+  "privatePagesSourceAvailable": false,
+  "limitations": [
+    "Only synthetic, explicitly reconstructed legacy adapter fixtures were compiled locally.",
+    "The real installed release compiler checks the actual retained file before applying the local patch; original full tsc remains mandatory.",
+    "Dependency installation timed out after registry DNS failure; no fake dependency metadata or downgraded lock is shipped.",
+    "Deploy regression uses fake Cloudflare transport and fake upload, not a live account."
+  ]
+}

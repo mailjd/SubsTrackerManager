@@ -5,11 +5,13 @@ async function setup(t,large=false){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'subs-safe-runner-')),state=path.join(root,'synthetic');fs.mkdirSync(state);
  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
  for(const sub of ['src','scripts','tests/upgrade'])fs.cpSync(path.join(source,sub),path.join(root,sub),{recursive:true});
- fs.copyFileSync(path.join(source,'wrangler.toml'),path.join(root,'wrangler.toml'));
+ // A repository may hold real production IDs. Offline tests must never use those IDs
+ // or inherit a real deployment target; the actual protection code is still exercised.
+ fs.writeFileSync(path.join(root,'wrangler.toml'),'name="synthetic-existing-worker"\nmain="src/index.js"\ncompatibility_date="2024-09-23"\n[build]\ncommand="node scripts/require-safe-upgrade.mjs"\n');
  fs.writeFileSync(path.join(root,'package.json'),'{"type":"module"}');
  const f=await fixture({rows:large?Array.from({length:25},(_,i)=>sample('many-'+i)):[sample('a',{paymentHistory:[payment()]}),sample('b')],mirrors:[sample('b')]});const b=f.bundle();fs.writeFileSync(path.join(state,'kv.json'),JSON.stringify(Object.fromEntries(f.values)));const db=new DatabaseSync(path.join(state,'d1.sqlite'));db.exec(b.d1Sql);db.close();f.close();
  const bin=path.join(root,'fakebin');fs.mkdirSync(bin);fs.writeFileSync(path.join(bin,'npx'),'#!/bin/sh\nnode "$FAKE_UPGRADE_ROOT/scripts/require-safe-upgrade.mjs" || exit $?\nprintf 1 > "$FAKE_UPGRADE_STATE/deployed"\n',{mode:0o700});
- const env={...process.env,PATH:bin+path.delimiter+process.env.PATH,FAKE_UPGRADE_ROOT:root,FAKE_UPGRADE_STATE:state,NODE_OPTIONS:'--import='+path.join(root,'tests/upgrade/fake-cloudflare-preload.mjs'),CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_TOKEN:'synthetic-only',SUBSTRACKER_BACKUP_PASSWORD:'only-synthetic-archive-password',SUBSTRACKER_WORKER_URL:'https://upgrade.example.invalid'};
+ const env={...process.env,WORKERS_CI:'',WORKERS_CI_BUILD_UUID:'',CF_PAGES:'',SUBSTRACKER_WORKER_NAME:'',SUBSTRACKER_ENVIRONMENT:'',PATH:bin+path.delimiter+process.env.PATH,FAKE_UPGRADE_ROOT:root,FAKE_UPGRADE_STATE:state,NODE_OPTIONS:'--import='+path.join(root,'tests/upgrade/fake-cloudflare-preload.mjs'),CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_TOKEN:'synthetic-only',SUBSTRACKER_BACKUP_PASSWORD:'only-synthetic-archive-password',SUBSTRACKER_WORKER_URL:'https://upgrade.example.invalid'};
  const run=(phase,extra={})=>spawnSync(process.execPath,['scripts/safe-upgrade.mjs',phase],{cwd:root,env:{...env,...extra},encoding:'utf8',timeout:45000});
  return {root,state,env,run};
 }

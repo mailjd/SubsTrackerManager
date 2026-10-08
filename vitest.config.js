@@ -24,9 +24,10 @@ export default defineWorkersConfig({
           compatibilityFlags: ['nodejs_compat'],
           kvNamespaces: ['SUBSCRIPTIONS_KV']
         },
-        // 让生产环境用的 .html 文本 import 在测试中也能工作
+        // 本机测试配置独立于正式发布 guard / 实际 KV、D1 ID / assets。
+        // 正式 require-safe-upgrade guard 由 Node 部署回归测试单独覆盖。
         wrangler: {
-          configPath: './wrangler.toml'
+          configPath: './wrangler.test.toml'
         }
       }
     }

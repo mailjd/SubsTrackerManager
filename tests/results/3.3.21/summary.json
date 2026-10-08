@@ -1,0 +1,21 @@
+{
+  "version": "3.3.21",
+  "date": "2026-10-08",
+  "tests": {
+    "deployment": 18,
+    "upgrade": 56,
+    "contract": 8,
+    "tableSaveAPI": 37,
+    "databaseHistoryWorkflow": 69
+  },
+  "functionalPassed": 188,
+  "functionalFailed": 0,
+  "syntaxPassed": 93,
+  "configurationParsingPassed": 5,
+  "vitest": "not run: dependency download failed",
+  "typecheck": "TS2688: missing dependency",
+  "realCloudflareDeploy": false,
+  "cloudflareDashboardChanged": false,
+  "requiredReleaseRunner": "GitHub Actions / Safe upgrade (or long-lived local CLI)",
+  "businessDataSourceFilesUnchanged": 67
+}

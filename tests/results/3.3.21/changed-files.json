@@ -1,0 +1,110 @@
+[
+  {
+    "path": ".github/workflows/deploy.yml",
+    "kind": "modified"
+  },
+  {
+    "path": ".github/workflows/test.yml",
+    "kind": "modified"
+  },
+  {
+    "path": "CLOUDFLARE_DEPLOY_FIX_3.3.21.md",
+    "kind": "added"
+  },
+  {
+    "path": "DEPLOY_CHECKLIST.md",
+    "kind": "modified"
+  },
+  {
+    "path": "GITHUB_DEPLOY.md",
+    "kind": "modified"
+  },
+  {
+    "path": "README.md",
+    "kind": "modified"
+  },
+  {
+    "path": "RELEASE_3.3.21.md",
+    "kind": "added"
+  },
+  {
+    "path": "SAFE_UPGRADE_3.3.21.md",
+    "kind": "added"
+  },
+  {
+    "path": "VERIFICATION_3.3.21.md",
+    "kind": "added"
+  },
+  {
+    "path": "package-lock.json",
+    "kind": "modified"
+  },
+  {
+    "path": "package.json",
+    "kind": "modified"
+  },
+  {
+    "path": "release-notes/v3.3.20_DEPLOY_CHECKLIST.md",
+    "kind": "added"
+  },
+  {
+    "path": "release-notes/v3.3.20_FILE_MANIFEST.json",
+    "kind": "added"
+  },
+  {
+    "path": "release-notes/v3.3.20_GITHUB_DEPLOY.md",
+    "kind": "added"
+  },
+  {
+    "path": "release-notes/v3.3.20_README.md",
+    "kind": "added"
+  },
+  {
+    "path": "scripts/check-deploy-environment.mjs",
+    "kind": "added"
+  },
+  {
+    "path": "scripts/require-safe-upgrade.mjs",
+    "kind": "modified"
+  },
+  {
+    "path": "scripts/safe-upgrade.mjs",
+    "kind": "modified"
+  },
+  {
+    "path": "scripts/upgrade/deploy-environment.mjs",
+    "kind": "added"
+  },
+  {
+    "path": "src/upgrade-release.js",
+    "kind": "modified"
+  },
+  {
+    "path": "src/version.js",
+    "kind": "modified"
+  },
+  {
+    "path": "src/views/adminPage.html",
+    "kind": "modified"
+  },
+  {
+    "path": "tests/deploy/environment.test.mjs",
+    "kind": "added"
+  },
+  {
+    "path": "tests/upgrade/runner.test.mjs",
+    "kind": "modified"
+  },
+  {
+    "path": "vitest.config.js",
+    "kind": "modified"
+  },
+  {
+    "path": "wrangler.test.toml",
+    "kind": "added"
+  },
+  {
+    "path": "wrangler.toml",
+    "kind": "modified"
+  }
+]

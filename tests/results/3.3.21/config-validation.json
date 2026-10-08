@@ -1,0 +1,26 @@
+{
+  ".github/workflows/deploy.yml": {
+    "valid": true,
+    "jobs": [
+      "deploy"
+    ]
+  },
+  ".github/workflows/test.yml": {
+    "valid": true,
+    "jobs": [
+      "test"
+    ]
+  },
+  "wrangler.toml": {
+    "valid": true,
+    "name": "subscription-manager"
+  },
+  "wrangler.test.toml": {
+    "valid": true,
+    "name": "subscription-manager-test"
+  },
+  "wrangler.dev.toml": {
+    "valid": true,
+    "name": "subscription-manager-dev"
+  }
+}

@@ -1,0 +1,7 @@
+
+> subscription-manager@3.3.21 lint
+> tsc --noEmit -p jsconfig.json
+
+error TS2688: Cannot find type definition file for '@cloudflare/workers-types'.
+  The file is in the program because:
+    Entry point of type library '@cloudflare/workers-types' specified in compilerOptions

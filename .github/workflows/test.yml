@@ -19,11 +19,21 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
+      - name: Setup Python for offline backup verification fixtures
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Install dependencies
         run: npm ci
 
       - name: Type check (JSDoc + // @ts-check)
         run: npm run lint
+
+      - name: Deployment routing and safety regression (local fixtures only)
+        run: |
+          npm run test:deploy
+          npm run test:upgrade
 
       - name: Run table input contract regression
         run: npm run test:table-contract

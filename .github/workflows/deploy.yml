@@ -33,17 +33,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Required access and backup secret
-        shell: bash
-        run: |
-          test -n "$CLOUDFLARE_API_TOKEN" || (echo 'Missing CLOUDFLARE_API_TOKEN' && exit 1)
-          test -n "$CLOUDFLARE_ACCOUNT_ID" || (echo 'Missing CLOUDFLARE_ACCOUNT_ID' && exit 1)
-          test "${#SUBSTRACKER_BACKUP_PASSWORD}" -ge 16 || (echo 'Set SUBSTRACKER_BACKUP_PASSWORD, at least 16 characters' && exit 1)
+      - name: Deployment entry and configuration preflight (no network / no writes)
+        run: npm run deploy:check
       - run: npm ci
       - name: Syntax, type and regression checks before any deployment
         run: |
           npm run lint
           npm run test:syntax
+          npm run test:deploy
           npm run test:upgrade
           npm run test:table-contract
           npm run test:workflow
@@ -76,3 +73,17 @@ jobs:
           path: upgrade-backups/
           if-no-files-found: warn
           retention-days: 90
+      - name: Publish workflow result summary
+        if: always()
+        shell: bash
+        env:
+          UPGRADE_JOB_STATUS: ${{ job.status }}
+        run: |
+          {
+            echo '## SubsTracker Safe upgrade 3.3.21'
+            echo 'Release runner: GitHub Actions. Do not retry the Cloudflare Git direct build.'
+            echo "Job status: $UPGRADE_JOB_STATUS"
+            echo 'Deployment is complete ONLY after the acceptance step succeeds and /api/upgrade/status reports maintenance:false.'
+            echo 'Download encrypted artifacts below; keep the backup password separately.'
+            echo 'If the job stopped after staging, preserve recovery artifacts and follow SAFE_UPGRADE_3.3.21.md. Do not clear storage or bypass the guard.'
+          } >> "$GITHUB_STEP_SUMMARY"

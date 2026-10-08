@@ -1,6 +1,6 @@
 {
   "name": "subscription-manager",
-  "version": "3.3.20",
+  "version": "3.3.21",
   "description": "订阅管理系统 - 基于 Cloudflare Workers + Hono",
   "main": "src/index.js",
   "type": "module",
@@ -21,7 +21,9 @@
     "upgrade:resume": "node scripts/safe-upgrade.mjs resume",
     "backup:verify": "node scripts/inspect-upgrade-backup.mjs",
     "test:upgrade": "node --test tests/upgrade/*.test.mjs",
-    "test:syntax": "node scripts/check-syntax.mjs"
+    "test:syntax": "node scripts/check-syntax.mjs",
+    "deploy:check": "node scripts/check-deploy-environment.mjs",
+    "test:deploy": "node --test tests/deploy/*.test.mjs"
   },
   "dependencies": {
     "hono": "^4.6.14"

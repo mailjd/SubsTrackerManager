@@ -1,0 +1,6 @@
+{
+  "command": "node scripts/require-safe-upgrade.mjs",
+  "exitCode": 1,
+  "stdout": "",
+  "stderr": "(node:793) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n[upgrade] 阻止未经保护的部署：本版本禁止直接 wrangler deploy；请使用 npm run deploy:safe 或 Safe upgrade 工作流\n"
+}

@@ -1,0 +1,9 @@
+# Vitest / Miniflare ONLY. No production resource IDs, no deployment build script.
+# Never use this file to deploy. Safe upgrade always generates wrangler.upgrade.json.
+name = "subscription-manager-test"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "test"

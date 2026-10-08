@@ -13,28 +13,19 @@ import {setTimeout as sleep} from 'node:timers/promises';
 import {Cloudflare,protectBindings} from './upgrade/cloudflare.mjs';
 import {encryptArchive,decryptArchive,inspectBundle,assertOriginalsPreserved} from './upgrade/archive.mjs';
 import {sha256,stableJSON} from '../src/data/upgrade-reconcile.js';
+import {VERSION} from '../src/version.js';
+import {checkDeploymentEnvironment,assertSupportedDeploymentHost,readWranglerConfig} from './upgrade/deploy-environment.mjs';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const STATE_DIR=path.join(ROOT,'.upgrade');
 const BACKUPS=path.join(ROOT,'upgrade-backups');
 const STATE=path.join(STATE_DIR,'state.stbackup');
 const CONFIG=path.join(ROOT,'wrangler.upgrade.json');
-const VERSION='3.3.20';
 function password(){const v=process.env.SUBSTRACKER_BACKUP_PASSWORD||'';if(v.length<16)throw new Error('请先设置 SUBSTRACKER_BACKUP_PASSWORD（至少16字符），加密保护完整备份；尚未修改线上数据');return v;}
 function savePrivate(file,bytes){fs.mkdirSync(path.dirname(file),{recursive:true,mode:0o700});const tmp=file+'.tmp';fs.writeFileSync(tmp,bytes,{mode:0o600});fs.renameSync(tmp,file);}
 function saveState(state){const bytes=encryptArchive(state,password());savePrivate(STATE,bytes);savePrivate(path.join(BACKUPS,state.runId+'-resume.stbackup'),bytes);}
 function loadState(){if(!fs.existsSync(STATE))throw new Error('缺少升级状态，请先执行 prepare；若恢复中断流程，请使用 resume 加密状态文件');return decryptArchive(fs.readFileSync(STATE),password());}
 function cfClient(){return new Cloudflare({accountId:process.env.CLOUDFLARE_ACCOUNT_ID,token:process.env.CLOUDFLARE_API_TOKEN});}
-export function readConfig(){
-  const py=process.env.PYTHON||(process.platform==='win32'?'python':'python3');
-  const r=spawnSync(py,['-c','import sys,tomllib,json;print(json.dumps(tomllib.load(open(sys.argv[1],"rb"))))',path.join(ROOT,'wrangler.toml')],{encoding:'utf8',timeout:10000});
-  if(r.status!==0)throw new Error('需要 Python 3.11+ 读取并保留原 wrangler.toml；不会用正则猜测或覆盖其配置');
-  let config=JSON.parse(r.stdout);const selected=process.env.SUBSTRACKER_ENVIRONMENT;
-  if(selected){if(!config.env?.[selected])throw new Error('找不到指定 Wrangler 环境');config={...config,...config.env[selected]};}
-  delete config.env;
-  if(process.env.SUBSTRACKER_WORKER_NAME)config.name=process.env.SUBSTRACKER_WORKER_NAME;
-  if(!/^[a-zA-Z0-9_-]+$/.test(config.name||''))throw new Error('缺少有效 Worker 名称');
-  return config;
-}
+export function readConfig(){ return readWranglerConfig(ROOT); }
 async function assertBindingIdentity(cf,state){
   if(cf.accountId!==state.accountId)throw new Error('Cloudflare 帐户与备份不一致，已停止');
   const settings=await cf.settings(state.worker);
@@ -76,6 +67,7 @@ function writeGenerated(state){
   savePrivate(path.join(ROOT,'src/upgrade-release.js'),`// Generated for this one verified upgrade; contains only a capability hash.\nexport const UPGRADE_RUN=Object.freeze(${JSON.stringify({version:VERSION,id:state.runId,tokenHash:crypto.createHash('sha256').update(state.token).digest('hex')})});\n`);
 }
 export async function prepare(){
+  checkDeploymentEnvironment(ROOT);
   password();const cf=cfClient(),config=readConfig();
   const settings=await cf.settings(config.name); // 404/permission errors STOP. Never create a new worker/store.
   const bindings=protectBindings(config,settings);
@@ -111,6 +103,7 @@ async function workerCall(state,operation,body){
   return data;
 }
 export async function stage(){
+  assertSupportedDeploymentHost();
   const state=loadState(),cf=cfClient();await assertBindingIdentity(cf,state);
   if(!state.preBackup)throw new Error('尚无升级前备份');
   if(state.applyIntent||state.applied)throw new Error('迁移已开始，禁止重建该批次基线；请执行 finish/resume，冲突核对后另开新批次');
@@ -137,6 +130,7 @@ export async function stage(){
   return state;
 }
 export async function finish(){
+  assertSupportedDeploymentHost();
   const state=loadState(),cf=cfClient();await assertBindingIdentity(cf,state);
   if(!state.maintenanceBackup)throw new Error('缺少维护期备份，不能提交升级');
   const bytes=fs.readFileSync(path.join(BACKUPS,state.maintenanceBackup.filename));
@@ -197,7 +191,8 @@ export async function finish(){
 }
 async function main(){
   const cmd=process.argv[2]||'all';
-  if(cmd==='--help'||cmd==='help'){console.log('prepare → stage → finish；或 all。resume <加密恢复状态文件> 继续中断升级。详见 SAFE_UPGRADE_3.3.20.md。');return;}
+  if(cmd==='--help'||cmd==='help'){console.log('prepare → stage → finish；或 all。resume <加密恢复状态文件> 继续中断升级。先执行 npm run deploy:check；Cloudflare Git 直连请先阅读 CLOUDFLARE_DEPLOY_FIX_3.3.21.md。详见 SAFE_UPGRADE_3.3.21.md。');return;}
+  assertSupportedDeploymentHost();
   if(cmd==='prepare')await prepare();
   else if(cmd==='stage')await stage();
   else if(cmd==='finish')await finish();
@@ -211,4 +206,4 @@ async function main(){
     await finish();
   }else throw new Error('未知命令：'+cmd);
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(e=>{console.error('[upgrade] 已停止：'+e.message);console.error('没有清空/新建/改绑数据库；若已进入维护模式，请保留 upgrade-backups 加密附件并按文档继续或回滚代码。');process.exitCode=1;});
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(e=>{console.error('[upgrade] '+(e.code||'ST_UPGRADE_STOP')+' 已停止：'+e.message);console.error('没有清空/新建/改绑数据库；若已进入维护模式，请保留 upgrade-backups 加密附件并按文档继续或回滚代码。');process.exitCode=1;});

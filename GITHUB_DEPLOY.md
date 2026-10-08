@@ -1,9 +1,15 @@
-# GitHub 部署 v3.3.20
+# GitHub / Cloudflare 發布入口
 
-唯一正式流程為本包 `.github/workflows/deploy.yml` 的 **Safe upgrade**。詳細操作見 [SAFE_UPGRADE_3.3.20.md](SAFE_UPGRADE_3.3.20.md)。
+當前版本：3.3.21。
 
-保留原帳戶、原 Worker、原 KV namespace ID、原 D1 database ID 和原加密密鑰。新增 Repository Secret `SUBSTRACKER_BACKUP_PASSWORD`（至少16字元，獨立保密保存），保留原 Cloudflare Token／Account ID。原 Worker 名稱不是模板 `subscription-manager` 時，設置 Variable `SUBSTRACKER_WORKER_NAME` 為準確原名稱；自訂域名設 `SUBSTRACKER_WORKER_URL`。
+**操作步驟：`CLOUDFLARE_DEPLOY_FIX_3.3.21.md`。**
 
-更新來源與安全工作流，保留原 wrangler 中的識別資料并合入 `[build]` 保護命令。停用任何平行的舊部署器，避免未驗證發布。工作流測試失敗就停止；升級前與維護期加密備份 Artifact 上傳完成才執行下一步。
+在原 GitHub 儲存庫建立三個 Repository Secrets：`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`SUBSTRACKER_BACKUP_PASSWORD`；核對原 `SUBSTRACKER_WORKER_NAME`，自訂網域設定 `SUBSTRACKER_WORKER_URL`。
 
-維護等待16分鐘之外還有測試／備份時間。完成條件不是「deploy 綠燈」，而是最後的 acceptance 資料保留和還原校驗全部為 true。失敗時下載恢復 Artifact，依安全指南 resume；不要清庫重跑初始化。
+Cloudflare 原 Worker → Settings → Builds → Disconnect（只斷開 Git 連線）。保留原 Worker/KV/D1；停用其他同時發布器。
+
+解壓後更新專案根目錄，包括 `.github/workflows/deploy.yml`，保留原 Wrangler 專屬設定。原 repo Actions → Safe upgrade → Run workflow；只看 Test 工作流成功不等於已部署。
+
+本 workflow 維持必要測試、備份上傳後才部署、16分鐘等待、逐項驗收與失敗恢復附件。不要刪除 guard 或改回 raw `npx wrangler deploy`。
+
+完整流程與復原：`SAFE_UPGRADE_3.3.21.md`。

@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/mnt/data/subs_v3326_evidence/reproduce-no-sqlite.py", line 8, in <module>
+    runpy.run_path(sys.argv[0], run_name="__main__")
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "tests/regression/workflow3319.py", line 2, in <module>
+    import json,sys,time,tempfile,socket,subprocess,urllib.request,urllib.error,http.cookiejar,sqlite3,uuid,concurrent.futures
+  File "/usr/lib/python3.13/sqlite3/__init__.py", line 57, in <module>
+    from sqlite3.dbapi2 import *
+  File "/usr/lib/python3.13/sqlite3/dbapi2.py", line 27, in <module>
+    from _sqlite3 import *
+  File "/mnt/data/subs_v3326_evidence/reproduce-no-sqlite.py", line 5, in find_spec
+    raise ModuleNotFoundError("No module named '_sqlite3'", name="_sqlite3")
+ModuleNotFoundError: No module named '_sqlite3'

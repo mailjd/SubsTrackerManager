@@ -1,3 +1,11 @@
+# SubsTracker v3.3.26｜SQLite 測試執行環境修正
+
+最新操作：[DEPLOY_REPAIR_3.3.26.md](DEPLOY_REPAIR_3.3.26.md)。修正 Cloudflare Python 缺少 `_sqlite3` 導致工作流測試無法啟動的問題；使用現有 Node 內建 SQLite 作真實磁碟核對，不跳過測試，不新增 R2 或其他儲存。
+
+保留原 D1/KV、密碼、來源適配修補及兩階段安全部署。下方為歷史說明；本版具體驗證以 [VERIFICATION_3.3.26.md](VERIFICATION_3.3.26.md) 為準。
+
+---
+
 # SubsTracker v3.3.25｜ExecutionContext 相容修補
 
 最新更新及操作：**[DEPLOY_REPAIR_3.3.25.md](DEPLOY_REPAIR_3.3.25.md)**。針對額外 `src/pages-handler.js` 缺 `props` 的 TS2345；保留 D1＋KV、原綁定與全部安全檢查。先依新版說明更新完整檔案，控制台命令及備份密碼保持不變。下方保留原有使用手冊和歷史說明。

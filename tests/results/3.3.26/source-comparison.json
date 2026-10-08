@@ -1,0 +1,36 @@
+{
+  "version": "3.3.26",
+  "input": "SubsTracker-GitHub-Cloudflare-Ready_v3.3.25_ExecutionContextFix_20261008.zip",
+  "inputSha256": "5d295027527850924baa9a7f33b223502839fbec19e37acad7c0dbff4b795130",
+  "businessFilesCompared": 67,
+  "businessFilesUnchanged": true,
+  "bindingAndSafetyFilesUnchanged": {
+    "jsconfig.json": true,
+    "wrangler.toml": true,
+    "wrangler.dev.toml": true,
+    "wrangler.test.toml": true,
+    "scripts/upgrade/archive.mjs": true,
+    "scripts/upgrade/cloudflare.mjs": true,
+    "scripts/upgrade/d1-query-snapshot.mjs": true,
+    "scripts/upgrade/storage-policy.mjs": true,
+    "scripts/upgrade/cloudflare-checkpoints.mjs": true
+  },
+  "dependencyVersionsAndResolvedIntegrityUnchanged": true,
+  "pythonAssertions": [
+    {
+      "file": "tests/regression/workflow3319.py",
+      "assertionsIdentical": true,
+      "count": 3
+    },
+    {
+      "file": "tests/regression/api-regression.py",
+      "assertionsIdentical": true,
+      "count": 1
+    },
+    {
+      "file": "tests/upgrade/old-version-integration.py",
+      "assertionsIdentical": true,
+      "count": 14
+    }
+  ]
+}

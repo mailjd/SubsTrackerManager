@@ -11,6 +11,7 @@ console.log('[build] Cloudflare Deploy command 保持 npm run deploy:cloudflare�
 // npm run lint runs the targeted prelint repair, then the ORIGINAL whole-project tsc command.
 // Keep this check before bundling so "build success" cannot hide this class of source error.
 const checks=[
+ ['check-test-runtime.mjs',process.execPath,[path.join(root,'scripts/check-test-runtime.mjs')]],
  ['check-toolchain.mjs',process.execPath,[path.join(root,'scripts/check-toolchain.mjs')]],
  ['lint',npm,['run','lint']],
  ['check-syntax.mjs',process.execPath,[path.join(root,'scripts/check-syntax.mjs')]],

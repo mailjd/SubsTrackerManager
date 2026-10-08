@@ -1,6 +1,9 @@
 """v3.3.19 workflows: production handlers, file KV + real local SQLite. No live Cloudflare."""
-import json,sys,time,tempfile,socket,subprocess,urllib.request,urllib.error,http.cookiejar,sqlite3,uuid,concurrent.futures
+import json,sys,time,tempfile,socket,subprocess,urllib.request,urllib.error,http.cookiejar,uuid,concurrent.futures
 from pathlib import Path
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "support"))
+from sqlite_local import query_rows, NODE
 ROOT=Path(sys.argv[1] if len(sys.argv)>1 else '.').resolve();OUT=Path(sys.argv[2] if len(sys.argv)>2 else tempfile.mkdtemp(prefix='subs-workflow-3319-')).resolve();OUT.mkdir(exist_ok=True,parents=True)
 RESULTS=[]
 def eq(a,b):assert a==b,(a,b)
@@ -12,7 +15,7 @@ class Server:
   with socket.socket() as s:s.bind(('127.0.0.1',0));self.port=s.getsockname()[1]
   self.state=OUT/label;self.state.mkdir(exist_ok=True);self.kv=kv;self.start()
  def start(self):
-  self.proc=subprocess.Popen(['node',str(ROOT/'tests/regression/local-server.mjs'),str(ROOT),str(self.state),str(self.port)]+(['kv-only'] if self.kv else []),stdout=(self.state/'log.txt').open('a'),stderr=subprocess.STDOUT)
+  self.proc=subprocess.Popen([NODE,str(ROOT/'tests/regression/local-server.mjs'),str(ROOT),str(self.state),str(self.port)]+(['kv-only'] if self.kv else []),stdout=(self.state/'log.txt').open('a'),stderr=subprocess.STDOUT)
   self.op=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
   for _ in range(80):
    try:self.call('/__test__/login');return
@@ -29,7 +32,7 @@ class Server:
  def history(self):return self.ok('/api/subscription-history?pageSize=500')['items']
  def disk(self,id):
   if self.kv:return json.loads(json.loads((self.state/'kv.json').read_text())['sub:'+id])
-  with sqlite3.connect(self.state/'d1.sqlite') as db:return json.loads(db.execute('SELECT data_json FROM subscriptions_current WHERE id=?',(id,)).fetchone()[0])
+  return json.loads(query_rows(self.state/'d1.sqlite', 'SELECT data_json FROM subscriptions_current WHERE id=?', (id,))[0][0])
 def make(**kw):return dict(name='Workflow Member',account='workflow@example.test',accountSerial='',customType='开会员',memberLevel='Pro',amount=90,currency='CNY',startDate='2030-09-25',expiryDate='2030-10-25',subscriptionMode='reset',periodValue=1,periodUnit='month',**kw)
 for kv in (False,True):
  s=Server('kv'if kv else'd1',kv);prefix='KV-only'if kv else'D1+KV';label=lambda n:prefix+': '+n

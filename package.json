@@ -1,6 +1,6 @@
 {
   "name": "subscription-manager",
-  "version": "3.3.25",
+  "version": "3.3.26",
   "description": "订阅管理系统 - 基于 Cloudflare Workers + Hono",
   "main": "src/index.js",
   "type": "module",
@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "setup:local-d1": "node scripts/local-d1.mjs",
     "test:table-contract": "node --test tests/regression/contract.node.mjs",
-    "test:workflow": "python3 tests/regression/workflow3319.py .",
+    "test:workflow": "node scripts/run-python-test.mjs tests/regression/workflow3319.py .",
     "upgrade:prepare": "node scripts/safe-upgrade.mjs prepare",
     "upgrade:stage": "node scripts/safe-upgrade.mjs stage",
     "upgrade:finish": "node scripts/safe-upgrade.mjs finish",
@@ -33,7 +33,9 @@
     "deploy:doctor": "node scripts/check-toolchain.mjs --report-only",
     "prelint": "node scripts/repair-pages-context.mjs",
     "repair:context": "node scripts/repair-pages-context.mjs",
-    "test:context": "node --test tests/compat/*.test.mjs"
+    "test:context": "node --test tests/compat/*.test.mjs",
+    "test:table-api": "node scripts/run-python-test.mjs tests/regression/api-regression.py .",
+    "test:runtime": "node scripts/check-test-runtime.mjs && node --test tests/runtime/*.test.mjs"
   },
   "dependencies": {
     "hono": "4.12.22"

@@ -2,8 +2,11 @@
 Requires Python 3 and Node 22.13+. Not a live Cloudflare test.
 Usage: python tests/regression/api-regression.py [sourceRoot] [outputDirectory]
 """
-import json, os, sys, time, socket, subprocess, urllib.request, urllib.error, http.cookiejar, sqlite3
+import json, os, sys, time, socket, subprocess, urllib.request, urllib.error, http.cookiejar
 from pathlib import Path
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "support"))
+from sqlite_local import query_rows, NODE
 ROOT=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve().parents[2]
 OUT=Path(sys.argv[2]).resolve() if len(sys.argv)>2 else ROOT/'regression-output'
 OUT.mkdir(parents=True,exist_ok=True)
@@ -20,7 +23,7 @@ class Server:
         self.start()
     def start(self):
         log=(self.state/'server.log').open('a')
-        self.proc=subprocess.Popen(['node',str(ROOT/'tests/regression/local-server.mjs'),str(ROOT),str(self.state),str(self.port)]+(['kv-only'] if self.kvonly else []),stdout=log,stderr=subprocess.STDOUT)
+        self.proc=subprocess.Popen([NODE,str(ROOT/'tests/regression/local-server.mjs'),str(ROOT),str(self.state),str(self.port)]+(['kv-only'] if self.kvonly else []),stdout=log,stderr=subprocess.STDOUT)
         self.op=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
         for _ in range(60):
             try:self.call('/__test__/login');return
@@ -37,7 +40,7 @@ class Server:
         return self.call(f'/api/subscriptions/{id}/table-edit',{'changes':changes,'clientVersion':client or json.loads((ROOT/'package.json').read_text())['version']},'PATCH')
     def raw(self,id='row-a'):return json.loads(json.loads((self.state/'kv.json').read_text())['sub:'+id])
     def d1(self,id='row-a'):
-        with sqlite3.connect(self.state/'d1.sqlite') as db:return json.loads(db.execute('select data_json from subscriptions_current where id=?',(id,)).fetchone()[0])
+        return json.loads(query_rows(self.state/'d1.sqlite', 'SELECT data_json FROM subscriptions_current WHERE id=?', (id,))[0][0])
     def controls(self,**kw):self.call('/__test__/controls',kw)
     def good(self,changes,id='row-a'):
         status,body=self.patch(changes,id);eq(status,200);eq(body['saved'],True);eq(body['storageVerified'],True);eq(body['tableEditProtocol'],2);return body

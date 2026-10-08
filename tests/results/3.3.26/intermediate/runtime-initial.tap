@@ -1,0 +1,257 @@
+TAP version 13
+# (node:1310) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+# Subtest: failure injection really reproduces a missing Python _sqlite3 extension
+ok 1 - failure injection really reproduces a missing Python _sqlite3 extension
+  ---
+  duration_ms: 736.431583
+  type: 'test'
+  ...
+# Subtest: disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+not ok 2 - disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+  ---
+  duration_ms: 758.322871
+  type: 'test'
+  location: '/mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:33:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    
+    Traceback (most recent call last):
+      File "/mnt/data/subs_v3326/tests/runtime/no-sqlite-python.py", line 21, in <module>
+        exec(compile(args[1], "<no-sqlite-fixture>", "exec"), {"__name__": "__main__"})
+        ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<no-sqlite-fixture>", line 5, in <module>
+    AssertionError: ('中文', 9223372036854775807, b'\x00\xff\x01', 1.25, None)
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    ok (file:///mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:27:23)
+    TestContext.<anonymous> (file:///mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:34:22)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: bound parameters preserve quotes and prevent query text injection
+not ok 3 - bound parameters preserve quotes and prevent query text injection
+  ---
+  duration_ms: 723.093783
+  type: 'test'
+  location: '/mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:36:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    
+    Traceback (most recent call last):
+      File "/mnt/data/subs_v3326/tests/runtime/no-sqlite-python.py", line 21, in <module>
+        exec(compile(args[1], "<no-sqlite-fixture>", "exec"), {"__name__": "__main__"})
+        ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<no-sqlite-fixture>", line 4, in <module>
+    AssertionError
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    ok (file:///mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:27:23)
+    TestContext.<anonymous> (file:///mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:37:22)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing fixture is rejected and is not silently created
+ok 4 - missing fixture is rejected and is not silently created
+  ---
+  duration_ms: 713.240122
+  type: 'test'
+  ...
+# Subtest: corrupt fixture and invalid SQL fail, not empty successful test results
+ok 5 - corrupt fixture and invalid SQL fail, not empty successful test results
+  ---
+  duration_ms: 1483.121623
+  type: 'test'
+  ...
+# Subtest: the read-only path rejects mutations and leaves original bytes untouched
+ok 6 - the read-only path rejects mutations and leaves original bytes untouched
+  ---
+  duration_ms: 807.244736
+  type: 'test'
+  ...
+# Subtest: explicit fixture transaction persists on independent process reopen
+ok 7 - explicit fixture transaction persists on independent process reopen
+  ---
+  duration_ms: 1437.239034
+  type: 'test'
+  ...
+# Subtest: a failed batch rolls back its preceding statement
+not ok 8 - a failed batch rolls back its preceding statement
+  ---
+  duration_ms: 684.065428
+  type: 'test'
+  location: '/mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:54:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    '中文' !== '中文\x00測試'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '中文\x00測試'
+  actual: '中文'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:55:218)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: multiple SQL statements cannot silently execute only the first one
+not ok 9 - multiple SQL statements cannot silently execute only the first one
+  ---
+  duration_ms: 638.911836
+  type: 'test'
+  location: '/mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:57:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    '中文' !== '中文\x00測試'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '中文\x00測試'
+  actual: '中文'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:58:173)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: fixture DDL and ATTACH are not accepted by the write helper
+not ok 10 - fixture DDL and ATTACH are not accepted by the write helper
+  ---
+  duration_ms: 1352.332933
+  type: 'test'
+  location: '/mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:60:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    '中文' !== '中文\x00測試'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '中文\x00測試'
+  actual: '中文'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:61:205)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: blob/empty string/NULL and minimum int64 values round trip through fixture writes
+ok 11 - blob/empty string/NULL and minimum int64 values round trip through fixture writes
+  ---
+  duration_ms: 743.405074
+  type: 'test'
+  ...
+# Subtest: out-of-range integer and non-finite real parameters fail without modifying fixture
+not ok 12 - out-of-range integer and non-finite real parameters fail without modifying fixture
+  ---
+  duration_ms: 1420.593697
+  type: 'test'
+  location: '/mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:66:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    '中文' !== '中文\x00測試'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '中文\x00測試'
+  actual: '中文'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/subs_v3326/tests/runtime/sqlite-runtime.test.mjs:67:187)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing Node executable is an actual failure, not a Python/sqlite fallback
+ok 13 - missing Node executable is an actual failure, not a Python/sqlite fallback
+  ---
+  duration_ms: 709.829109
+  type: 'test'
+  ...
+# Subtest: runtime preflight tests a real disk file and a Python-to-Node round trip
+ok 14 - runtime preflight tests a real disk file and a Python-to-Node round trip
+  ---
+  duration_ms: 775.236975
+  type: 'test'
+  ...
+# Subtest: runtime preflight rejects a missing Python executable before release checks
+ok 15 - runtime preflight rejects a missing Python executable before release checks
+  ---
+  duration_ms: 2.291275
+  type: 'test'
+  ...
+# Subtest: workflow launcher uses PYTHON rather than silently invoking another interpreter
+ok 16 - workflow launcher uses PYTHON rather than silently invoking another interpreter
+  ---
+  duration_ms: 35.273559
+  type: 'test'
+  ...
+# Subtest: mandatory release workflow and original checks are retained; runtime probe is first
+ok 17 - mandatory release workflow and original checks are retained; runtime probe is first
+  ---
+  duration_ms: 0.344409
+  type: 'test'
+  ...
+# Subtest: all shipped Python disk assertions use the portable helper, not sqlite3 imports
+ok 18 - all shipped Python disk assertions use the portable helper, not sqlite3 imports
+  ---
+  duration_ms: 0.666575
+  type: 'test'
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 12
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13097.182608

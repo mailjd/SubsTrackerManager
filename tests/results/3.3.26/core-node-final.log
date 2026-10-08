@@ -1,0 +1,1127 @@
+TAP version 13
+# Subtest: Workers Builds is detected before generic CI or Actions flags
+ok 1 - Workers Builds is detected before generic CI or Actions flags
+  ---
+  duration_ms: 0.904324
+  type: 'test'
+  ...
+# Subtest: Pages is explicitly rejected; local / GitHub Actions remain supported
+ok 2 - Pages is explicitly rejected; local / GitHub Actions remain supported
+  ---
+  duration_ms: 0.679395
+  type: 'test'
+  ...
+# Subtest: unsupported Node stops before any backup or remote API
+ok 3 - unsupported Node stops before any backup or remote API
+  ---
+  duration_ms: 0.289937
+  type: 'test'
+  ...
+# Subtest: preflight aggregates missing secret NAMES without printing configured values
+ok 4 - preflight aggregates missing secret NAMES without printing configured values
+  ---
+  duration_ms: 0.277679
+  type: 'test'
+  ...
+# Subtest: successful preflight reads but never mutates original TOML or creates state
+ok 5 - successful preflight reads but never mutates original TOML or creates state
+  ---
+  duration_ms: 1328.004667
+  type: 'test'
+  ...
+# Subtest: Cloudflare preflight rejects even if secrets are configured, before reading any file
+ok 6 - Cloudflare preflight rejects even if secrets are configured, before reading any file
+  ---
+  duration_ms: 0.314985
+  type: 'test'
+  ...
+# Subtest: explicit original Worker name overrides template, environment is preserved
+ok 7 - explicit original Worker name overrides template, environment is preserved
+  ---
+  duration_ms: 4450.041377
+  type: 'test'
+  ...
+# Subtest: wrong account ID rejects rather than rewriting to another account
+ok 8 - wrong account ID rejects rather than rewriting to another account
+  ---
+  duration_ms: 1364.901099
+  type: 'test'
+  ...
+# Subtest: Worker URL is an HTTPS origin, not /admin or credentialed URL
+ok 9 - Worker URL is an HTTPS origin, not /admin or credentialed URL
+  ---
+  duration_ms: 5285.62344
+  type: 'test'
+  ...
+# Subtest: missing Python produces actionable failure, not guessed config
+ok 10 - missing Python produces actionable failure, not guessed config
+  ---
+  duration_ms: 3.92532
+  type: 'test'
+  ...
+# Subtest: raw Cloudflare command explains the supported split route, not a mandatory disconnect
+ok 11 - raw Cloudflare command explains the supported split route, not a mandatory disconnect
+  ---
+  duration_ms: 35.080058
+  type: 'test'
+  ...
+# Subtest: ordinary raw Wrangler guard still fails closed without SQLite warning
+ok 12 - ordinary raw Wrangler guard still fails closed without SQLite warning
+  ---
+  duration_ms: 32.89195
+  type: 'test'
+  ...
+# Subtest: setting a fake run ID cannot unlock guard
+ok 13 - setting a fake run ID cannot unlock guard
+  ---
+  duration_ms: 45.290849
+  type: 'test'
+  ...
+# Subtest: preflight CLI succeeds locally with synthetic config and leaks no secrets
+ok 14 - preflight CLI succeeds locally with synthetic config and leaks no secrets
+  ---
+  duration_ms: 729.470567
+  type: 'test'
+  ...
+# Subtest: CLI rejects Workers Builds before prepare and does not create state
+ok 15 - CLI rejects Workers Builds before prepare and does not create state
+  ---
+  duration_ms: 42.977346
+  type: 'test'
+  ...
+# Subtest: safe workflow retains required tests, both uploaded backups, recovery, and long timeout
+ok 16 - safe workflow retains required tests, both uploaded backups, recovery, and long timeout
+  ---
+  duration_ms: 0.798755
+  type: 'test'
+  ...
+# Subtest: Vitest uses isolated local configuration, never real production binding IDs
+ok 17 - Vitest uses isolated local configuration, never real production binding IDs
+  ---
+  duration_ms: 0.244669
+  type: 'test'
+  ...
+# Subtest: build version and upgrade runner stay consistent, and drain is not shortened
+ok 18 - build version and upgrade runner stay consistent, and drain is not shortened
+  ---
+  duration_ms: 0.283878
+  type: 'test'
+  ...
+# (node:5467) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [bundle] ST_BUNDLE_OK {"wrangler":"3.114.17","uploaded":false,"productionStorageAccess":false}
+# Subtest: root release Wrangler and deprecated nested TEST Wrangler are correctly distinguished
+ok 19 - root release Wrangler and deprecated nested TEST Wrangler are correctly distinguished
+  ---
+  duration_ms: 9.459476
+  type: 'test'
+  ...
+# Subtest: every direct dependency is an exact version paired with lock metadata
+ok 20 - every direct dependency is an exact version paired with lock metadata
+  ---
+  duration_ms: 2.877389
+  type: 'test'
+  ...
+# Subtest: missing root Wrangler fails rather than looking up npx/global/network fallback
+ok 21 - missing root Wrangler fails rather than looking up npx/global/network fallback
+  ---
+  duration_ms: 2.990981
+  type: 'test'
+  ...
+# Subtest: wrong installed root version is explicitly rejected
+ok 22 - wrong installed root version is explicitly rejected
+  ---
+  duration_ms: 3.115909
+  type: 'test'
+  ...
+# Subtest: partial package update / mismatching lock root version is rejected
+ok 23 - partial package update / mismatching lock root version is rejected
+  ---
+  duration_ms: 3.040515
+  type: 'test'
+  ...
+# Subtest: caret or floating root Wrangler does not silently drift
+ok 24 - caret or floating root Wrangler does not silently drift
+  ---
+  duration_ms: 3.177872
+  type: 'test'
+  ...
+# Subtest: bin traversal outside installed package is rejected
+ok 25 - bin traversal outside installed package is rejected
+  ---
+  duration_ms: 2.535283
+  type: 'test'
+  ...
+# Subtest: invalid package JSON gives a useful safe error
+ok 26 - invalid package JSON gives a useful safe error
+  ---
+  duration_ms: 1.691872
+  type: 'test'
+  ...
+# Subtest: report-only distinguishes no install from successful verification
+ok 27 - report-only distinguishes no install from successful verification
+  ---
+  duration_ms: 2.858872
+  type: 'test'
+  ...
+# Subtest: public deploy:check now accepts Workers Builds and performs no remote writes
+ok 28 - public deploy:check now accepts Workers Builds and performs no remote writes
+  ---
+  duration_ms: 1190.718519
+  type: 'test'
+  ...
+# Subtest: public deploy:check still rejects Pages and missing build secrets
+ok 29 - public deploy:check still rejects Pages and missing build secrets
+  ---
+  duration_ms: 174.308839
+  type: 'test'
+  ...
+# Subtest: raw Wrangler remains blocked: no fake-success workaround or clearing of protection
+ok 30 - raw Wrangler remains blocked: no fake-success workaround or clearing of protection
+  ---
+  duration_ms: 51.875849
+  type: 'test'
+  ...
+# Subtest: error help points at Deploy command and current documentation, not obsolete version
+ok 31 - error help points at Deploy command and current documentation, not obsolete version
+  ---
+  duration_ms: 0.181193
+  type: 'test'
+  ...
+# Subtest: build is no longer an echo-only success and no build script calls production deployment
+ok 32 - build is no longer an echo-only success and no build script calls production deployment
+  ---
+  duration_ms: 0.337859
+  type: 'test'
+  ...
+# Subtest: bundle child environment cannot inherit production credentials, preloads or run capability
+ok 33 - bundle child environment cannot inherit production credentials, preloads or run capability
+  ---
+  duration_ms: 0.14594
+  type: 'test'
+  ...
+# Subtest: bundle wrapper forces --dry-run and never hands it live resource IDs (FAKE executable only)
+ok 34 - bundle wrapper forces --dry-run and never hands it live resource IDs (FAKE executable only)
+  ---
+  duration_ms: 56.0483
+  type: 'test'
+  ...
+# Subtest: bundle check rejects a tool that returns zero but produced no bundle (FAKE executable only)
+ok 35 - bundle check rejects a tool that returns zero but produced no bundle (FAKE executable only)
+  ---
+  duration_ms: 46.973706
+  type: 'test'
+  ...
+# Subtest: bundle child failure is propagated, not presented as successful build (FAKE executable only)
+ok 36 - bundle child failure is propagated, not presented as successful build (FAKE executable only)
+  ---
+  duration_ms: 80.324834
+  type: 'test'
+  ...
+# Subtest: release list retains ALL original checks and adds toolchain + actual bundle
+ok 37 - release list retains ALL original checks and adds toolchain + actual bundle
+  ---
+  duration_ms: 0.754268
+  type: 'test'
+  ...
+# Subtest: GitHub publisher retains required bundle/toolchain checks without skipping previous tests
+ok 38 - GitHub publisher retains required bundle/toolchain checks without skipping previous tests
+  ---
+  duration_ms: 0.169365
+  type: 'test'
+  ...
+# Subtest: retry source digest includes test/config changes but excludes generated result files
+ok 39 - retry source digest includes test/config changes but excludes generated result files
+  ---
+  duration_ms: 3.974374
+  type: 'test'
+  ...
+# Subtest: deploy --help never starts a deployment and works from another working directory
+ok 40 - deploy --help never starts a deployment and works from another working directory
+  ---
+  duration_ms: 200.326789
+  type: 'test'
+  ...
+# Subtest: unknown deployment arguments are not silently ignored before deploying
+ok 41 - unknown deployment arguments are not silently ignored before deploying
+  ---
+  duration_ms: 109.128336
+  type: 'test'
+  ...
+# (node:5468) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: append-only split metadata does not invalidate maintenance backup
+ok 42 - append-only split metadata does not invalidate maintenance backup
+  ---
+  duration_ms: 1.131797
+  type: 'test'
+  ...
+# Subtest: changed original metadata cannot hide behind the operational prefix filter
+ok 43 - changed original metadata cannot hide behind the operational prefix filter
+  ---
+  duration_ms: 0.72306
+  type: 'test'
+  ...
+# Subtest: new ordinary metadata must not be silently accepted as checkpoint bookkeeping
+ok 44 - new ordinary metadata must not be silently accepted as checkpoint bookkeeping
+  ---
+  duration_ms: 13.716877
+  type: 'test'
+  ...
+# Subtest: source changes stop, even if summary row counts are identical
+ok 45 - source changes stop, even if summary row counts are identical
+  ---
+  duration_ms: 0.357319
+  type: 'test'
+  ...
+# Subtest: KV-only is not silently given a race-prone deployment lease
+ok 46 - KV-only is not silently given a race-prone deployment lease
+  ---
+  duration_ms: 0.20542
+  type: 'test'
+  ...
+# Subtest: D1 lease insertion atomically excludes a concurrent Build; release is append-only
+ok 47 - D1 lease insertion atomically excludes a concurrent Build; release is append-only
+  ---
+  duration_ms: 3.442652
+  type: 'test'
+  ...
+# Subtest: expired lease can be superseded without deleting the original claim
+ok 48 - expired lease can be superseded without deleting the original claim
+  ---
+  duration_ms: 0.813336
+  type: 'test'
+  ...
+# (node:5518) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Cloudflare first build really passes guard, remains closed, persists encrypted recovery; fresh second build unlocks once
+ok 49 - Cloudflare first build really passes guard, remains closed, persists encrypted recovery; fresh second build unlocks once
+  ---
+  duration_ms: 21341.18058
+  type: 'test'
+  ...
+# Subtest: test failure stops before lease, artifact upload or Worker deployment
+ok 50 - test failure stops before lease, artifact upload or Worker deployment
+  ---
+  duration_ms: 815.306921
+  type: 'test'
+  ...
+# Subtest: wrong backup password on a fresh Build cannot create a replacement run
+ok 51 - wrong backup password on a fresh Build cannot create a replacement run
+  ---
+  duration_ms: 8242.730843
+  type: 'test'
+  ...
+# Subtest: changed code while maintenance is active is rejected rather than silently starting another run
+ok 52 - changed code while maintenance is active is rejected rather than silently starting another run
+  ---
+  duration_ms: 8218.33268
+  type: 'test'
+  ...
+# Subtest: lost apply acknowledgement resumes from durable checkpoint in a new Build
+ok 53 - lost apply acknowledgement resumes from durable checkpoint in a new Build
+  ---
+  duration_ms: 13842.087249
+  type: 'test'
+  ...
+# Subtest: lost commit acknowledgement recovers without remigrating or reopening a new run
+ok 54 - lost commit acknowledgement recovers without remigrating or reopening a new run
+  ---
+  duration_ms: 13771.220972
+  type: 'test'
+  ...
+# Subtest: lost Wrangler acknowledgement detects actual maintenance version without duplicate upload and restarts conservative drain
+ok 55 - lost Wrangler acknowledgement detects actual maintenance version without duplicate upload and restarts conservative drain
+  ---
+  duration_ms: 14005.165192
+  type: 'test'
+  ...
+# Subtest: corrupted remote ciphertext is detected before any new deployment or migration
+ok 56 - corrupted remote ciphertext is detected before any new deployment or migration
+  ---
+  duration_ms: 8208.279158
+  type: 'test'
+  ...
+# Subtest: original SQL modified between maintenance backup and retry is not accepted as internal bookkeeping
+ok 57 - original SQL modified between maintenance backup and retry is not accepted as internal bookkeeping
+  ---
+  duration_ms: 13204.97785
+  type: 'test'
+  ...
+# Subtest: encrypted backup download works from a new local directory without a deploy or test bypass
+ok 58 - encrypted backup download works from a new local directory without a deploy or test bypass
+  ---
+  duration_ms: 8531.764853
+  type: 'test'
+  ...
+# Subtest: required bundle failure stops before ANY Cloudflare request or checkpoint write
+ok 59 - required bundle failure stops before ANY Cloudflare request or checkpoint write
+  ---
+  duration_ms: 768.57554
+  type: 'test'
+  ...
+# Subtest: input intent: empty string must not match old nonempty value
+ok 60 - input intent: empty string must not match old nonempty value
+  ---
+  duration_ms: 4.443932
+  type: 'test'
+  ...
+# Subtest: date equivalence uses configured date semantics, not string representation
+ok 61 - date equivalence uses configured date semantics, not string representation
+  ---
+  duration_ms: 31.94554
+  type: 'test'
+  ...
+# Subtest: empty optional values remain valid
+ok 62 - empty optional values remain valid
+  ---
+  duration_ms: 0.250308
+  type: 'test'
+  ...
+# Subtest: normalization never silently accepts invalid dates or periods
+ok 63 - normalization never silently accepts invalid dates or periods
+  ---
+  duration_ms: 0.453784
+  type: 'test'
+  ...
+# Subtest: disabled reminder rules are different; IDs and creation timestamps are not business values
+ok 64 - disabled reminder rules are different; IDs and creation timestamps are not business values
+  ---
+  duration_ms: 0.328546
+  type: 'test'
+  ...
+# Subtest: D1 safe snapshot retains reminder content but no password data
+ok 65 - D1 safe snapshot retains reminder content but no password data
+  ---
+  duration_ms: 0.98776
+  type: 'test'
+  ...
+# Subtest: preset still builds 7/3 disabled and 1/day-of enabled
+ok 66 - preset still builds 7/3 disabled and 1/day-of enabled
+  ---
+  duration_ms: 1.721977
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 生成新的订阅凭据加密密钥
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: empty rules stay disabled and legacy rule keeps stable dedupe id
+ok 67 - scheduler: empty rules stay disabled and legacy rule keeps stable dedupe id
+  ---
+  duration_ms: 100.228542
+  type: 'test'
+  ...
+# (node:5820) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+# [runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+# Subtest: failure injection really reproduces a missing Python _sqlite3 extension
+ok 68 - failure injection really reproduces a missing Python _sqlite3 extension
+  ---
+  duration_ms: 952.893877
+  type: 'test'
+  ...
+# Subtest: disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+ok 69 - disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+  ---
+  duration_ms: 1598.687675
+  type: 'test'
+  ...
+# Subtest: bound parameters preserve quotes and prevent query text injection
+ok 70 - bound parameters preserve quotes and prevent query text injection
+  ---
+  duration_ms: 1584.245664
+  type: 'test'
+  ...
+# Subtest: missing fixture is rejected and is not silently created
+ok 71 - missing fixture is rejected and is not silently created
+  ---
+  duration_ms: 1683.18174
+  type: 'test'
+  ...
+# Subtest: corrupt fixture and invalid SQL fail, not empty successful test results
+ok 72 - corrupt fixture and invalid SQL fail, not empty successful test results
+  ---
+  duration_ms: 1873.216594
+  type: 'test'
+  ...
+# Subtest: the read-only path rejects mutations and leaves original bytes untouched
+ok 73 - the read-only path rejects mutations and leaves original bytes untouched
+  ---
+  duration_ms: 863.420003
+  type: 'test'
+  ...
+# Subtest: explicit fixture transaction persists on independent process reopen
+ok 74 - explicit fixture transaction persists on independent process reopen
+  ---
+  duration_ms: 1616.654158
+  type: 'test'
+  ...
+# Subtest: a failed batch rolls back its preceding statement
+ok 75 - a failed batch rolls back its preceding statement
+  ---
+  duration_ms: 827.82428
+  type: 'test'
+  ...
+# Subtest: multiple SQL statements cannot silently execute only the first one
+ok 76 - multiple SQL statements cannot silently execute only the first one
+  ---
+  duration_ms: 925.026289
+  type: 'test'
+  ...
+# Subtest: fixture DDL and ATTACH are not accepted by the write helper
+ok 77 - fixture DDL and ATTACH are not accepted by the write helper
+  ---
+  duration_ms: 1673.809726
+  type: 'test'
+  ...
+# Subtest: blob/empty string/NULL and minimum int64 values round trip through fixture writes
+ok 78 - blob/empty string/NULL and minimum int64 values round trip through fixture writes
+  ---
+  duration_ms: 894.003831
+  type: 'test'
+  ...
+# Subtest: out-of-range integer and non-finite real parameters fail without modifying fixture
+ok 79 - out-of-range integer and non-finite real parameters fail without modifying fixture
+  ---
+  duration_ms: 1572.874324
+  type: 'test'
+  ...
+# Subtest: missing Node executable is an actual failure, not a Python/sqlite fallback
+ok 80 - missing Node executable is an actual failure, not a Python/sqlite fallback
+  ---
+  duration_ms: 803.484213
+  type: 'test'
+  ...
+# Subtest: runtime preflight tests a real disk file and a Python-to-Node round trip
+ok 81 - runtime preflight tests a real disk file and a Python-to-Node round trip
+  ---
+  duration_ms: 774.929588
+  type: 'test'
+  ...
+# Subtest: runtime preflight rejects a missing Python executable before release checks
+ok 82 - runtime preflight rejects a missing Python executable before release checks
+  ---
+  duration_ms: 8.030741
+  type: 'test'
+  ...
+# Subtest: workflow launcher uses PYTHON rather than silently invoking another interpreter
+ok 83 - workflow launcher uses PYTHON rather than silently invoking another interpreter
+  ---
+  duration_ms: 83.988167
+  type: 'test'
+  ...
+# Subtest: mandatory release workflow and original checks are retained; runtime probe is first
+ok 84 - mandatory release workflow and original checks are retained; runtime probe is first
+  ---
+  duration_ms: 0.369978
+  type: 'test'
+  ...
+# Subtest: all shipped Python disk assertions use the portable helper, not sqlite3 imports
+ok 85 - all shipped Python disk assertions use the portable helper, not sqlite3 imports
+  ---
+  duration_ms: 0.645374
+  type: 'test'
+  ...
+# Subtest: runtime preflight succeeds when the selected Python explicitly blocks SQLite imports
+ok 86 - runtime preflight succeeds when the selected Python explicitly blocks SQLite imports
+  ---
+  duration_ms: 784.763996
+  type: 'test'
+  ...
+# Subtest: disabled Node SQLite is rejected explicitly instead of silently skipping local SQL checks
+ok 87 - disabled Node SQLite is rejected explicitly instead of silently skipping local SQL checks
+  ---
+  duration_ms: 27.970404
+  type: 'test'
+  ...
+# Subtest: Python test failures propagate their exit status through the launcher
+ok 88 - Python test failures propagate their exit status through the launcher
+  ---
+  duration_ms: 1437.348587
+  type: 'test'
+  ...
+# (node:6766) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: empty D1 returns valid logical SQL (application schema gate remains separate)
+ok 89 - empty D1 returns valid logical SQL (application schema gate remains separate)
+  ---
+  duration_ms: 20.814311
+  type: 'test'
+  ...
+# Subtest: data pages never call export API or any object URL and round-trip every row
+ok 90 - data pages never call export API or any object URL and round-trip every row
+  ---
+  duration_ms: 13.191875
+  type: 'test'
+  ...
+# Subtest: Unicode / apostrophe / newlines / NUL TEXT bytes preserved
+ok 91 - Unicode / apostrophe / newlines / NUL TEXT bytes preserved
+  ---
+  duration_ms: 2.457817
+  type: 'test'
+  ...
+# Subtest: NULL, empty text, empty BLOB and binary are distinct after restore
+ok 92 - NULL, empty text, empty BLOB and binary are distinct after restore
+  ---
+  duration_ms: 1.603098
+  type: 'test'
+  ...
+# Subtest: int64 extremes pass as SQL text without JSON number rounding
+ok 93 - int64 extremes pass as SQL text without JSON number rounding
+  ---
+  duration_ms: 1.71092
+  type: 'test'
+  ...
+# Subtest: finite and infinite REAL values preserve numeric values
+ok 94 - finite and infinite REAL values preserve numeric values
+  ---
+  duration_ms: 1.809529
+  type: 'test'
+  ...
+# Subtest: implicit rowid gaps and duplicate business rows preserved
+ok 95 - implicit rowid gaps and duplicate business rows preserved
+  ---
+  duration_ms: 1.866596
+  type: 'test'
+  ...
+# Subtest: AUTOINCREMENT high-water value survives deleted highest row
+ok 96 - AUTOINCREMENT high-water value survives deleted highest row
+  ---
+  duration_ms: 3.988394
+  type: 'test'
+  ...
+# Subtest: WITHOUT ROWID composite/collated primary key is ordered and preserved
+ok 97 - WITHOUT ROWID composite/collated primary key is ordered and preserved
+  ---
+  duration_ms: 3.014466
+  type: 'test'
+  ...
+# Subtest: STORED and VIRTUAL generated columns restored from table definition
+ok 98 - STORED and VIRTUAL generated columns restored from table definition
+  ---
+  duration_ms: 2.118394
+  type: 'test'
+  ...
+# Subtest: trigger creation after inserts does not duplicate audit rows; trigger still works
+ok 99 - trigger creation after inserts does not duplicate audit rows; trigger still works
+  ---
+  duration_ms: 3.214137
+  type: 'test'
+  ...
+# Subtest: indexes/views/constraints retained and external system table not queried
+ok 100 - indexes/views/constraints retained and external system table not queried
+  ---
+  duration_ms: 2.481001
+  type: 'test'
+  ...
+# Subtest: quoted SQL identifiers do not break schema/row serialization
+ok 101 - quoted SQL identifiers do not break schema/row serialization
+  ---
+  duration_ms: 1.989731
+  type: 'test'
+  ...
+# Subtest: large TEXT uses bounded chunks including NUL and multibyte characters
+ok 102 - large TEXT uses bounded chunks including NUL and multibyte characters
+  ---
+  duration_ms: 12.894015
+  type: 'test'
+  ...
+# Subtest: large binary uses chunks and exact BLOB type, not UTF-8 replacement
+ok 103 - large binary uses chunks and exact BLOB type, not UTF-8 replacement
+  ---
+  duration_ms: 36.041456
+  type: 'test'
+  ...
+# Subtest: large WITHOUT ROWID record retains composite identity
+ok 104 - large WITHOUT ROWID record retains composite identity
+  ---
+  duration_ms: 4.885408
+  type: 'test'
+  ...
+# Subtest: missing page entries fail instead of being accepted as complete
+ok 105 - missing page entries fail instead of being accepted as complete
+  ---
+  duration_ms: 1.853886
+  type: 'test'
+  ...
+# Subtest: repeating pages fail monotonic rowid verification
+ok 106 - repeating pages fail monotonic rowid verification
+  ---
+  duration_ms: 1.669598
+  type: 'test'
+  ...
+# Subtest: schema change during scan fails and returns no archive
+ok 107 - schema change during scan fails and returns no archive
+  ---
+  duration_ms: 1.388043
+  type: 'test'
+  ...
+# Subtest: row count changes during scan fail
+ok 108 - row count changes during scan fail
+  ---
+  duration_ms: 1.421885
+  type: 'test'
+  ...
+# Subtest: unsupported virtual/shadow tables rejected before returning partial backup
+ok 109 - unsupported virtual/shadow tables rejected before returning partial backup
+  ---
+  duration_ms: 0.666055
+  type: 'test'
+  ...
+# Subtest: incomplete xinfo refused, generated/hidden columns never silently omitted
+ok 110 - incomplete xinfo refused, generated/hidden columns never silently omitted
+  ---
+  duration_ms: 0.663471
+  type: 'test'
+  ...
+# Subtest: damaged large cell chunk fails before it can reach encryption
+ok 111 - damaged large cell chunk fails before it can reach encryption
+  ---
+  duration_ms: 7.231897
+  type: 'test'
+  ...
+# Subtest: backup size budget fails closed without changing storage backend
+ok 112 - backup size budget fails closed without changing storage backend
+  ---
+  duration_ms: 0.905586
+  type: 'test'
+  ...
+# Subtest: integer bounds and snapshot options checked before querying
+ok 113 - integer bounds and snapshot options checked before querying
+  ---
+  duration_ms: 0.351921
+  type: 'test'
+  ...
+# (node:6786) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: R2 local/inactive environment bindings rejected; never silently stripped
+ok 114 - R2 local/inactive environment bindings rejected; never silently stripped
+  ---
+  duration_ms: 1.031535
+  type: 'test'
+  ...
+# Subtest: online R2 binding rejected without delete/create/migrate side effects
+ok 115 - online R2 binding rejected without delete/create/migrate side effects
+  ---
+  duration_ms: 0.227864
+  type: 'test'
+  ...
+# Subtest: D1/KV/static assets/variables/secrets accepted without object storage
+ok 116 - D1/KV/static assets/variables/secrets accepted without object storage
+  ---
+  duration_ms: 0.366182
+  type: 'test'
+  ...
+# Subtest: additional storage/services rejected locally to avoid implicit additions
+ok 117 - additional storage/services rejected locally to avoid implicit additions
+  ---
+  duration_ms: 0.245491
+  type: 'test'
+  ...
+# Subtest: R2 and D1 import/export jobs rejected before transport
+ok 118 - R2 and D1 import/export jobs rejected before transport
+  ---
+  duration_ms: 4.862213
+  type: 'test'
+  ...
+# Subtest: redirect-style/absolute paths cannot send token to another storage host
+ok 119 - redirect-style/absolute paths cannot send token to another storage host
+  ---
+  duration_ms: 1.334503
+  type: 'test'
+  ...
+# Subtest: schema response with wrong shape or success false is rejected
+ok 120 - schema response with wrong shape or success false is rejected
+  ---
+  duration_ms: 39.503266
+  type: 'test'
+  ...
+# Subtest: D1 permission error stops backup, no silent fallback to bucket
+ok 121 - D1 permission error stops backup, no silent fallback to bucket
+  ---
+  duration_ms: 0.539133
+  type: 'test'
+  ...
+# Subtest: all shipped Wrangler configs parse and only declare KV/D1 for data storage
+ok 122 - all shipped Wrangler configs parse and only declare KV/D1 for data storage
+  ---
+  duration_ms: 2299.033236
+  type: 'test'
+  ...
+# Subtest: no direct S3/R2 SDK dependency is introduced
+ok 123 - no direct S3/R2 SDK dependency is introduced
+  ---
+  duration_ms: 1.765754
+  type: 'test'
+  ...
+# Subtest: split and GitHub release require storage regression, not a bypass
+ok 124 - split and GitHub release require storage regression, not a bypass
+  ---
+  duration_ms: 1.096324
+  type: 'test'
+  ...
+# Subtest: custom storage IDs retained without any name-based discovery
+ok 125 - custom storage IDs retained without any name-based discovery
+  ---
+  duration_ms: 1.559983
+  type: 'test'
+  ...
+# Subtest: matching explicit local binding retained
+ok 126 - matching explicit local binding retained
+  ---
+  duration_ms: 0.167663
+  type: 'test'
+  ...
+# Subtest: local KV different from actual binding rejected
+ok 127 - local KV different from actual binding rejected
+  ---
+  duration_ms: 0.635629
+  type: 'test'
+  ...
+# Subtest: local D1 different from actual binding rejected
+ok 128 - local D1 different from actual binding rejected
+  ---
+  duration_ms: 0.14593
+  type: 'test'
+  ...
+# Subtest: unknown binding rejected rather than removed at deploy
+ok 129 - unknown binding rejected rather than removed at deploy
+  ---
+  duration_ms: 0.145189
+  type: 'test'
+  ...
+# Subtest: second KV rejected rather than silently dropped
+ok 130 - second KV rejected rather than silently dropped
+  ---
+  duration_ms: 0.127252
+  type: 'test'
+  ...
+# Subtest: legacy D1 id and modern database_id formats supported and conflicts refused
+ok 131 - legacy D1 id and modern database_id formats supported and conflicts refused
+  ---
+  duration_ms: 0.156005
+  type: 'test'
+  ...
+# Subtest: KV-only deployment does not create D1
+ok 132 - KV-only deployment does not create D1
+  ---
+  duration_ms: 0.147502
+  type: 'test'
+  ...
+# Subtest: missing bindings or missing token/account rejected
+ok 133 - missing bindings or missing token/account rejected
+  ---
+  duration_ms: 0.302607
+  type: 'test'
+  ...
+# Subtest: full KV pagination preserves binary, expiration, metadata and encodes keys
+ok 134 - full KV pagination preserves binary, expiration, metadata and encodes keys
+  ---
+  duration_ms: 29.781887
+  type: 'test'
+  ...
+# Subtest: missing KV cursor metadata rejects partial backup
+ok 135 - missing KV cursor metadata rejects partial backup
+  ---
+  duration_ms: 0.945116
+  type: 'test'
+  ...
+# Subtest: KV pagination duplicate keys stop backup
+ok 136 - KV pagination duplicate keys stop backup
+  ---
+  duration_ms: 0.869281
+  type: 'test'
+  ...
+# Subtest: KV key vanishing on read does not produce incomplete success
+ok 137 - KV key vanishing on read does not produce incomplete success
+  ---
+  duration_ms: 1.069193
+  type: 'test'
+  ...
+# Subtest: Cloudflare API permission failure stops without create/delete calls
+ok 138 - Cloudflare API permission failure stops without create/delete calls
+  ---
+  duration_ms: 0.591272
+  type: 'test'
+  ...
+# (node:6912) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D1 backup only uses query API, never an export/download job
+ok 139 - D1 backup only uses query API, never an export/download job
+  ---
+  duration_ms: 11.644977
+  type: 'test'
+  ...
+# Subtest: malformed D1 query backup response fails closed
+ok 140 - malformed D1 query backup response fails closed
+  ---
+  duration_ms: 0.607467
+  type: 'test'
+  ...
+# Subtest: schedules and settings use correct endpoint and response structure
+ok 141 - schedules and settings use correct endpoint and response structure
+  ---
+  duration_ms: 0.531592
+  type: 'test'
+  ...
+# (node:6923) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: repair partial 3319 migration, preserve raw data, retry idempotent (KV)
+ok 142 - repair partial 3319 migration, preserve raw data, retry idempotent (KV)
+  ---
+  duration_ms: 26.62206
+  type: 'test'
+  ...
+# Subtest: repair partial 3319 migration, preserve raw data, retry idempotent (D1)
+ok 143 - repair partial 3319 migration, preserve raw data, retry idempotent (D1)
+  ---
+  duration_ms: 56.225193
+  type: 'test'
+  ...
+# Subtest: full KV scan finds records omitted by index; D1-only record retained
+ok 144 - full KV scan finds records omitted by index; D1-only record retained
+  ---
+  duration_ms: 10.585148
+  type: 'test'
+  ...
+# Subtest: latest D1 changes used without modifying original KV or losing encrypted field
+ok 145 - latest D1 changes used without modifying original KV or losing encrypted field
+  ---
+  duration_ms: 31.312697
+  type: 'test'
+  ...
+# Subtest: equal timestamp business conflict fails before writes
+ok 146 - equal timestamp business conflict fails before writes
+  ---
+  duration_ms: 2.910921
+  type: 'test'
+  ...
+# Subtest: same payment ID with conflicting amount fails before writes
+ok 147 - same payment ID with conflicting amount fails before writes
+  ---
+  duration_ms: 6.040211
+  type: 'test'
+  ...
+# Subtest: newer snapshot missing an older payment is not silently resurrected
+ok 148 - newer snapshot missing an older payment is not silently resurrected
+  ---
+  duration_ms: 1.73693
+  type: 'test'
+  ...
+# Subtest: equal timestamp additive payments repair stale mirror
+ok 149 - equal timestamp additive payments repair stale mirror
+  ---
+  duration_ms: 4.626159
+  type: 'test'
+  ...
+# Subtest: corrupt JSON never becomes an empty record list
+ok 150 - corrupt JSON never becomes an empty record list
+  ---
+  duration_ms: 1.665663
+  type: 'test'
+  ...
+# Subtest: enumeration error fails without writes or done marker
+ok 151 - enumeration error fails without writes or done marker
+  ---
+  duration_ms: 1.636719
+  type: 'test'
+  ...
+# Subtest: index-only missing entry fails instead of claiming complete
+ok 152 - index-only missing entry fails instead of claiming complete
+  ---
+  duration_ms: 1.495827
+  type: 'test'
+  ...
+# Subtest: duplicate payment IDs rejected without writes
+ok 153 - duplicate payment IDs rejected without writes
+  ---
+  duration_ms: 3.926273
+  type: 'test'
+  ...
+# Subtest: old placeholder retained but excluded from spend after actual payments recovered
+ok 154 - old placeholder retained but excluded from spend after actual payments recovered
+  ---
+  duration_ms: 8.597691
+  type: 'test'
+  ...
+# Subtest: dropped ledger writes never report verified (KV)
+ok 155 - dropped ledger writes never report verified (KV)
+  ---
+  duration_ms: 1.313311
+  type: 'test'
+  ...
+# Subtest: dropped ledger writes never report verified (D1)
+ok 156 - dropped ledger writes never report verified (D1)
+  ---
+  duration_ms: 12.722267
+  type: 'test'
+  ...
+# Subtest: failed marker write leaves retryable additive rows
+ok 157 - failed marker write leaves retryable additive rows
+  ---
+  duration_ms: 5.908082
+  type: 'test'
+  ...
+# Subtest: source changes during additive migration prevents complete marker
+ok 158 - source changes during additive migration prevents complete marker
+  ---
+  duration_ms: 0.968701
+  type: 'test'
+  ...
+# Subtest: wrong expected source digest stops before migration
+ok 159 - wrong expected source digest stops before migration
+  ---
+  duration_ms: 2.303675
+  type: 'test'
+  ...
+# Subtest: existing conflicting ledger row not overwritten
+ok 160 - existing conflicting ledger row not overwritten
+  ---
+  duration_ms: 2.170695
+  type: 'test'
+  ...
+# Subtest: deleted current not resurrected; original snapshot still protected
+ok 161 - deleted current not resurrected; original snapshot still protected
+  ---
+  duration_ms: 1.785704
+  type: 'test'
+  ...
+# Subtest: encrypted full archive restores every SQL row, ciphertext, key, KV metadata and binary
+ok 162 - encrypted full archive restores every SQL row, ciphertext, key, KV metadata and binary
+  ---
+  duration_ms: 183.539596
+  type: 'test'
+  ...
+# Subtest: wrong backup password and file corruption rejected
+ok 163 - wrong backup password and file corruption rejected
+  ---
+  duration_ms: 270.952232
+  type: 'test'
+  ...
+# Subtest: weak backup password refused
+ok 164 - weak backup password refused
+  ---
+  duration_ms: 0.176156
+  type: 'test'
+  ...
+# Subtest: missing original key refuses upgrade instead of generating a replacement
+ok 165 - missing original key refuses upgrade instead of generating a replacement
+  ---
+  duration_ms: 3.883909
+  type: 'test'
+  ...
+# Subtest: row count equality cannot hide overwritten original values
+ok 166 - row count equality cannot hide overwritten original values
+  ---
+  duration_ms: 9.147279
+  type: 'test'
+  ...
+# Subtest: KV same count with altered template rejected
+ok 167 - KV same count with altered template rejected
+  ---
+  duration_ms: 5.86028
+  type: 'test'
+  ...
+# Subtest: SQL truncated file or foreign-key violation rejected in isolated restore
+ok 168 - SQL truncated file or foreign-key violation rejected in isolated restore
+  ---
+  duration_ms: 2.02195
+  type: 'test'
+  ...
+# Subtest: two-phase gate only unlocks after original/restore proof (KV)
+ok 169 - two-phase gate only unlocks after original/restore proof (KV)
+  ---
+  duration_ms: 29.284537
+  type: 'test'
+  ...
+# Subtest: two-phase gate only unlocks after original/restore proof (D1)
+ok 170 - two-phase gate only unlocks after original/restore proof (D1)
+  ---
+  duration_ms: 28.698272
+  type: 'test'
+  ...
+# Subtest: commit rejects data changed since applied report
+ok 171 - commit rejects data changed since applied report
+  ---
+  duration_ms: 5.390191
+  type: 'test'
+  ...
+# Subtest: manual raw deployment cannot silently migrate or expose application
+ok 172 - manual raw deployment cannot silently migrate or expose application
+  ---
+  duration_ms: 1.887187
+  type: 'test'
+  ...
+# Subtest: 180 receipts migrate in bounded requests under strict 50-query cold-isolate budget
+ok 173 - 180 receipts migrate in bounded requests under strict 50-query cold-isolate budget
+  ---
+  duration_ms: 563.539452
+  type: 'test'
+  ...
+# Subtest: bulk KV inventory reads >1000 subscriptions without >1000 storage operations
+ok 174 - bulk KV inventory reads >1000 subscriptions without >1000 storage operations
+  ---
+  duration_ms: 12.564815
+  type: 'test'
+  ...
+# Subtest: missing key in a bulk Map is an error, never a skipped row
+ok 175 - missing key in a bulk Map is an error, never a skipped row
+  ---
+  duration_ms: 1.795879
+  type: 'test'
+  ...
+# (node:6980) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: complete prepare→build guard→stage→backup→apply→restore→commit transport integration
+ok 176 - complete prepare→build guard→stage→backup→apply→restore→commit transport integration
+  ---
+  duration_ms: 5977.782865
+  type: 'test'
+  ...
+# Subtest: lost apply response resumes from server report without rerunning or overwriting originals
+ok 177 - lost apply response resumes from server report without rerunning or overwriting originals
+  ---
+  duration_ms: 5728.925388
+  type: 'test'
+  ...
+# Subtest: raw build without safe-run capability is blocked before deploy
+ok 178 - raw build without safe-run capability is blocked before deploy
+  ---
+  duration_ms: 45.003934
+  type: 'test'
+  ...
+# Subtest: lost commit acknowledgement recovers completed receipt without repeating migration
+ok 179 - lost commit acknowledgement recovers completed receipt without repeating migration
+  ---
+  duration_ms: 5698.945438
+  type: 'test'
+  ...
+# Subtest: runner iterates bounded migration batches and reports total additions
+ok 180 - runner iterates bounded migration batches and reports total additions
+  ---
+  duration_ms: 5759.934085
+  type: 'test'
+  ...
+# Subtest: generated configuration cannot add R2 even after an authentic verified backup
+ok 181 - generated configuration cannot add R2 even after an authentic verified backup
+  ---
+  duration_ms: 3069.824206
+  type: 'test'
+  ...
+# Subtest: tampering generated config other than first storage IDs is rejected after authentic prepare
+ok 182 - tampering generated config other than first storage IDs is rejected after authentic prepare
+  ---
+  duration_ms: 3082.908761
+  type: 'test'
+  ...
+1..182
+# tests 182
+# suites 0
+# pass 182
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 111184.954798

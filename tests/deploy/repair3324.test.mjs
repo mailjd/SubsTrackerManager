@@ -82,7 +82,7 @@ test('bundle child failure is propagated, not presented as successful build (FAK
  const root=fixture(t);fs.writeFileSync(localWrangler(root).entry,'process.exit(9);');assert.throws(()=>checkBundle(root),/exit 9/);
 });
 test('release list retains ALL original checks and adds toolchain + actual bundle',()=>{
- assert.deepEqual(RELEASE_CHECKS,['test:toolchain','lint','test:context','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:table-contract','test:workflow','test']);
+ assert.deepEqual(RELEASE_CHECKS,['test:runtime','test:toolchain','lint','test:context','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:table-contract','test:workflow','test']);
  assert.throws(()=>verifyReleaseChecks(source,Date.now()-1),/ST_SPLIT_BUDGET/);
  const safe=fs.readFileSync(path.join(source,'scripts/safe-upgrade.mjs'),'utf8');assert.match(safe,/cmd==='all'\).*verifyReleaseChecks\(ROOT/);assert.doesNotMatch(safe,/spawnSync\(npx/);
 });

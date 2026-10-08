@@ -1,0 +1,121 @@
+TAP version 13
+# (node:1720) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+# Subtest: failure injection really reproduces a missing Python _sqlite3 extension
+ok 1 - failure injection really reproduces a missing Python _sqlite3 extension
+  ---
+  duration_ms: 774.093203
+  type: 'test'
+  ...
+# Subtest: disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+ok 2 - disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+  ---
+  duration_ms: 891.307512
+  type: 'test'
+  ...
+# Subtest: bound parameters preserve quotes and prevent query text injection
+ok 3 - bound parameters preserve quotes and prevent query text injection
+  ---
+  duration_ms: 811.303346
+  type: 'test'
+  ...
+# Subtest: missing fixture is rejected and is not silently created
+ok 4 - missing fixture is rejected and is not silently created
+  ---
+  duration_ms: 631.353795
+  type: 'test'
+  ...
+# Subtest: corrupt fixture and invalid SQL fail, not empty successful test results
+ok 5 - corrupt fixture and invalid SQL fail, not empty successful test results
+  ---
+  duration_ms: 1388.492707
+  type: 'test'
+  ...
+# Subtest: the read-only path rejects mutations and leaves original bytes untouched
+ok 6 - the read-only path rejects mutations and leaves original bytes untouched
+  ---
+  duration_ms: 711.632083
+  type: 'test'
+  ...
+# Subtest: explicit fixture transaction persists on independent process reopen
+ok 7 - explicit fixture transaction persists on independent process reopen
+  ---
+  duration_ms: 1431.30721
+  type: 'test'
+  ...
+# Subtest: a failed batch rolls back its preceding statement
+ok 8 - a failed batch rolls back its preceding statement
+  ---
+  duration_ms: 700.026013
+  type: 'test'
+  ...
+# Subtest: multiple SQL statements cannot silently execute only the first one
+ok 9 - multiple SQL statements cannot silently execute only the first one
+  ---
+  duration_ms: 726.412825
+  type: 'test'
+  ...
+# Subtest: fixture DDL and ATTACH are not accepted by the write helper
+ok 10 - fixture DDL and ATTACH are not accepted by the write helper
+  ---
+  duration_ms: 1572.292857
+  type: 'test'
+  ...
+# Subtest: blob/empty string/NULL and minimum int64 values round trip through fixture writes
+ok 11 - blob/empty string/NULL and minimum int64 values round trip through fixture writes
+  ---
+  duration_ms: 812.707542
+  type: 'test'
+  ...
+# Subtest: out-of-range integer and non-finite real parameters fail without modifying fixture
+ok 12 - out-of-range integer and non-finite real parameters fail without modifying fixture
+  ---
+  duration_ms: 1375.08068
+  type: 'test'
+  ...
+# Subtest: missing Node executable is an actual failure, not a Python/sqlite fallback
+ok 13 - missing Node executable is an actual failure, not a Python/sqlite fallback
+  ---
+  duration_ms: 695.294133
+  type: 'test'
+  ...
+# Subtest: runtime preflight tests a real disk file and a Python-to-Node round trip
+ok 14 - runtime preflight tests a real disk file and a Python-to-Node round trip
+  ---
+  duration_ms: 786.792986
+  type: 'test'
+  ...
+# Subtest: runtime preflight rejects a missing Python executable before release checks
+ok 15 - runtime preflight rejects a missing Python executable before release checks
+  ---
+  duration_ms: 3.455741
+  type: 'test'
+  ...
+# Subtest: workflow launcher uses PYTHON rather than silently invoking another interpreter
+ok 16 - workflow launcher uses PYTHON rather than silently invoking another interpreter
+  ---
+  duration_ms: 40.421987
+  type: 'test'
+  ...
+# Subtest: mandatory release workflow and original checks are retained; runtime probe is first
+ok 17 - mandatory release workflow and original checks are retained; runtime probe is first
+  ---
+  duration_ms: 0.387074
+  type: 'test'
+  ...
+# Subtest: all shipped Python disk assertions use the portable helper, not sqlite3 imports
+ok 18 - all shipped Python disk assertions use the portable helper, not sqlite3 imports
+  ---
+  duration_ms: 0.670721
+  type: 'test'
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13423.684683

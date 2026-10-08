@@ -29,6 +29,7 @@ jobs:
 
       - name: Validate pinned tools and real offline bundle
         run: |
+          npm run test:runtime
           npm run test:toolchain
           npm run test:bundle
 

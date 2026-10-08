@@ -1,0 +1,34 @@
+{
+  "changed": [
+    "package-lock.json",
+    "README.md",
+    ".gitignore",
+    "GITHUB_DEPLOY.md",
+    "DEPLOY_CHECKLIST.md",
+    "package.json",
+    "scripts/build.mjs",
+    "src/version.js",
+    "src/upgrade-release.js",
+    "src/views/adminPage.html",
+    "scripts/upgrade/release-checks.mjs",
+    ".github/workflows/deploy.yml",
+    ".github/workflows/test.yml",
+    "tests/deploy/split-runner.test.mjs",
+    "tests/deploy/repair3324.test.mjs",
+    "tests/regression/api-regression.py",
+    "tests/regression/README.md",
+    "tests/regression/workflow3319.py",
+    "tests/upgrade/README.md",
+    "tests/upgrade/old-version-integration.py"
+  ],
+  "addedExcludingResults": [
+    "DEPLOY_REPAIR_3.3.26.md",
+    "SAFE_UPGRADE_3.3.26.md",
+    "scripts/run-python-test.mjs",
+    "scripts/check-test-runtime.mjs",
+    "tests/runtime/sqlite-runtime.test.mjs",
+    "tests/runtime/no-sqlite-python.py",
+    "tests/support/sqlite-local.mjs",
+    "tests/support/sqlite_local.py"
+  ]
+}

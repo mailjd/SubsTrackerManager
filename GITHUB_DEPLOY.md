@@ -1,4 +1,4 @@
-# v3.3.24 GitHub Actions（可選長流程）
+# v3.3.26 GitHub Actions（可選長流程）
 
 原GitHub倉庫 → Actions → Safe upgrade → Run workflow；仍是手動入口，不隨Push與Cloudflare同時發布。
 
@@ -6,4 +6,6 @@
 
 沿用原Worker/D1/KV，只在GitHub配置原Cloudflare憑證與備份密碼；不需要R2。原本已有分段未完成批次要先按同版指南恢復，不同來源不可混用。
 
-完整參數及恢復操作：`SAFE_UPGRADE_3.3.24.md`。Cloudflare Git入口改法：`DEPLOY_REPAIR_3.3.24.md`。本次驗證邊界：`VERIFICATION_3.3.24.md`。
+完整參數及恢復操作：`SAFE_UPGRADE_3.3.26.md`。Cloudflare Git入口改法：`DEPLOY_REPAIR_3.3.26.md`。本次驗證邊界：`VERIFICATION_3.3.26.md`。
+
+本版新增 test:runtime（Python 標準庫 + Node SQLite 實際能力）；不再要求 Python 的 sqlite3/_sqlite3。相關測試仍完整執行，詳見 DEPLOY_REPAIR_3.3.26.md。

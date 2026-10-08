@@ -1,3 +1,9 @@
+## v3.3.26 runtime portability
+
+The Python coordinators no longer import sqlite3/_sqlite3. `tests/support/sqlite_local.py` reads existing local SQLite files through the real Node built-in SQLite engine, in a separate read-only process. Cross-version fixture mutations are explicit atomic local transactions. `npm run test:workflow` uses the same probed Python/Node executables; failed assertions/SQL still fail the release.
+
+Run `npm run test:runtime` or reproduce an incomplete Python build with `python3 tests/runtime/no-sqlite-python.py tests/regression/workflow3319.py .`. No tests are skipped and no SQLite package is downloaded.
+
 # SubsTracker table/workflow regression (3.3.19)
 
 ## Scope

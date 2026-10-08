@@ -41,3 +41,7 @@ wrangler.upgrade.json
 
 # Local-only legacy source repair snapshots (never production records)
 .compat-backups/
+
+# Python test-runner caches are not release source or backup data
+__pycache__/
+*.py[cod]

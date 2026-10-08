@@ -1,0 +1,5 @@
+
+> subscription-manager@3.3.26 test:bundle
+> node scripts/check-bundle.mjs
+
+[bundle] hono：预期 4.12.22，实际 未安装。请用本版 package-lock.json 重新 npm ci --include=dev；不要仅更新全局 Wrangler。

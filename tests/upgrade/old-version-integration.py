@@ -1,6 +1,9 @@
 """Read-only project audit; tests mutate only synthetic local copies, never Cloudflare."""
 from pathlib import Path
-import subprocess, socket, json, time, urllib.request, urllib.error, http.cookiejar, sqlite3, shutil, os, argparse
+import subprocess, socket, json, time, urllib.request, urllib.error, http.cookiejar, sys, shutil, os, argparse
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "support"))
+from sqlite_local import query_rows, execute_transaction, NODE
 parser=argparse.ArgumentParser(description='Synthetic cross-version integration; baseline-dir must contain extracted 18 and 19 releases.')
 parser.add_argument('--baseline-dir',required=True,type=Path);parser.add_argument('--root',default=Path(__file__).resolve().parents[2],type=Path);parser.add_argument('--out',required=True,type=Path)
 args=parser.parse_args();BASE=args.baseline_dir.resolve();ROOT=args.root.resolve();OUT=args.out.resolve()
@@ -12,7 +15,7 @@ class Server:
   self.root = ROOT if version==20 else BASE / str(version); self.state = state; state.mkdir(parents=True, exist_ok=True)
   with socket.socket() as s: s.bind(('127.0.0.1',0)); self.port=s.getsockname()[1]
   self.log=(state/f'run-{version}.log').open('a')
-  self.p=subprocess.Popen(['node',str(self.root/'tests/regression/local-server.mjs'),str(self.root),str(state),str(self.port)],stdout=self.log,stderr=subprocess.STDOUT)
+  self.p=subprocess.Popen([NODE,str(self.root/'tests/regression/local-server.mjs'),str(self.root),str(state),str(self.port)],stdout=self.log,stderr=subprocess.STDOUT)
   self.op=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
   for _ in range(100):
    if self.p.poll() is not None: raise RuntimeError((state/f'run-{version}.log').read_text())
@@ -34,7 +37,7 @@ def kvread(state): return json.loads((state/'kv.json').read_text())
 def rawsubs(state):
  k=kvread(state);return {x:k['sub:'+x] for x in json.loads(k['sub_index'])}
 def dbrows(state,table):
- with sqlite3.connect(state/'d1.sqlite') as db: return db.execute(f'SELECT * FROM {table} ORDER BY 1').fetchall()
+ return query_rows(state/'d1.sqlite', f'SELECT * FROM {table} ORDER BY 1')
 state=OUT/'baseline18'
 s=Server(18,state)
 try:
@@ -46,37 +49,37 @@ try:
 finally:s.stop()
 # Add two legacy payments to one subscription identically in both original stores.
 k=kvread(state);a=json.loads(k['sub:row-a']);a['paymentHistory']=[{'id':'p1','amount':20,'currency':'CNY','date':'2026-08-01T00:00:00Z','periodStart':'2026-08-01','periodEnd':'2026-09-01'},{'id':'p2','amount':30,'currency':'CNY','date':'2026-09-01T00:00:00Z','periodStart':'2026-09-01','periodEnd':'2026-10-01'}];k['sub:row-a']=json.dumps(a);(state/'kv.json').write_text(json.dumps(k))
-with sqlite3.connect(state/'d1.sqlite') as db:
- old=json.loads(db.execute('SELECT data_json FROM subscriptions_current WHERE id=?',('row-a',)).fetchone()[0]);old['paymentHistory']=a['paymentHistory'];db.execute('UPDATE subscriptions_current SET data_json=? WHERE id=?',(json.dumps(old),'row-a'))
+old=json.loads(query_rows(state/'d1.sqlite','SELECT data_json FROM subscriptions_current WHERE id=?',('row-a',))[0][0]);old['paymentHistory']=a['paymentHistory']
+execute_transaction(state/'d1.sqlite',[('UPDATE subscriptions_current SET data_json=? WHERE id=?',(json.dumps(old),'row-a'))])
 # Scenario 1: normal upgrade 18 -> 20, followed by a process restart.
 normal=OUT/'normal';shutil.copytree(state,normal)
 raw_before=rawsubs(normal);cred_before=dbrows(normal,'account_credentials');templates={key:v for key,v in kvread(normal).items() if key.startswith('ui:')};config=kvread(normal)['config']
-subprocess.run(['node',str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(normal)],check=True,stdout=(normal/'upgrade.log').open('a'))
+subprocess.run([NODE,str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(normal)],check=True,stdout=(normal/'upgrade.log').open('a'))
 s=Server(20,normal)
 try:
  current=s.req('/api/subscriptions');history=s.req('/api/subscription-history?pageSize=500')['items'];account=s.req('/api/accounts/item?account=upgrade-audit%40example.test')['account']
  record('normal_upgrade',current_count=len(current),legacy_history_count=len(history),original_raw_subscriptions_identical=raw_before==rawsubs(normal),encrypted_account_credentials_identical=cred_before==dbrows(normal,'account_credentials'),templates_identical=all(kvread(normal).get(x)==v for x,v in templates.items()),config_identical=kvread(normal)['config']==config,old_account_serial=account['accountSerial'],inferred_owner_type=account.get('ownerType'))
  assert len(history)==4
 finally:s.stop()
-subprocess.run(['node',str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(normal)],check=True,stdout=(normal/'upgrade.log').open('a'))
+subprocess.run([NODE,str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(normal)],check=True,stdout=(normal/'upgrade.log').open('a'))
 s=Server(20,normal)
 try: record('restart_migration_idempotency',history_count=len(s.req('/api/subscription-history?pageSize=500')['items']))
 finally:s.stop()
 # Scenario 2: v18 KV has 3 rows, while D1 has 1; its once-only seed marker already exists.
 gap=OUT/'partial_d1';shutil.copytree(state,gap)
-with sqlite3.connect(gap/'d1.sqlite') as db: db.execute("DELETE FROM subscriptions_current WHERE id IN ('row-b','row-history')"); db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('subscription_ledger_seed_3319','done')")
-subprocess.run(['node',str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(gap)],check=True,stdout=(gap/'upgrade.log').open('a'))
+execute_transaction(gap/'d1.sqlite',[("DELETE FROM subscriptions_current WHERE id IN ('row-b','row-history')",()),("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('subscription_ledger_seed_3319','done')",())])
+subprocess.run([NODE,str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(gap)],check=True,stdout=(gap/'upgrade.log').open('a'))
 s=Server(20,gap)
 try:
  current=s.req('/api/subscriptions');history=s.req('/api/subscription-history?pageSize=500')['items']
- with sqlite3.connect(gap/'d1.sqlite') as db: marker=db.execute("SELECT value FROM schema_meta WHERE key='subscription_ledger_seed_3320'").fetchone()
+ marker_rows=query_rows(gap/'d1.sqlite',"SELECT value FROM schema_meta WHERE key='subscription_ledger_seed_3320'");marker=marker_rows[0] if marker_rows else None
  record('partial_d1_history_omission',kv_subscriptions=len(rawsubs(gap)),current_ids=[x['id'] for x in current],migrated_history_count=len(history),expected_legacy_history_count=4,missing_history_subscription_ids=sorted(set(rawsubs(gap))-{x['subscriptionId'] for x in history}),migration_marked_done=marker[0] if marker else None,raw_records_deleted=False)
 finally:s.stop()
 # Scenario 3: D1 is complete, but its row-a paymentHistory is older than KV.
 stale=OUT/'stale_d1';shutil.copytree(state,stale)
-with sqlite3.connect(stale/'d1.sqlite') as db:
- old=json.loads(db.execute('SELECT data_json FROM subscriptions_current WHERE id=?',('row-a',)).fetchone()[0]);old['paymentHistory']=old['paymentHistory'][:1];old['updatedAt']='2026-08-01T00:00:00Z';db.execute('UPDATE subscriptions_current SET data_json=?,updated_at=? WHERE id=?',(json.dumps(old),old['updatedAt'],'row-a'))
-subprocess.run(['node',str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(stale)],check=True,stdout=(stale/'upgrade.log').open('a'))
+old=json.loads(query_rows(stale/'d1.sqlite','SELECT data_json FROM subscriptions_current WHERE id=?',('row-a',))[0][0]);old['paymentHistory']=old['paymentHistory'][:1];old['updatedAt']='2026-08-01T00:00:00Z'
+execute_transaction(stale/'d1.sqlite',[('UPDATE subscriptions_current SET data_json=?,updated_at=? WHERE id=?',(json.dumps(old),old['updatedAt'],'row-a'))])
+subprocess.run([NODE,str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(stale)],check=True,stdout=(stale/'upgrade.log').open('a'))
 s=Server(20,stale)
 try:
  history=s.req('/api/subscription-history?pageSize=500')['items'];current=s.req('/api/subscriptions');a=next(x for x in current if x['id']=='row-a')
@@ -84,9 +87,9 @@ try:
 finally:s.stop()
 # Scenario 4: newest successfully mirrored values exist in D1 but the KV copy is old.
 backup=OUT/'backup_divergence';shutil.copytree(state,backup)
-with sqlite3.connect(backup/'d1.sqlite') as db:
- old=json.loads(db.execute('SELECT data_json FROM subscriptions_current WHERE id=?',('row-b',)).fetchone()[0]);old['notes']='LATEST_D1_CONFIRMED_VALUE';old['updatedAt']='2026-09-28T08:00:00Z';db.execute('UPDATE subscriptions_current SET data_json=?,updated_at=? WHERE id=?',(json.dumps(old),old['updatedAt'],'row-b'))
-subprocess.run(['node',str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(backup)],check=True,stdout=(backup/'upgrade.log').open('a'))
+old=json.loads(query_rows(backup/'d1.sqlite','SELECT data_json FROM subscriptions_current WHERE id=?',('row-b',))[0][0]);old['notes']='LATEST_D1_CONFIRMED_VALUE';old['updatedAt']='2026-09-28T08:00:00Z'
+execute_transaction(backup/'d1.sqlite',[('UPDATE subscriptions_current SET data_json=?,updated_at=? WHERE id=?',(json.dumps(old),old['updatedAt'],'row-b'))])
+subprocess.run([NODE,str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(backup)],check=True,stdout=(backup/'upgrade.log').open('a'))
 s=Server(20,backup)
 try:
  current=s.req('/api/subscriptions');export=s.req('/api/backup');a=next(x for x in current if x['id']=='row-b');b=next(x for x in export['subscriptions'] if x['id']=='row-b')
@@ -105,16 +108,15 @@ try:
  old_history=s.req('/api/subscription-history?pageSize=500')['items']
  assert len(old_history)==4
 finally:s.stop()
-with sqlite3.connect(from19/'d1.sqlite') as db:
- ledger_table=next(row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'") if row[0]=='subscription_ledger')
- old_columns=[row[1] for row in db.execute('PRAGMA table_info('+ledger_table+')')]
- old_rows=db.execute('SELECT * FROM '+ledger_table+' ORDER BY 1').fetchall()
+ledger_table=next(row[0] for row in query_rows(from19/'d1.sqlite',"SELECT name FROM sqlite_master WHERE type='table'") if row[0]=='subscription_ledger')
+old_columns=[row[1] for row in query_rows(from19/'d1.sqlite','PRAGMA table_info('+ledger_table+')')]
+old_rows=query_rows(from19/'d1.sqlite','SELECT * FROM '+ledger_table+' ORDER BY 1')
 old_kv=kvread(from19)
-subprocess.run(['node',str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(from19)],check=True,stdout=(from19/'upgrade.log').open('a'))
+subprocess.run([NODE,str(ROOT/'tests/upgrade/apply-fixture.mjs'),str(from19)],check=True,stdout=(from19/'upgrade.log').open('a'))
 s=Server(20,from19)
 try:
  upgraded_history=s.req('/api/subscription-history?pageSize=500')['items']
- with sqlite3.connect(from19/'d1.sqlite') as db: after_rows=db.execute('SELECT '+','.join(old_columns)+' FROM '+ledger_table+' ORDER BY 1').fetchall()
+ after_rows=query_rows(from19/'d1.sqlite','SELECT '+','.join(old_columns)+' FROM '+ledger_table+' ORDER BY 1')
  assert after_rows==old_rows
  assert all(kvread(from19)[key]==value for key,value in old_kv.items())
  assert {r['id'] for r in upgraded_history}=={r['id'] for r in old_history}

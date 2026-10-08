@@ -1,0 +1,59 @@
+{
+  "version": "3.3.26",
+  "platform": "Local Node 22.16.0 / Python 3.13.5; no production Cloudflare access",
+  "results": [
+    {
+      "group": "runtime/deploy/storage/upgrade/contract node suite",
+      "passed": 182,
+      "total": 182,
+      "skipped": 0,
+      "evidence": "core-node-final.log",
+      "notes": "Includes 21 new runtime cases; Cloudflare REST/upload isolated mocks."
+    },
+    {
+      "group": "workflow via real npm and selected Python blocking sqlite3/_sqlite3",
+      "passed": 69,
+      "total": 69,
+      "evidence": "workflow-npm-no-python-sqlite.log"
+    },
+    {
+      "group": "API and independent disk reread with Python sqlite3/_sqlite3 blocked",
+      "passed": 37,
+      "total": 37,
+      "evidence": "api-no-python-sqlite.log"
+    },
+    {
+      "group": "prior ExecutionContext compatibility",
+      "passed": 20,
+      "total": 20,
+      "evidence": "context-regression.log",
+      "notes": "Uses locally available TypeScript 5.8.3 fixtures, not full locked 5.9.3 project."
+    }
+  ],
+  "localFunctionalTotal": 308,
+  "additionalOldSourceUpgradeScenarios": {
+    "passed": 7,
+    "total": 7,
+    "evidence": "cross-version-results.json",
+    "aggregateRowNotCounted": true
+  },
+  "syntax": {
+    "javascriptAndInlineScripts": 109,
+    "pythonParsedSources": 7
+  },
+  "notCompleted": [
+    "Full locked dependencies install",
+    "Full TypeScript 5.9.3 + Workers typings lint",
+    "Full Workers Vitest",
+    "Real Wrangler bundle/upload",
+    "Production Cloudflare verification",
+    "Browser UI rerun"
+  ],
+  "controls": {
+    "noTestSkipping": true,
+    "businessFilesUnchanged": 67,
+    "D1KVOnlyPreserved": true,
+    "remoteAccess": false,
+    "pythonSQLiteRequired": false
+  }
+}

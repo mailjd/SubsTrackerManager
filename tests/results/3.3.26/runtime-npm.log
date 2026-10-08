@@ -1,0 +1,147 @@
+
+> subscription-manager@3.3.26 test:runtime
+> node scripts/check-test-runtime.mjs && node --test tests/runtime/*.test.mjs
+
+[runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+(node:10007) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:10045) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+# [runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+# Subtest: failure injection really reproduces a missing Python _sqlite3 extension
+ok 1 - failure injection really reproduces a missing Python _sqlite3 extension
+  ---
+  duration_ms: 702.617365
+  type: 'test'
+  ...
+# Subtest: disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+ok 2 - disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+  ---
+  duration_ms: 684.233512
+  type: 'test'
+  ...
+# Subtest: bound parameters preserve quotes and prevent query text injection
+ok 3 - bound parameters preserve quotes and prevent query text injection
+  ---
+  duration_ms: 683.987305
+  type: 'test'
+  ...
+# Subtest: missing fixture is rejected and is not silently created
+ok 4 - missing fixture is rejected and is not silently created
+  ---
+  duration_ms: 621.719605
+  type: 'test'
+  ...
+# Subtest: corrupt fixture and invalid SQL fail, not empty successful test results
+ok 5 - corrupt fixture and invalid SQL fail, not empty successful test results
+  ---
+  duration_ms: 1235.894159
+  type: 'test'
+  ...
+# Subtest: the read-only path rejects mutations and leaves original bytes untouched
+ok 6 - the read-only path rejects mutations and leaves original bytes untouched
+  ---
+  duration_ms: 765.315743
+  type: 'test'
+  ...
+# Subtest: explicit fixture transaction persists on independent process reopen
+ok 7 - explicit fixture transaction persists on independent process reopen
+  ---
+  duration_ms: 1311.356838
+  type: 'test'
+  ...
+# Subtest: a failed batch rolls back its preceding statement
+ok 8 - a failed batch rolls back its preceding statement
+  ---
+  duration_ms: 653.722237
+  type: 'test'
+  ...
+# Subtest: multiple SQL statements cannot silently execute only the first one
+ok 9 - multiple SQL statements cannot silently execute only the first one
+  ---
+  duration_ms: 704.023433
+  type: 'test'
+  ...
+# Subtest: fixture DDL and ATTACH are not accepted by the write helper
+ok 10 - fixture DDL and ATTACH are not accepted by the write helper
+  ---
+  duration_ms: 1506.022591
+  type: 'test'
+  ...
+# Subtest: blob/empty string/NULL and minimum int64 values round trip through fixture writes
+ok 11 - blob/empty string/NULL and minimum int64 values round trip through fixture writes
+  ---
+  duration_ms: 714.88463
+  type: 'test'
+  ...
+# Subtest: out-of-range integer and non-finite real parameters fail without modifying fixture
+ok 12 - out-of-range integer and non-finite real parameters fail without modifying fixture
+  ---
+  duration_ms: 1294.598907
+  type: 'test'
+  ...
+# Subtest: missing Node executable is an actual failure, not a Python/sqlite fallback
+ok 13 - missing Node executable is an actual failure, not a Python/sqlite fallback
+  ---
+  duration_ms: 713.05161
+  type: 'test'
+  ...
+# Subtest: runtime preflight tests a real disk file and a Python-to-Node round trip
+ok 14 - runtime preflight tests a real disk file and a Python-to-Node round trip
+  ---
+  duration_ms: 712.057702
+  type: 'test'
+  ...
+# Subtest: runtime preflight rejects a missing Python executable before release checks
+ok 15 - runtime preflight rejects a missing Python executable before release checks
+  ---
+  duration_ms: 2.458718
+  type: 'test'
+  ...
+# Subtest: workflow launcher uses PYTHON rather than silently invoking another interpreter
+ok 16 - workflow launcher uses PYTHON rather than silently invoking another interpreter
+  ---
+  duration_ms: 32.886864
+  type: 'test'
+  ...
+# Subtest: mandatory release workflow and original checks are retained; runtime probe is first
+ok 17 - mandatory release workflow and original checks are retained; runtime probe is first
+  ---
+  duration_ms: 0.380974
+  type: 'test'
+  ...
+# Subtest: all shipped Python disk assertions use the portable helper, not sqlite3 imports
+ok 18 - all shipped Python disk assertions use the portable helper, not sqlite3 imports
+  ---
+  duration_ms: 0.293072
+  type: 'test'
+  ...
+# Subtest: runtime preflight succeeds when the selected Python explicitly blocks SQLite imports
+ok 19 - runtime preflight succeeds when the selected Python explicitly blocks SQLite imports
+  ---
+  duration_ms: 680.114911
+  type: 'test'
+  ...
+# Subtest: disabled Node SQLite is rejected explicitly instead of silently skipping local SQL checks
+ok 20 - disabled Node SQLite is rejected explicitly instead of silently skipping local SQL checks
+  ---
+  duration_ms: 27.040284
+  type: 'test'
+  ...
+# Subtest: Python test failures propagate their exit status through the launcher
+ok 21 - Python test failures propagate their exit status through the launcher
+  ---
+  duration_ms: 1384.944459
+  type: 'test'
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14496.172865

@@ -1,0 +1,37 @@
+[
+  {
+    "file": "tests/runtime/no-sqlite-python.py",
+    "syntax": true,
+    "pythonSQLiteImports": []
+  },
+  {
+    "file": "tests/regression/api-regression.py",
+    "syntax": true,
+    "pythonSQLiteImports": []
+  },
+  {
+    "file": "tests/regression/browser-regression.py",
+    "syntax": true,
+    "pythonSQLiteImports": []
+  },
+  {
+    "file": "tests/regression/workflow-browser3319.py",
+    "syntax": true,
+    "pythonSQLiteImports": []
+  },
+  {
+    "file": "tests/regression/workflow3319.py",
+    "syntax": true,
+    "pythonSQLiteImports": []
+  },
+  {
+    "file": "tests/support/sqlite_local.py",
+    "syntax": true,
+    "pythonSQLiteImports": []
+  },
+  {
+    "file": "tests/upgrade/old-version-integration.py",
+    "syntax": true,
+    "pythonSQLiteImports": []
+  }
+]

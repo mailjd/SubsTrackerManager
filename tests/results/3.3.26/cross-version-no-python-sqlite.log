@@ -1,0 +1,20 @@
+(node:5639) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"name": "normal_upgrade", "current_count": 2, "legacy_history_count": 4, "original_raw_subscriptions_identical": true, "encrypted_account_credentials_identical": true, "templates_identical": true, "config_identical": true, "old_account_serial": "公司01号", "inferred_owner_type": "公司"}
+(node:5793) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"name": "restart_migration_idempotency", "history_count": 4}
+(node:5888) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"name": "partial_d1_history_omission", "kv_subscriptions": 3, "current_ids": ["row-a", "row-b"], "migrated_history_count": 4, "expected_legacy_history_count": 4, "missing_history_subscription_ids": [], "migration_marked_done": "{\"version\":\"3.3.20\",\"verified\":true,\"sourceDigest\":\"09d88bfa48bbf285204ab1cc53cafbedfea7bf6b2b948522060cfa6cea1231a1\",\"counts\":{\"kv\":3,\"d1\":1,\"total\":3,\"payments\":2},\"expectedCount\":4,\"retained\":0,\"added\":4,\"ledgerCount\":4,\"ledgerDigest\":\"e46d57a31f19d7a8daa0b5ee81c014714c718443d881904ec1fd65cce1a1551c\",\"supersededSnapshotIds\":[],\"orphanIds\":[],\"completedAt\":\"2026-10-08T10:34:08.737Z\"}", "raw_records_deleted": false}
+(node:5992) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"name": "stale_d1_payment_omission", "current_payment_count": 2, "ledger_payment_ids": ["legacy:row-a:p2", "legacy:row-a:p1"], "expected_ledger_payment_ids": ["legacy:row-a:p1", "legacy:row-a:p2"]}
+(node:6113) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"name": "backup_current_mismatch", "table_current_notes": "LATEST_D1_CONFIRMED_VALUE", "exported_notes": "LATEST_D1_CONFIRMED_VALUE", "backup_includes_latest_value": true, "default_backup_contains_saved_passwords": false}
+(node:6322) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"name": "actual_3319_to_3320", "passed": true, "old_history_rows": 4, "retained_history_rows": 4, "all_original_keys_identical": true, "all_original_ledger_columns_identical": true}
+{"name": "v7_json_checksum_tamper_rejected", "passed": true, "all_originals_unchanged": true}
+{"name": "all_upgrade_assertions_passed", "passed": true}

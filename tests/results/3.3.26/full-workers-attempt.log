@@ -1,0 +1,5 @@
+
+> subscription-manager@3.3.26 test
+> vitest run
+
+sh: 1: vitest: not found

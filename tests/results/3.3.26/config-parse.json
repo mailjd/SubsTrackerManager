@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "files": [
+    "package.json",
+    "package-lock.json",
+    "jsconfig.json",
+    "wrangler.toml",
+    "wrangler.dev.toml",
+    "wrangler.test.toml",
+    ".github/workflows/deploy.yml",
+    ".github/workflows/test.yml"
+  ]
+}

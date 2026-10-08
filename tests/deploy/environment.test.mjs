@@ -108,6 +108,6 @@ test('Vitest uses isolated local configuration, never real production binding ID
 });
 test('build version and upgrade runner stay consistent, and drain is not shortened',()=>{
   const pkg=JSON.parse(fs.readFileSync(path.join(source,'package.json'),'utf8'));
-  assert.equal(pkg.version,'3.3.23');assert.match(fs.readFileSync(path.join(source,'src/version.js'),'utf8'),/VERSION = '3.3.23'/);
+  assert.equal(pkg.version,'3.3.24');assert.match(fs.readFileSync(path.join(source,'src/version.js'),'utf8'),/VERSION = '3.3.24'/);
   const runner=fs.readFileSync(path.join(source,'scripts/safe-upgrade.mjs'),'utf8');assert.match(runner,/import \{VERSION\} from '\.\.\/src\/version.js'/);assert.match(runner,/16\*60\*1000/);
 });

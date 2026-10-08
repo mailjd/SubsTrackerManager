@@ -12,7 +12,7 @@ name = "subscription-manager"
 name = "subscription-manager-staging"
 
 # 保留原 Worker/存储 ID；安全升级只读取实际绑定，不创建或改绑新存储。
-# 参见 SAFE_UPGRADE_3.3.23.md；npm run setup 仅预检与加密备份。
+# 参见 SAFE_UPGRADE_3.3.24.md；npm run setup 仅预检与加密备份。
 
 # 静态资源：托管 public/ 目录下的 JS/CSS/HTML 给浏览器
 # 使用方式：浏览器访问 /js/lib/api-client.js 等同于 public/js/lib/api-client.js
@@ -29,10 +29,10 @@ crons = ["0 * * * *"]
 [vars]
 ENVIRONMENT = "production"
 
-# Cloudflare Git builds: set Deploy command = npm run deploy:cloudflare. See CLOUDFLARE_SPLIT_DEPLOY_3.3.23.md.
+# Cloudflare Git builds: set Deploy command = npm run deploy:cloudflare. See CLOUDFLARE_SPLIT_DEPLOY_3.3.24.md.
 # Upgrade protection: do not bypass the encrypted backup / original-binding checks.
 [build]
 command = "node scripts/require-safe-upgrade.mjs"
 
-# Storage policy v3.3.23: existing SUBSCRIPTIONS_KV + SUBSCRIPTIONS_DB only.
+# Storage policy v3.3.24: existing SUBSCRIPTIONS_KV + SUBSCRIPTIONS_DB only.
 # Backups use D1 query + KV; no bucket/account activation or object-storage keys required.

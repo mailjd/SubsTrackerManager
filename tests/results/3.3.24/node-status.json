@@ -1,0 +1,19 @@
+{
+  "exit": 0,
+  "durationSeconds": 126.28,
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=3",
+    "/mnt/data/subs_v3324/tests/deploy/environment.test.mjs",
+    "/mnt/data/subs_v3324/tests/deploy/repair3324.test.mjs",
+    "/mnt/data/subs_v3324/tests/deploy/split-baseline.test.mjs",
+    "/mnt/data/subs_v3324/tests/deploy/split-runner.test.mjs",
+    "/mnt/data/subs_v3324/tests/storage/d1-query.test.mjs",
+    "/mnt/data/subs_v3324/tests/storage/policy.test.mjs",
+    "/mnt/data/subs_v3324/tests/upgrade/cloudflare.test.mjs",
+    "/mnt/data/subs_v3324/tests/upgrade/protection.test.mjs",
+    "/mnt/data/subs_v3324/tests/upgrade/runner.test.mjs",
+    "/mnt/data/subs_v3324/tests/regression/contract.node.mjs"
+  ]
+}

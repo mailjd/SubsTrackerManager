@@ -13,6 +13,8 @@ import {setTimeout as sleep} from 'node:timers/promises';
 import {Cloudflare,protectBindings} from './upgrade/cloudflare.mjs';
 import {encryptArchive,decryptArchive,inspectBundle,assertOriginalsPreserved} from './upgrade/archive.mjs';
 import {sha256,stableJSON} from '../src/data/upgrade-reconcile.js';
+import {localWrangler} from './upgrade/local-toolchain.mjs';
+import {verifyReleaseChecks} from './upgrade/release-checks.mjs';
 import {VERSION} from '../src/version.js';
 import {checkDeploymentEnvironment,assertSupportedDeploymentHost,readWranglerConfig} from './upgrade/deploy-environment.mjs';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -119,9 +121,9 @@ export async function stage(options={}){
     await options.beforeWrite?.();
     await options.checkpoint?.(state);
     writeGenerated(state);
-    const npx=process.platform==='win32'?'npx.cmd':'npx';
-    // --no-install prevents unexpectedly using a different CLI when dependencies are missing.
-    const deployed=spawnSync(npx,['--no-install','wrangler','deploy','--config',CONFIG],{cwd:ROOT,stdio:'inherit',timeout:options.deployTimeoutMs?.()||600000,env:{...process.env,SUBSTRACKER_SAFE_DEPLOY_RUN:state.runId}});
+    const tool=localWrangler(ROOT);
+    console.log('[upgrade] ST_DEPLOY_TOOL '+JSON.stringify({version:tool.version,source:'project-root-node_modules',config:'wrangler.upgrade.json'}));
+    const deployed=spawnSync(tool.command,[tool.entry,'deploy','--config',CONFIG],{cwd:ROOT,stdio:'inherit',timeout:options.deployTimeoutMs?.()||600000,env:{...process.env,SUBSTRACKER_SAFE_DEPLOY_RUN:state.runId}});
     if(deployed.status!==0)throw new Error('部署命令失败；保留备份和原存储，请检查线上版本');
     state.phase='staged';state.stagedAt=Date.now();saveState(state);await options.checkpoint?.(state);
   }
@@ -206,12 +208,12 @@ export async function finish(options={}){
 }
 async function main(){
   const cmd=process.argv[2]||'all';
-  if(cmd==='--help'||cmd==='help'){console.log('prepare → stage → finish；或 all。resume <加密恢复状态文件> 继续中断升级。先执行 npm run deploy:check；Cloudflare Git 直连请先阅读 CLOUDFLARE_SPLIT_DEPLOY_3.3.23.md。详见 SAFE_UPGRADE_3.3.23.md。');return;}
+  if(cmd==='--help'||cmd==='help'){console.log('prepare → stage → finish；或 all。resume <加密恢复状态文件> 继续中断升级。先执行 npm run deploy:check；Cloudflare Git 直连请先阅读 CLOUDFLARE_SPLIT_DEPLOY_3.3.24.md。详见 SAFE_UPGRADE_3.3.24.md。');return;}
   assertSupportedDeploymentHost();
   if(cmd==='prepare')await prepare();
   else if(cmd==='stage')await stage();
   else if(cmd==='finish')await finish();
-  else if(cmd==='all'){await prepare();await stage();await finish();}
+  else if(cmd==='all'){checkDeploymentEnvironment(ROOT);verifyReleaseChecks(ROOT,Date.now()+75*60*1000);await prepare();await stage();await finish();}
   else if(cmd==='resume'){
     if(!process.argv[3])throw new Error('请提供加密 resume.stbackup 文件路径');
     const state=decryptArchive(fs.readFileSync(path.resolve(process.argv[3])),password());

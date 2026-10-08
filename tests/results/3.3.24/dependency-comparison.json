@@ -1,0 +1,20 @@
+{
+  "dependencyGraphNodes": 238,
+  "nonRootNodeDifferences": [],
+  "actualResolvedGraphUnchanged": true,
+  "note": "npm10 lock-only sync succeeded; original optional libc metadata was preserved rather than silently dropped. Root declarations/version/engines updated, non-root packages byte-equivalent as JSON objects.",
+  "wranglerRoot": "3.114.17",
+  "testPool": "0.5.41",
+  "nestedWrangler": [
+    {
+      "path": "node_modules/@cloudflare/vitest-pool-workers/node_modules/wrangler",
+      "version": "3.100.0",
+      "deprecated": "Downgrade to 3.99.0"
+    },
+    {
+      "path": "node_modules/wrangler",
+      "version": "3.114.17",
+      "deprecated": null
+    }
+  ]
+}

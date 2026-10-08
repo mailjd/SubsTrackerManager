@@ -1,0 +1,80 @@
+{
+  "version": "3.3.24",
+  "createdAt": "2026-10-08T05:31:36.398056+00:00",
+  "runtime": {
+    "node": "22.16.0",
+    "npm": "10.9.2",
+    "python": "3.13.5"
+  },
+  "node": {
+    "tests": 161,
+    "pass": 161,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "api": {
+    "passed": 37,
+    "failed": 0
+  },
+  "workflow": {
+    "passed": 69,
+    "failed": 0
+  },
+  "regressionTotal": 267,
+  "extraOldVersionScenarios": 7,
+  "extraOldVersionSummary": {
+    "name": "all_upgrade_assertions_passed",
+    "passed": true
+  },
+  "syntax": {
+    "checked": 105,
+    "passed": 105,
+    "failed": 0
+  },
+  "configParsing": {
+    "allPassed": true,
+    "files": [
+      "wrangler.dev.toml",
+      "wrangler.test.toml",
+      "wrangler.toml",
+      ".github/workflows/deploy.yml",
+      ".github/workflows/test.yml"
+    ]
+  },
+  "dataFilesIdentical": 67,
+  "dependencyLockNonRootNodesIdentical": 238,
+  "actualCommands": {
+    "npm ci": {
+      "exit": 1,
+      "cause": "Registry EAI_AGAIN; npm Exit handler never called. No dependencies installed."
+    },
+    "npm run lint": {
+      "exit": 2,
+      "cause": "TS2688 missing Cloudflare types"
+    },
+    "npm test": {
+      "exit": 127,
+      "cause": "vitest not installed"
+    },
+    "npm run test:bundle": {
+      "exit": 1,
+      "cause": "missing installed dependency, real bundler NOT run"
+    },
+    "npm run build": {
+      "exit": 1,
+      "cause": "missing dependency correctly stops instead of echo success"
+    },
+    "npm install --package-lock-only --offline": {
+      "exit": 0,
+      "scope": "lock only, not installation"
+    }
+  },
+  "cloudflareProductionAccess": false,
+  "realWranglerBundleVerified": false,
+  "fullWorkersVitestVerified": false,
+  "fullTypeCheckVerified": false,
+  "manualSecondBuildStillRequired": true,
+  "storage": "original D1 + KV only; no R2",
+  "testsUsingFakes": "Wrangler upload, bundle wrapper contract, Cloudflare REST, release-runner npm orchestration. Fakes live under tests only; not proof of real bundle/upload/test suite."
+}

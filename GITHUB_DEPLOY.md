@@ -1,9 +1,9 @@
-# v3.3.23 GitHub Actions（可選長流程）
+# v3.3.24 GitHub Actions（可選長流程）
 
-一般Cloudflare Git直連繼續使用`npm run deploy:cloudflare`，不必切換發布器。
+原GitHub倉庫 → Actions → Safe upgrade → Run workflow；仍是手動入口，不隨Push與Cloudflare同時發布。
 
-要使用GitHub長流程時，在原repo的Actions選Safe upgrade手動執行；保留原Cloudflare憑證、資源ID及備份密碼，不與Cloudflare發布並行。流程保留D1＋KV核對、完整測試、加密備份、維護等待、驗收與恢復附件。
+工作流先核對環境，再npm ci，再依賴/真實dry-run/型別/語法/儲存/部署/升級/業務/Workers測試；完整加密備份附件上傳後才stage，維護備份保存後才finish。沒有刪除16分鐘等待、備份或驗收。
 
-D1來源改為query-only，不需要R2。此可選工作流仍把加密備份另存GitHub Actions artifacts（CI附件而非業務資料庫）；Cloudflare原生分階段入口則把恢復檢查點放在原KV／D1。
+沿用原Worker/D1/KV，只在GitHub配置原Cloudflare憑證與備份密碼；不需要R2。原本已有分段未完成批次要先按同版指南恢復，不同來源不可混用。
 
-見 `SAFE_UPGRADE_3.3.23.md` 及 `D1_KV_ONLY_3.3.23.md`。原Secret不要貼到聊天或寫入Git。
+完整參數及恢復操作：`SAFE_UPGRADE_3.3.24.md`。Cloudflare Git入口改法：`DEPLOY_REPAIR_3.3.24.md`。本次驗證邊界：`VERIFICATION_3.3.24.md`。

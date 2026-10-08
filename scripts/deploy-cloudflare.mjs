@@ -2,7 +2,6 @@
 /** Native Workers Builds: bounded, resumable stages. This is not a raw-deploy bypass. */
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {spawnSync} from 'node:child_process';
 import {checkDeploymentEnvironment} from './upgrade/deploy-environment.mjs';
 import {Cloudflare,protectBindings} from './upgrade/cloudflare.mjs';
 import {CloudflareCheckpoints,sourceFingerprint} from './upgrade/cloudflare-checkpoints.mjs';
@@ -10,20 +9,14 @@ import {prepare,stage,finish,saveState,writeGenerated,readConfig,workerCall} fro
 import {VERSION} from '../src/version.js';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const options={allowWorkersBuilds:true,pauseForDrain:true};
-export function verifyReleaseChecks(root, deadline = Date.now()+15*60*1000) {
-  const npm=process.platform==='win32'?'npm.cmd':'npm';
-  // Same required tests as the long-running release. No SKIP_TESTS switch.
-  for(const script of ['lint','test:syntax','test:storage','test:deploy','test:upgrade','test:table-contract','test:workflow','test']) {
-    const remaining=deadline-Date.now()-30000;
-    if(remaining<=0)throw new Error('ST_SPLIT_BUDGET：发布前测试达到本次时间上限；尚未部署，请使用长时限 Safe upgrade');
-    const result=spawnSync(npm,['run',script],{cwd:root,stdio:'inherit',timeout:Math.min(240000,remaining)});
-    if(result.status!==0)throw new Error('ST_SPLIT_TEST：'+script+' 未通过，未开始发布；请保留具体测试错误日志');
-  }
-}
+import {verifyReleaseChecks} from './upgrade/release-checks.mjs';
+export {verifyReleaseChecks};
 export async function runSplitDeployment({downloadOnly=false}={}) {
   const deadline=Date.now()+15*60*1000;
   const budget=()=>{if(Date.now()+5000>=deadline)throw new Error('ST_SPLIT_BUDGET：本次构建预算不足；保留检查点，重试同一提交');};
   checkDeploymentEnvironment(ROOT,process.env,options);
+  console.log('[upgrade] ST_DEPLOY_ENTRY '+JSON.stringify({version:VERSION,entry:'deploy:cloudflare',storage:'D1_KV_ONLY',continuation:'manual-retry'}));
+  if(!downloadOnly)verifyReleaseChecks(ROOT,deadline);
   const config=readConfig(),cf=new Cloudflare({accountId:process.env.CLOUDFLARE_ACCOUNT_ID,token:process.env.CLOUDFLARE_API_TOKEN});
   const bindings=protectBindings(config,await cf.settings(config.name));
   const store=new CloudflareCheckpoints(cf,{worker:config.name,bindings,password:process.env.SUBSTRACKER_BACKUP_PASSWORD});
@@ -32,7 +25,6 @@ export async function runSplitDeployment({downloadOnly=false}={}) {
     if(!state)throw new Error('原 Worker 没有分段升级检查点');
     console.log('[upgrade:download] 已下载并验证加密附件到 upgrade-backups/；没有部署、迁移或解锁。');return {phase:state.phase,downloaded:true};
   }
-  verifyReleaseChecks(ROOT,deadline);
   const sourceHash=sourceFingerprint(ROOT);
   await store.acquire();
   const checkpoint=async state=>{budget();saveState(state);await store.publish(ROOT,state);};

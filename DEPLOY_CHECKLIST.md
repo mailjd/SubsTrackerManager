@@ -1,12 +1,13 @@
-# v3.3.23 部署檢查
+# v3.3.24部署檢查
 
-1. 已閱讀 `D1_KV_ONLY_3.3.23.md`；本工具不使用R2，不需要開通bucket或新增R2金鑰。
-2. 原Worker準確名稱、Account ID、KV／D1 ID均保留，不以範例替換。
-3. 原版未完成的升級先用同版原提交及恢復憑證處理，不混用來源。
-4. Cloudflare Build command留空，Deploy command為`npm run deploy:cloudflare`。
-5. Builds配置原Token、Account ID、至少16字元備份密碼、Worker名稱／必要的源網址。Token需涵蓋原Worker、KV、D1，不需要R2。
-6. 不同發布器不要並行運作；保留完整測試、加密備份、維護與驗收門禁。
-7. WAIT不是完成；依readyAfter重試同一提交，到COMPLETE且3.3.23/maintenance:false才完成。
-8. 下載加密備份另存本機；核對原記錄、歷史、帳號、模板和保存診斷。
+1. 已閱讀`DEPLOY_REPAIR_3.3.24.md`；完整解壓更新原專案，package及lock配套，含scripts/tests/.github。
+2. 原Worker的Deploy command已保存為`npm run deploy:cloudflare`；不是改Build或Preview欄。下一次日誌必須顯示該命令。
+3. Build command可保留`npm run build`或留空。npm ci包含devDependencies；Node22.13+/npm10+/Python3.11+。
+4. 原名稱、路由、KV/D1綁定與執行時密鑰均保留；不新增R2、不建立替代儲存。
+5. Builds中的原帳戶Token/Account ID、備份密碼（至少16字元）、Worker名稱等已配置；Token具原D1/KV/Worker必要權限。
+6. 所有必需檢查通過才備份／發布，不能以缺包、型別或bundle失敗為由跳過測試。
+7. 無其他未完成舊批次／並行發布者。舊WAIT批次先用其原提交恢復。
+8. WAIT後依readyAfter手動Retry同一提交；COMPLETE且版本3.3.24/maintenance:false才完成。
+9. 核對原資料／帳號／模板／歷史及保存診斷，另存加密備份與驗收報告，密碼單獨保存。
 
-完整操作與停止情況見 `CLOUDFLARE_SPLIT_DEPLOY_3.3.23.md`。不宣稱未驗證正式環境一定一次成功。
+本包不代表已替你修改控制台或正式發布。詳細證據與限制見`VERIFICATION_3.3.24.md`。

@@ -18,10 +18,10 @@ export function sourceFingerprint(root) {
   const files=[];
   function scan(dir){for(const item of fs.readdirSync(path.join(root,dir),{withFileTypes:true})){const file=dir+'/'+item.name;
     if(item.isSymbolicLink())throw new Error('部署源码不可含符号链接：'+file);
-    if(item.isDirectory())scan(file);else if(file!=='src/upgrade-release.js')files.push(file);
+    if(item.isDirectory()){if(file!=='tests/results')scan(file);}else if(file!=='src/upgrade-release.js')files.push(file);
   }}
-  for(const dir of ['src','scripts','migrations','public'])if(fs.existsSync(path.join(root,dir)))scan(dir);
-  for(const file of ['package.json','package-lock.json'])if(fs.existsSync(path.join(root,file)))files.push(file);
+  for(const dir of ['src','scripts','migrations','public','tests','.github'])if(fs.existsSync(path.join(root,dir)))scan(dir);
+  for(const file of ['package.json','package-lock.json','wrangler.toml','wrangler.test.toml','vitest.config.js','jsconfig.json','.node-version'])if(fs.existsSync(path.join(root,file)))files.push(file);
   const h=crypto.createHash('sha256');for(const file of files.sort()){h.update(file+'\0');h.update(fs.readFileSync(path.join(root,file)));h.update('\0');}return h.digest('hex');
 }
 function privateWrite(file,bytes) {

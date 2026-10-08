@@ -1,0 +1,187 @@
+[
+  {
+    "file": ".github/workflows/deploy.yml",
+    "status": "modified",
+    "sha256": "6553928abf66f015357789675114fe84ad198a582bb8b4206ffaa3c58b42d396"
+  },
+  {
+    "file": ".github/workflows/test.yml",
+    "status": "modified",
+    "sha256": "3b014db26a6a132c990d82f30c6178f403ad388e6a5fa9246a05d81bd33e54f0"
+  },
+  {
+    "file": "CLOUDFLARE_SPLIT_DEPLOY_3.3.24.md",
+    "status": "added",
+    "sha256": "8a5f4461cd9e7bbeb2ae180dbbf5f816301ee80d749aaf6dafeb9f0e2627b4f2"
+  },
+  {
+    "file": "D1_KV_ONLY_3.3.24.md",
+    "status": "added",
+    "sha256": "fbf4dd4f236d367fb183feda1314e032b8a95fed5a696f1fd24747260c91fd33"
+  },
+  {
+    "file": "DEPLOY_CHECKLIST.md",
+    "status": "modified",
+    "sha256": "aee0d2870cb9842ae03a4198441d835450cffa8eee4ab27032a50919ee50c9a3"
+  },
+  {
+    "file": "DEPLOY_REPAIR_3.3.24.md",
+    "status": "added",
+    "sha256": "2a1aad0a1971395deb1163e7925a6c12c51157ffa70fc77a439b27e80db6c76d"
+  },
+  {
+    "file": "GITHUB_DEPLOY.md",
+    "status": "modified",
+    "sha256": "6a4298032d93094b388360704dc4002dfd05e1d081118a3162f380da0dfff8cd"
+  },
+  {
+    "file": "README.md",
+    "status": "modified",
+    "sha256": "f949752b2651caf9109114ff2253bc6861e2ddf3946580ee6b2b3f314284893c"
+  },
+  {
+    "file": "SAFE_UPGRADE_3.3.24.md",
+    "status": "added",
+    "sha256": "94123b968dcf364bc995bc4fb4174e507264fbfb786e8a236a5cbabcd3fecda2"
+  },
+  {
+    "file": "VERIFICATION_3.3.24.md",
+    "status": "added",
+    "sha256": "a0a7e056fcc808afe5f6970e46d25c83ed0d1a4431c10c7b753a1f3ff4feb6a3"
+  },
+  {
+    "file": "package-lock.json",
+    "status": "modified",
+    "sha256": "9bc1744605de61385681ead3d3eb85ddaa1481e2a6dd74492f7df89377c42b4d"
+  },
+  {
+    "file": "package.json",
+    "status": "modified",
+    "sha256": "7181ff2b097258963f167fedfb341d8765349daf4c1ab5d8eed08ea6dcb560c7"
+  },
+  {
+    "file": "release-notes/FILE_MANIFEST_3.3.23_ORIGINAL.json",
+    "status": "added",
+    "sha256": "48a1afa5fa13dba8f97bdd46486c2bbaadcdabbc02775e9ae57ed2e779eba8aa"
+  },
+  {
+    "file": "scripts/build.mjs",
+    "status": "added",
+    "sha256": "9da2b8f1daeb3179426bf8766bec93a281879183eff70ff640ff07a2db093036"
+  },
+  {
+    "file": "scripts/check-bundle.mjs",
+    "status": "added",
+    "sha256": "c102b1fb1b258d7db5cbf3ef594d366b00bb5fe4b1eb2e0f2f242bdf4701d15f"
+  },
+  {
+    "file": "scripts/check-deploy-environment.mjs",
+    "status": "modified",
+    "sha256": "77d2cd6ded4161d29fcc0a8f3cfb09026471716af3a9d08e26a03282ac3529e0"
+  },
+  {
+    "file": "scripts/check-toolchain.mjs",
+    "status": "added",
+    "sha256": "ce9fb39ad6cb711adae3c0f65276c722378a404e649b405f1fd882a1a39e9722"
+  },
+  {
+    "file": "scripts/deploy-cloudflare.mjs",
+    "status": "modified",
+    "sha256": "4acfa53e8fe0270a969d0b9dd0b1e44fcd9b6af61a3f2e2a5efe17b8f1e219a7"
+  },
+  {
+    "file": "scripts/deploy.mjs",
+    "status": "modified",
+    "sha256": "37bb45e9091cc007fc67b65c15370b173345922ad9088de50f5734c65b23e128"
+  },
+  {
+    "file": "scripts/local-d1.mjs",
+    "status": "added",
+    "sha256": "d159a1ea786b8fcff83df26a074954116b524cf8e72e1ad944b566b1b3e6580d"
+  },
+  {
+    "file": "scripts/require-safe-upgrade.mjs",
+    "status": "modified",
+    "sha256": "f8ac29e94edcf35083d11186b2c1455995f4514e293f082b2da90a92cc82675c"
+  },
+  {
+    "file": "scripts/safe-upgrade.mjs",
+    "status": "modified",
+    "sha256": "33a018e20f7b66b8fbbae39b5fbccb63f0fd8065e7a3aedb1adf6cd4660f0702"
+  },
+  {
+    "file": "scripts/upgrade/cloudflare-checkpoints.mjs",
+    "status": "modified",
+    "sha256": "91600f6713970836a0f09b07aca82dad3e80c932d6f00ea6fa42659a000addb0"
+  },
+  {
+    "file": "scripts/upgrade/deploy-environment.mjs",
+    "status": "modified",
+    "sha256": "3d630cd212fde3a5d51035123a785b41576c360928c6280d09afc73156878249"
+  },
+  {
+    "file": "scripts/upgrade/local-toolchain.mjs",
+    "status": "added",
+    "sha256": "1178c944da4721dc57694763e0d8f5eeaf6479611dbed923637de18792bae3b7"
+  },
+  {
+    "file": "scripts/upgrade/release-checks.mjs",
+    "status": "added",
+    "sha256": "cd4b7bc2bc1412585983ab7433ad54033c2ddc8c39164e49bfedb6d466781503"
+  },
+  {
+    "file": "src/upgrade-release.js",
+    "status": "modified",
+    "sha256": "a325aeccf788fd2111bf4d8babf890601e711ffe1473acf02f86837d2beb4597"
+  },
+  {
+    "file": "src/version.js",
+    "status": "modified",
+    "sha256": "ae7ba9f3ea26344ea448e65314eedcbc6e85535379cc641ddb32f117b5479373"
+  },
+  {
+    "file": "src/views/adminPage.html",
+    "status": "modified",
+    "sha256": "ac986a5dcca24f1a857dbd941d2e596a72a6b716d87432248c1f92687d7a64d0"
+  },
+  {
+    "file": "tests/deploy/environment.test.mjs",
+    "status": "modified",
+    "sha256": "8441fc73f551b87b127abe25d4b02c1e43a536a493c43504dba18ed3563e9166"
+  },
+  {
+    "file": "tests/deploy/repair3324.test.mjs",
+    "status": "added",
+    "sha256": "eabe0857c32818bf4d86f71305d9e730ae712ef9b78133e9c3b05abdece0e1d7"
+  },
+  {
+    "file": "tests/deploy/split-runner.test.mjs",
+    "status": "modified",
+    "sha256": "7af7375371808df3bd24dbdeebc602acad9cc43d64451af5efbae46d326f841b"
+  },
+  {
+    "file": "tests/storage/policy.test.mjs",
+    "status": "modified",
+    "sha256": "741e994c1ac2a3aca44c7c6d3ee3bfdb0f71c335663c9b1e9a36d185568eb9ca"
+  },
+  {
+    "file": "tests/upgrade/fake-local-toolchain.mjs",
+    "status": "added",
+    "sha256": "f342aa49113a17c6af51388496cbee3472a61bc5f8a550c7e25db2f69300f829"
+  },
+  {
+    "file": "tests/upgrade/runner.test.mjs",
+    "status": "modified",
+    "sha256": "5095e40f31c61ff49a7d8b907b55edb1378b1c8dc7d22d3141f1efe4bf0613ad"
+  },
+  {
+    "file": "wrangler.toml",
+    "status": "modified",
+    "sha256": "caa201617846eca5a32721f4f8e18f7b8035cae0b8cfc3c8e051812fe8809591"
+  },
+  {
+    "file": "FILE_MANIFEST_3.3.23.json",
+    "status": "removed",
+    "note": "Historical original manifest moved under release-notes; no business data deletion."
+  }
+]

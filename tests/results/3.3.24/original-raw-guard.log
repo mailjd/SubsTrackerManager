@@ -1,0 +1,13 @@
+COMMAND: ['node', 'scripts/require-safe-upgrade.mjs']
+EXIT: 1
+[upgrade] ST_DEPLOY_COMMAND 阻止未经保护的部署：
+当前入口：Cloudflare Workers Builds / Git 直连。禁止直接 wrangler deploy 绕过备份。
+v3.3.22 已支持保留 Cloudflare Git 直连；不必 Disconnect。
+请将原 Worker → Settings → Builds 的 Deploy command 改为 npm run deploy:cloudflare，Build command 留空。
+在 Builds 的变量/机密配置原 CLOUDFLARE_ACCOUNT_ID、CLOUDFLARE_API_TOKEN、SUBSTRACKER_BACKUP_PASSWORD（至少16字符）、SUBSTRACKER_WORKER_NAME。
+第一次运行：加密备份并部署维护版本；日志 ST_UPGRADE_WAIT 会给出再次运行时间。
+等待至少16分钟后，Retry 同一提交：恢复加密检查点、补迁移、逐项验收后才开站。
+构建成功不等于升级完成；只有 ST_UPGRADE_COMPLETE 且 maintenance:false 才完成。
+本机/GitHub Actions → Safe upgrade 仍可运行完整流程；Cloudflare Pages 仍不支持。
+不要删除 build guard、不要伪造 runId、不要重建 Worker / KV / D1。
+详细操作：CLOUDFLARE_SPLIT_DEPLOY_3.3.23.md。

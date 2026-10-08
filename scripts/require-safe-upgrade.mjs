@@ -27,8 +27,10 @@ try {
     throw new DeploymentError('ST_DEPLOY_CHECKPOINT','Cloudflare 分段部署缺少远端加密备份回读凭证；请执行 npm run deploy:cloudflare，不可手动设置 runId。');
   }
   const config = JSON.parse(fs.readFileSync(path.join(root, 'wrangler.upgrade.json'), 'utf8'));
+  const {stableJSON} = await import('../src/data/upgrade-reconcile.js');
   assertD1KVConfig(state.config);
   assertD1KVConfig(config);
+  if (stableJSON(config)!==stableJSON(state.config)) throw new DeploymentError('ST_DEPLOY_CONFIG_CHANGED','生成的部署配置与加密备份中的配置不一致；停止，不能只核对数据库ID。');
   if (config.name !== state.worker || config.kv_namespaces?.[0]?.id !== state.bindings.kvId || (config.d1_databases?.[0]?.database_id || null) !== state.bindings.dbId) {
     throw new DeploymentError('ST_DEPLOY_BINDINGS', '生成的部署绑定与原 Worker 不同；已停止，不会改绑现有数据。');
   }

@@ -1,0 +1,51 @@
+{
+  "direct": {
+    "hono": "4.12.22",
+    "@cloudflare/vitest-pool-workers": "0.5.41",
+    "@cloudflare/workers-types": "4.20260524.1",
+    "typescript": "5.9.3",
+    "vitest": "2.1.9",
+    "wrangler": "3.114.17"
+  },
+  "wranglerNodes": {
+    "node_modules/@cloudflare/vitest-pool-workers/node_modules/wrangler": {
+      "version": "3.100.0",
+      "deprecated": "Downgrade to 3.99.0",
+      "dependencies": {
+        "@cloudflare/kv-asset-handler": "0.3.4",
+        "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+        "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+        "blake3-wasm": "^2.1.5",
+        "chokidar": "^4.0.1",
+        "date-fns": "^4.1.0",
+        "esbuild": "0.17.19",
+        "itty-time": "^1.0.6",
+        "miniflare": "3.20241230.0",
+        "nanoid": "^3.3.3",
+        "path-to-regexp": "^6.3.0",
+        "resolve": "^1.22.8",
+        "selfsigned": "^2.0.1",
+        "source-map": "^0.6.1",
+        "unenv": "npm:unenv-nightly@2.0.0-20241218-183400-5d6aec3",
+        "workerd": "1.20241230.0",
+        "xxhash-wasm": "^1.0.1"
+      }
+    },
+    "node_modules/wrangler": {
+      "version": "3.114.17",
+      "deprecated": null,
+      "dependencies": {
+        "@cloudflare/kv-asset-handler": "0.3.4",
+        "@cloudflare/unenv-preset": "2.0.2",
+        "@esbuild-plugins/node-globals-polyfill": "0.2.3",
+        "@esbuild-plugins/node-modules-polyfill": "0.2.2",
+        "blake3-wasm": "2.1.5",
+        "esbuild": "0.17.19",
+        "miniflare": "3.20250718.3",
+        "path-to-regexp": "6.3.0",
+        "unenv": "2.0.0-rc.14",
+        "workerd": "1.20250718.0"
+      }
+    }
+  }
+}

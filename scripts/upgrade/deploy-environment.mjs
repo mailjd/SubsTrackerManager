@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
+import {VERSION} from '../../src/version.js';
 import {assertD1KVConfig} from './storage-policy.mjs';
 
 export class DeploymentError extends Error {
@@ -23,15 +24,17 @@ export function deploymentRouteHelp(host = detectDeploymentHost()) {
     : host === 'cloudflare-pages' ? 'Cloudflare Pages（本项目是 Worker）' : '未受保护的 Wrangler 部署入口';
   return [
     `当前入口：${where}。禁止直接 wrangler deploy 绕过备份。`,
-    'v3.3.22 已支持保留 Cloudflare Git 直连；不必 Disconnect。',
-    '请将原 Worker → Settings → Builds 的 Deploy command 改为 npm run deploy:cloudflare，Build command 留空。',
+    `v${VERSION} 支持保留 Cloudflare Git 直连；不必 Disconnect。`,
+    '必须在原 Worker → Settings → Build(s) → Deploy command 设置 npm run deploy:cloudflare；不是 Build command。Build command 可留空或用 npm run build。',
+    'STOP：若日志仍显示 Executing user deploy command: npx wrangler deploy，控制台设置尚未生效；不要反复 Retry 同一错误命令。',
+    'ZIP/package.json 无法自动覆盖控制台保存的 Deploy command；保存设置后才执行新 Build。',
     '在 Builds 的变量/机密配置原 CLOUDFLARE_ACCOUNT_ID、CLOUDFLARE_API_TOKEN、SUBSTRACKER_BACKUP_PASSWORD（至少16字符）、SUBSTRACKER_WORKER_NAME。',
     '第一次运行：加密备份并部署维护版本；日志 ST_UPGRADE_WAIT 会给出再次运行时间。',
     '等待至少16分钟后，Retry 同一提交：恢复加密检查点、补迁移、逐项验收后才开站。',
     '构建成功不等于升级完成；只有 ST_UPGRADE_COMPLETE 且 maintenance:false 才完成。',
     '本机/GitHub Actions → Safe upgrade 仍可运行完整流程；Cloudflare Pages 仍不支持。',
     '不要删除 build guard、不要伪造 runId、不要重建 Worker / KV / D1。',
-    '详细操作：CLOUDFLARE_SPLIT_DEPLOY_3.3.23.md。',
+    `详细操作：DEPLOY_REPAIR_${VERSION}.md。`,
   ].join('\n');
 }
 

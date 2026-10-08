@@ -1,0 +1,7 @@
+COMMAND: ['npm', 'run', 'build']
+EXIT: 0
+
+> subscription-manager@3.3.23 build
+> echo 'No build step required for Workers runtime'
+
+No build step required for Workers runtime

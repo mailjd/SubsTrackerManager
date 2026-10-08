@@ -1,0 +1,10 @@
+{
+  "allPassed": true,
+  "files": [
+    "wrangler.dev.toml",
+    "wrangler.test.toml",
+    "wrangler.toml",
+    ".github/workflows/deploy.yml",
+    ".github/workflows/test.yml"
+  ]
+}

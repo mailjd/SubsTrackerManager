@@ -3,6 +3,7 @@ import fs from 'node:fs';import path from 'node:path';import {spawnSync} from 'n
 import {fileURLToPath} from 'node:url';
 import {Cloudflare,protectBindings} from '../../scripts/upgrade/cloudflare.mjs';
 import {assertD1KVConfig} from '../../scripts/upgrade/storage-policy.mjs';
+import {RELEASE_CHECKS} from '../../scripts/upgrade/release-checks.mjs';
 import {ACCOUNT,KV,DB,makeD1} from './helpers.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const settings={bindings:[{type:'kv_namespace',name:'SUBSCRIPTIONS_KV',namespace_id:KV},{type:'d1',name:'SUBSCRIPTIONS_DB',database_id:DB},{type:'assets',name:'ASSETS'}]};
@@ -29,5 +30,12 @@ test('all shipped Wrangler configs parse and only declare KV/D1 for data storage
 });
 test('no direct S3/R2 SDK dependency is introduced',()=>{const p=JSON.parse(fs.readFileSync(path.join(root,'package.json')));for(const key of Object.keys({...p.dependencies,...p.devDependencies}))assert.ok(!/aws-sdk|client-s3|@aws-sdk|minio|r2-client/i.test(key),key);});
 test('split and GitHub release require storage regression, not a bypass',()=>{
- const runner=fs.readFileSync(path.join(root,'scripts/deploy-cloudflare.mjs'),'utf8');assert.match(runner,/'test:storage'/);const workflow=fs.readFileSync(path.join(root,'.github/workflows/deploy.yml'),'utf8');assert.ok(workflow.indexOf('npm run test:storage')<workflow.indexOf('npm run upgrade:prepare'));
+ const runner=fs.readFileSync(path.join(root,'scripts/deploy-cloudflare.mjs'),'utf8');
+ assert.ok(RELEASE_CHECKS.includes('test:storage'));
+ assert.match(runner,/import \{verifyReleaseChecks\} from '\.\/upgrade\/release-checks\.mjs'/);
+ const call=runner.indexOf('if(!downloadOnly)verifyReleaseChecks(ROOT,deadline)');
+ assert.ok(call>=0 && call<runner.indexOf('await cf.settings('), 'shared mandatory checks execute before any Cloudflare request');
+ const workflow=fs.readFileSync(path.join(root,'.github/workflows/deploy.yml'),'utf8');
+ const check=workflow.indexOf('npm run test:storage');
+ assert.ok(check>=0 && check<workflow.indexOf('npm run upgrade:prepare'));
 });

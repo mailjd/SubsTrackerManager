@@ -1,3 +1,4 @@
+import {installFakeToolchain} from './fake-local-toolchain.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import path from 'node:path';import os from 'node:os';import {spawnSync} from 'node:child_process';import {fileURLToPath} from 'node:url';import {DatabaseSync} from 'node:sqlite';
 import {fixture,sample,payment} from './helpers.mjs';import {decryptArchive} from '../../scripts/upgrade/archive.mjs';
 const source=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
@@ -8,9 +9,9 @@ async function setup(t,large=false){
  // A repository may hold real production IDs. Offline tests must never use those IDs
  // or inherit a real deployment target; the actual protection code is still exercised.
  fs.writeFileSync(path.join(root,'wrangler.toml'),'name="synthetic-existing-worker"\nmain="src/index.js"\ncompatibility_date="2024-09-23"\n[build]\ncommand="node scripts/require-safe-upgrade.mjs"\n');
- fs.writeFileSync(path.join(root,'package.json'),'{"type":"module"}');
+ installFakeToolchain(source,root);
  const f=await fixture({rows:large?Array.from({length:25},(_,i)=>sample('many-'+i)):[sample('a',{paymentHistory:[payment()]}),sample('b')],mirrors:[sample('b')]});const b=f.bundle();fs.writeFileSync(path.join(state,'kv.json'),JSON.stringify(Object.fromEntries(f.values)));const db=new DatabaseSync(path.join(state,'d1.sqlite'));db.exec(b.d1Sql);db.close();f.close();
- const bin=path.join(root,'fakebin');fs.mkdirSync(bin);fs.writeFileSync(path.join(bin,'npx'),'#!/bin/sh\nnode "$FAKE_UPGRADE_ROOT/scripts/require-safe-upgrade.mjs" || exit $?\nprintf 1 > "$FAKE_UPGRADE_STATE/deployed"\n',{mode:0o700});
+ const bin=path.join(root,'fakebin');fs.mkdirSync(bin);fs.writeFileSync(path.join(bin,'npx'),'#!/bin/sh\necho forbidden-npx >&2\nexit 99\n',{mode:0o700});
  const env={...process.env,WORKERS_CI:'',WORKERS_CI_BUILD_UUID:'',CF_PAGES:'',SUBSTRACKER_WORKER_NAME:'',SUBSTRACKER_ENVIRONMENT:'',PATH:bin+path.delimiter+process.env.PATH,FAKE_UPGRADE_ROOT:root,FAKE_UPGRADE_STATE:state,NODE_OPTIONS:'--import='+path.join(root,'tests/upgrade/fake-cloudflare-preload.mjs'),CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_TOKEN:'synthetic-only',SUBSTRACKER_BACKUP_PASSWORD:'only-synthetic-archive-password',SUBSTRACKER_WORKER_URL:'https://upgrade.example.invalid'};
  const run=(phase,extra={})=>spawnSync(process.execPath,['scripts/safe-upgrade.mjs',phase],{cwd:root,env:{...env,...extra},encoding:'utf8',timeout:45000});
  return {root,state,env,run};
@@ -52,4 +53,11 @@ test('generated configuration cannot add R2 even after an authentic verified bac
  const state=decryptArchive(fs.readFileSync(path.join(f.root,'.upgrade/state.stbackup')),f.env.SUBSTRACKER_BACKUP_PASSWORD);
  const file=path.join(f.root,'wrangler.upgrade.json'),cfg=JSON.parse(fs.readFileSync(file));cfg.r2_buckets=[{binding:'INJECTED',bucket_name:'must-not-create-or-bind'}];fs.writeFileSync(file,JSON.stringify(cfg));
  const guard=spawnSync(process.execPath,['scripts/require-safe-upgrade.mjs'],{cwd:f.root,env:{...f.env,SUBSTRACKER_SAFE_DEPLOY_RUN:state.runId},encoding:'utf8',timeout:10000});assert.notEqual(guard.status,0);assert.match(guard.stderr,/ST_STORAGE_POLICY/);assert.ok(!fs.existsSync(path.join(f.state,'deployed')));
+});
+
+test('tampering generated config other than first storage IDs is rejected after authentic prepare',async t=>{
+ const f=await setup(t);const prepared=f.run('prepare');assert.equal(prepared.status,0,prepared.stderr);
+ const state=decryptArchive(fs.readFileSync(path.join(f.root,'.upgrade/state.stbackup')),f.env.SUBSTRACKER_BACKUP_PASSWORD);
+ const file=path.join(f.root,'wrangler.upgrade.json'),cfg=JSON.parse(fs.readFileSync(file));cfg.main='src/not-the-reviewed-entry.js';fs.writeFileSync(file,JSON.stringify(cfg));
+ const guard=spawnSync(process.execPath,['scripts/require-safe-upgrade.mjs'],{cwd:f.root,env:{...f.env,SUBSTRACKER_SAFE_DEPLOY_RUN:state.runId},encoding:'utf8',timeout:10000});assert.equal(guard.status,1);assert.match(guard.stderr,/ST_DEPLOY_CONFIG_CHANGED/);assert.ok(!fs.existsSync(path.join(f.state,'deployed')));
 });

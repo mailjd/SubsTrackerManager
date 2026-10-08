@@ -1,18 +1,18 @@
 {
   "name": "subscription-manager",
-  "version": "3.3.23",
+  "version": "3.3.24",
   "description": "订阅管理系统 - 基于 Cloudflare Workers + Hono",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "build": "echo 'No build step required for Workers runtime'",
+    "build": "node scripts/build.mjs",
     "setup": "node scripts/setup-kv.cjs",
     "deploy": "node scripts/deploy.mjs",
     "deploy:safe": "node scripts/safe-upgrade.mjs all",
     "lint": "tsc --noEmit -p jsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "setup:local-d1": "npx wrangler d1 migrations apply subscription-manager-dev --local --config wrangler.dev.toml",
+    "setup:local-d1": "node scripts/local-d1.mjs",
     "test:table-contract": "node --test tests/regression/contract.node.mjs",
     "test:workflow": "python3 tests/regression/workflow3319.py .",
     "upgrade:prepare": "node scripts/safe-upgrade.mjs prepare",
@@ -27,17 +27,20 @@
     "deploy:cloudflare": "node scripts/deploy-cloudflare.mjs",
     "upgrade:download": "node scripts/deploy-cloudflare.mjs download",
     "test:split-deploy": "node --test tests/deploy/split-*.test.mjs",
-    "test:storage": "node --test tests/storage/*.test.mjs"
+    "test:storage": "node --test tests/storage/*.test.mjs",
+    "test:toolchain": "node scripts/check-toolchain.mjs",
+    "test:bundle": "node scripts/check-bundle.mjs",
+    "deploy:doctor": "node scripts/check-toolchain.mjs --report-only"
   },
   "dependencies": {
-    "hono": "^4.6.14"
+    "hono": "4.12.22"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.5.40",
-    "@cloudflare/workers-types": "^4.20241218.0",
-    "typescript": "^5.7.2",
-    "vitest": "~2.1.9",
-    "wrangler": "^3.99.0"
+    "@cloudflare/vitest-pool-workers": "0.5.41",
+    "@cloudflare/workers-types": "4.20260524.1",
+    "typescript": "5.9.3",
+    "vitest": "2.1.9",
+    "wrangler": "3.114.17"
   },
   "keywords": [
     "cloudflare-workers",
@@ -46,5 +49,9 @@
     "lunar-calendar",
     "hono"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13.0",
+    "npm": ">=10"
+  }
 }

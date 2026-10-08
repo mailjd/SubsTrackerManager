@@ -1,29 +1,27 @@
-# SubsTracker v3.3.23｜D1＋KV 限定版
+# SubsTracker v3.3.24｜部署預檢與依賴核對修正版
 
-本版基於 v3.3.22。應用資料、Cloudflare分階段備份與恢復只使用既有D1＋KV，沒有R2綁定、R2金鑰或R2 SDK。不要求開通R2。
+基於原v3.3.23，保留D1＋KV限定、原業務資料、備份、維護等待、恢復與驗收。沒有R2。
 
-舊版無專案R2 bucket，但D1全量备份仍經`export`與`signed_url`下載。本版改為D1 `query`分頁生成SQL，並增加儲存白名單與拒絕額外物件儲存的檢查。業務相關67個檔案維持原值。
+**必讀 `DEPLOY_REPAIR_3.3.24.md`；本次實測／未完成項目見 `VERIFICATION_3.3.24.md`。**
 
-**先讀 `D1_KV_ONLY_3.3.23.md`，測試明細見 `VERIFICATION_3.3.23.md`。**
+## 你提供日誌中的根因
 
-## Cloudflare部署
+`Executing user deploy command: npx wrangler deploy`：控制台仍是舊命令。必須改原Worker的 **Deploy command** 為 `npm run deploy:cloudflare` 並保存；ZIP不會修改這個控制台設定。不要刪除guard強行發布。
 
-Build command留空；Deploy command仍為：
+Build command可保留原 `npm run build`，本版已改成真實依賴、語法和Wrangler dry-run檢查；也可留空由Deploy入口完成檢查。不再只有echo就綠燈。
 
-```sh
-npm run deploy:cloudflare
-```
+## 重要邊界
 
-沿用原Worker、KV、D1和Builds機密，不新建資料庫，不刪除build guard。第一次WAIT後依readyAfter重試同一提交，直到COMPLETE並maintenance:false。若舊版批次仍在維護，先處理原批次，不能混用新程式。
+仍是Git自動啟動第一階段，WAIT後按readyAfter手動Retry同一提交；不是全自動接續。舊版已有未完成維護批次時，先用舊版原提交恢復，不要混用新版。沿用原KV／D1、Worker名與機密，不清庫、不新建替代資料庫。
 
-詳細步驟：`CLOUDFLARE_SPLIT_DEPLOY_3.3.23.md`。可選長流程：`SAFE_UPGRADE_3.3.23.md`。
-
-## 本機檢查
+## 本機診斷與驗證
 
 ```sh
-npm ci
+npm run deploy:doctor       # 只讀本地lock/已安裝版本，不認證正式部署
+npm ci --include=dev
+npm run build               # 依賴 + 語法 + 真實dry-run；不發布
+npm run deploy:check         # 本機設定預檢，不訪問原帳戶
 npm run test:storage
-npm run test:syntax
 npm run test:deploy
 npm run test:upgrade
 npm run test:table-contract
@@ -32,6 +30,8 @@ npm run lint
 npm test
 ```
 
-`test:storage`使用Node＋Python合成D1測試，無需R2。正式發布仍要求完整測試，不提供跳過備份/測試開關。本機全部已執行與未完成項目以驗證報告為準；舊的`tests/results/3.3.xx`是歷史證據，不算本次測試。
+發布固定使用專案根Wrangler3.114.17；間接測試套件Wrangler3.100.0的deprecated警告仍可能出現，不是此次ST_DEPLOY_COMMAND的成因。沒有在無法做完整驗證時強行切換Wrangler4；所有原lock套件版本保持。
 
-備份下載：`npm run upgrade:download`。備份密碼另存，完整加密附件另存本機；存於原KV不能代替獨立災難備份。
+測試證據在`tests/results/3.3.24/`，其他版本的results和報告屬於歷史。完整型別、Workers Vitest和真實bundle是否通過以本次報告為準，不把模擬工具回歸冒充正式Wrangler驗收。
+
+部署完成後 `npm run upgrade:download` 另存加密備份，備份密碼另外保管。可選GitHub／本機長流程見 `SAFE_UPGRADE_3.3.24.md`；不要兩個發布器同時操作。

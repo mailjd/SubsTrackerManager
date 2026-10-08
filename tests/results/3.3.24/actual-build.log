@@ -1,0 +1,8 @@
+
+> subscription-manager@3.3.24 build
+> node scripts/build.mjs
+
+[build] SubsTracker 3.3.24：依赖、源码语法、Wrangler dry-run；不会发布。
+[build] Cloudflare Deploy command 必须为 npm run deploy:cloudflare。npm run build 不能覆盖控制台的部署命令。
+[toolchain] ST_TOOLCHAIN hono：预期 4.12.22，实际 未安装。请用本版 package-lock.json 重新 npm ci --include=dev；不要仅更新全局 Wrangler。
+[build] ST_BUILD_CHECK check-toolchain.mjs 未通过；不是部署成功。

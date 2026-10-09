@@ -1,0 +1,588 @@
+0 verbose cli /opt/nvm/versions/node/v22.16.0/bin/node /opt/nvm/versions/node/v22.16.0/bin/npm
+1 info using npm@10.9.2
+2 info using node@v22.16.0
+3 silly config load:file:/opt/nvm/versions/node/v22.16.0/lib/node_modules/npm/npmrc
+4 silly config load:file:/mnt/data/work_v3333/.npmrc
+5 silly config load:file:/home/oai/.npmrc
+6 silly config load:file:/opt/nvm/versions/node/v22.16.0/etc/npmrc
+7 verbose title npm ci
+8 verbose argv "ci" "--include" "dev" "--no-audit" "--no-fund" "--fetch-retries" "0" "--fetch-timeout" "20000"
+9 verbose logfile logs-max:10 dir:/home/oai/.npm/_logs/2026-10-09T12_44_02_482Z-
+10 verbose logfile /home/oai/.npm/_logs/2026-10-09T12_44_02_482Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+13 silly idealTree buildDeps
+14 silly reify moves {}
+15 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/wrangler/node_modules/@cloudflare/workerd-windows-64
+16 silly reify mark deleted [
+16 silly reify   '/mnt/data/work_v3333/node_modules/wrangler/node_modules/@cloudflare/workerd-windows-64'
+16 silly reify ]
+17 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/wrangler/node_modules/@cloudflare/workerd-linux-arm64
+18 silly reify mark deleted [
+18 silly reify   '/mnt/data/work_v3333/node_modules/wrangler/node_modules/@cloudflare/workerd-linux-arm64'
+18 silly reify ]
+19 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/wrangler/node_modules/@cloudflare/workerd-darwin-arm64
+20 silly reify mark deleted [
+20 silly reify   '/mnt/data/work_v3333/node_modules/wrangler/node_modules/@cloudflare/workerd-darwin-arm64'
+20 silly reify ]
+21 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/wrangler/node_modules/@cloudflare/workerd-darwin-64
+22 silly reify mark deleted [
+22 silly reify   '/mnt/data/work_v3333/node_modules/wrangler/node_modules/@cloudflare/workerd-darwin-64'
+22 silly reify ]
+23 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/win32-x64
+24 silly reify mark deleted [
+24 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/win32-x64'
+24 silly reify ]
+25 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/win32-ia32
+26 silly reify mark deleted [
+26 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/win32-ia32'
+26 silly reify ]
+27 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/win32-arm64
+28 silly reify mark deleted [
+28 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/win32-arm64'
+28 silly reify ]
+29 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/sunos-x64
+30 silly reify mark deleted [
+30 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/sunos-x64'
+30 silly reify ]
+31 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/openbsd-x64
+32 silly reify mark deleted [
+32 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/openbsd-x64'
+32 silly reify ]
+33 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/netbsd-x64
+34 silly reify mark deleted [
+34 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/netbsd-x64'
+34 silly reify ]
+35 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-s390x
+36 silly reify mark deleted [
+36 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-s390x'
+36 silly reify ]
+37 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-riscv64
+38 silly reify mark deleted [
+38 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-riscv64'
+38 silly reify ]
+39 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-ppc64
+40 silly reify mark deleted [
+40 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-ppc64'
+40 silly reify ]
+41 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-mips64el
+42 silly reify mark deleted [
+42 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-mips64el'
+42 silly reify ]
+43 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-loong64
+44 silly reify mark deleted [
+44 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-loong64'
+44 silly reify ]
+45 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-ia32
+46 silly reify mark deleted [
+46 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-ia32'
+46 silly reify ]
+47 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-arm64
+48 silly reify mark deleted [
+48 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-arm64'
+48 silly reify ]
+49 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-arm
+50 silly reify mark deleted [
+50 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/linux-arm'
+50 silly reify ]
+51 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/freebsd-x64
+52 silly reify mark deleted [
+52 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/freebsd-x64'
+52 silly reify ]
+53 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/freebsd-arm64
+54 silly reify mark deleted [
+54 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/freebsd-arm64'
+54 silly reify ]
+55 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/darwin-x64
+56 silly reify mark deleted [
+56 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/darwin-x64'
+56 silly reify ]
+57 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/darwin-arm64
+58 silly reify mark deleted [
+58 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/darwin-arm64'
+58 silly reify ]
+59 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/android-x64
+60 silly reify mark deleted [
+60 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/android-x64'
+60 silly reify ]
+61 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/android-arm64
+62 silly reify mark deleted [
+62 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/android-arm64'
+62 silly reify ]
+63 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/android-arm
+64 silly reify mark deleted [
+64 silly reify   '/mnt/data/work_v3333/node_modules/vite/node_modules/@esbuild/android-arm'
+64 silly reify ]
+65 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/fsevents
+66 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/fsevents' ]
+67 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-win32-x64-msvc
+68 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-win32-x64-msvc' ]
+69 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-win32-x64-gnu
+70 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-win32-x64-gnu' ]
+71 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-win32-ia32-msvc
+72 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-win32-ia32-msvc' ]
+73 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-win32-arm64-msvc
+74 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-win32-arm64-msvc' ]
+75 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-openharmony-arm64
+76 silly reify mark deleted [
+76 silly reify   '/mnt/data/work_v3333/node_modules/@rollup/rollup-openharmony-arm64'
+76 silly reify ]
+77 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-openbsd-x64
+78 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-openbsd-x64' ]
+79 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-x64-musl
+80 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-x64-musl' ]
+81 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-s390x-gnu
+82 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-s390x-gnu' ]
+83 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-riscv64-musl
+84 silly reify mark deleted [
+84 silly reify   '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-riscv64-musl'
+84 silly reify ]
+85 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-riscv64-gnu
+86 silly reify mark deleted [
+86 silly reify   '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-riscv64-gnu'
+86 silly reify ]
+87 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-ppc64-musl
+88 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-ppc64-musl' ]
+89 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-ppc64-gnu
+90 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-ppc64-gnu' ]
+91 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-loong64-musl
+92 silly reify mark deleted [
+92 silly reify   '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-loong64-musl'
+92 silly reify ]
+93 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-loong64-gnu
+94 silly reify mark deleted [
+94 silly reify   '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-loong64-gnu'
+94 silly reify ]
+95 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-arm64-musl
+96 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-arm64-musl' ]
+97 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-arm64-gnu
+98 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-arm64-gnu' ]
+99 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-arm-musleabihf
+100 silly reify mark deleted [
+100 silly reify   '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-arm-musleabihf'
+100 silly reify ]
+101 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-linux-arm-gnueabihf
+102 silly reify mark deleted [
+102 silly reify   '/mnt/data/work_v3333/node_modules/@rollup/rollup-linux-arm-gnueabihf'
+102 silly reify ]
+103 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-freebsd-x64
+104 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-freebsd-x64' ]
+105 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-freebsd-arm64
+106 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-freebsd-arm64' ]
+107 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-darwin-x64
+108 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-darwin-x64' ]
+109 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-darwin-arm64
+110 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-darwin-arm64' ]
+111 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-android-arm64
+112 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-android-arm64' ]
+113 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@rollup/rollup-android-arm-eabi
+114 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@rollup/rollup-android-arm-eabi' ]
+115 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-win32-x64
+116 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-win32-x64' ]
+117 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-win32-ia32
+118 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-win32-ia32' ]
+119 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-wasm32
+120 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-wasm32' ]
+121 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@emnapi/runtime
+122 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@emnapi/runtime' ]
+123 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-linuxmusl-x64
+124 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-linuxmusl-x64' ]
+125 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-linuxmusl-arm64
+126 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-linuxmusl-arm64' ]
+127 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-linux-s390x
+128 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-linux-s390x' ]
+129 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-linux-arm64
+130 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-linux-arm64' ]
+131 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-linux-arm
+132 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-linux-arm' ]
+133 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-libvips-linuxmusl-x64
+134 silly reify mark deleted [
+134 silly reify   '/mnt/data/work_v3333/node_modules/@img/sharp-libvips-linuxmusl-x64'
+134 silly reify ]
+135 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-libvips-linuxmusl-arm64
+136 silly reify mark deleted [
+136 silly reify   '/mnt/data/work_v3333/node_modules/@img/sharp-libvips-linuxmusl-arm64'
+136 silly reify ]
+137 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-libvips-linux-s390x
+138 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-libvips-linux-s390x' ]
+139 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-libvips-linux-arm64
+140 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-libvips-linux-arm64' ]
+141 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-libvips-linux-arm
+142 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-libvips-linux-arm' ]
+143 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-libvips-darwin-x64
+144 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-libvips-darwin-x64' ]
+145 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-libvips-darwin-arm64
+146 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-libvips-darwin-arm64' ]
+147 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-darwin-x64
+148 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-darwin-x64' ]
+149 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@img/sharp-darwin-arm64
+150 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@img/sharp-darwin-arm64' ]
+151 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/win32-x64
+152 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/win32-x64' ]
+153 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/win32-ia32
+154 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/win32-ia32' ]
+155 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/win32-arm64
+156 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/win32-arm64' ]
+157 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/sunos-x64
+158 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/sunos-x64' ]
+159 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/openbsd-x64
+160 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/openbsd-x64' ]
+161 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/netbsd-x64
+162 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/netbsd-x64' ]
+163 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/linux-s390x
+164 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/linux-s390x' ]
+165 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/linux-riscv64
+166 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/linux-riscv64' ]
+167 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/linux-ppc64
+168 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/linux-ppc64' ]
+169 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/linux-mips64el
+170 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/linux-mips64el' ]
+171 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/linux-loong64
+172 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/linux-loong64' ]
+173 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/linux-ia32
+174 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/linux-ia32' ]
+175 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/linux-arm64
+176 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/linux-arm64' ]
+177 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/linux-arm
+178 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/linux-arm' ]
+179 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/freebsd-x64
+180 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/freebsd-x64' ]
+181 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/freebsd-arm64
+182 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/freebsd-arm64' ]
+183 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/darwin-x64
+184 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/darwin-x64' ]
+185 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/darwin-arm64
+186 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/darwin-arm64' ]
+187 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/android-x64
+188 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/android-x64' ]
+189 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/android-arm64
+190 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/android-arm64' ]
+191 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/android-arm
+192 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/android-arm' ]
+193 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@esbuild/aix-ppc64
+194 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@esbuild/aix-ppc64' ]
+195 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@cloudflare/workerd-windows-64
+196 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@cloudflare/workerd-windows-64' ]
+197 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@cloudflare/workerd-linux-arm64
+198 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@cloudflare/workerd-linux-arm64' ]
+199 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@cloudflare/workerd-darwin-arm64
+200 silly reify mark deleted [
+200 silly reify   '/mnt/data/work_v3333/node_modules/@cloudflare/workerd-darwin-arm64'
+200 silly reify ]
+201 verbose reify failed optional dependency /mnt/data/work_v3333/node_modules/@cloudflare/workerd-darwin-64
+202 silly reify mark deleted [ '/mnt/data/work_v3333/node_modules/@cloudflare/workerd-darwin-64' ]
+203 http cache zod@https://registry.npmjs.org/zod/-/zod-3.25.76.tgz 1ms (cache hit)
+204 http cache youch@https://registry.npmjs.org/youch/-/youch-3.3.4.tgz 0ms (cache hit)
+205 http cache xxhash-wasm@https://registry.npmjs.org/xxhash-wasm/-/xxhash-wasm-1.1.0.tgz 1ms (cache hit)
+206 http cache wrangler@https://registry.npmjs.org/wrangler/-/wrangler-3.114.17.tgz 0ms (cache hit)
+207 http cache workerd@https://registry.npmjs.org/workerd/-/workerd-1.20241230.0.tgz 0ms (cache hit)
+208 http cache ws@https://registry.npmjs.org/ws/-/ws-8.21.0.tgz 0ms (cache hit)
+209 http cache why-is-node-running@https://registry.npmjs.org/why-is-node-running/-/why-is-node-running-2.3.0.tgz 0ms (cache hit)
+210 http cache vitest@https://registry.npmjs.org/vitest/-/vitest-2.1.9.tgz 0ms (cache hit)
+211 http cache vite-node@https://registry.npmjs.org/vite-node/-/vite-node-2.1.9.tgz 0ms (cache hit)
+212 http cache vite@https://registry.npmjs.org/vite/-/vite-5.4.21.tgz 0ms (cache hit)
+213 http cache unenv@https://registry.npmjs.org/unenv/-/unenv-2.0.0-rc.14.tgz 0ms (cache hit)
+214 http cache undici@https://registry.npmjs.org/undici/-/undici-5.29.0.tgz 0ms (cache hit)
+215 http cache undici-types@https://registry.npmjs.org/undici-types/-/undici-types-7.24.6.tgz 0ms (cache hit)
+216 http cache ufo@https://registry.npmjs.org/ufo/-/ufo-1.6.4.tgz 0ms (cache hit)
+217 http cache typescript@https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz 0ms (cache hit)
+218 http cache tslib@https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz 0ms (cache hit)
+219 http cache tinyspy@https://registry.npmjs.org/tinyspy/-/tinyspy-3.0.2.tgz 0ms (cache hit)
+220 http cache tinyrainbow@https://registry.npmjs.org/tinyrainbow/-/tinyrainbow-1.2.0.tgz 0ms (cache hit)
+221 http cache tinypool@https://registry.npmjs.org/tinypool/-/tinypool-1.1.1.tgz 0ms (cache hit)
+222 http cache tinyexec@https://registry.npmjs.org/tinyexec/-/tinyexec-0.3.2.tgz 0ms (cache hit)
+223 http cache tinybench@https://registry.npmjs.org/tinybench/-/tinybench-2.9.0.tgz 0ms (cache hit)
+224 http cache supports-preserve-symlinks-flag@https://registry.npmjs.org/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz 0ms (cache hit)
+225 http cache stoppable@https://registry.npmjs.org/stoppable/-/stoppable-1.1.0.tgz 0ms (cache hit)
+226 http cache std-env@https://registry.npmjs.org/std-env/-/std-env-3.10.0.tgz 0ms (cache hit)
+227 http cache stacktracey@https://registry.npmjs.org/stacktracey/-/stacktracey-2.2.0.tgz 0ms (cache hit)
+228 http cache stackback@https://registry.npmjs.org/stackback/-/stackback-0.0.2.tgz 0ms (cache hit)
+229 http cache sourcemap-codec@https://registry.npmjs.org/sourcemap-codec/-/sourcemap-codec-1.4.8.tgz 0ms (cache hit)
+230 http cache source-map-js@https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz 0ms (cache hit)
+231 http cache source-map@https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz 0ms (cache hit)
+232 http cache simple-swizzle@https://registry.npmjs.org/simple-swizzle/-/simple-swizzle-0.2.4.tgz 0ms (cache hit)
+233 http cache siginfo@https://registry.npmjs.org/siginfo/-/siginfo-2.0.0.tgz 0ms (cache hit)
+234 http cache sharp@https://registry.npmjs.org/sharp/-/sharp-0.33.5.tgz 0ms (cache hit)
+235 http cache semver@https://registry.npmjs.org/semver/-/semver-7.8.1.tgz 0ms (cache hit)
+236 http cache selfsigned@https://registry.npmjs.org/selfsigned/-/selfsigned-2.4.1.tgz 0ms (cache hit)
+237 http cache rollup-pluginutils@https://registry.npmjs.org/rollup-pluginutils/-/rollup-pluginutils-2.8.2.tgz 0ms (cache hit)
+238 http cache rollup-plugin-node-polyfills@https://registry.npmjs.org/rollup-plugin-node-polyfills/-/rollup-plugin-node-polyfills-0.2.1.tgz 0ms (cache hit)
+239 http cache rollup-plugin-inject@https://registry.npmjs.org/rollup-plugin-inject/-/rollup-plugin-inject-3.0.2.tgz 0ms (cache hit)
+240 http cache rollup@https://registry.npmjs.org/rollup/-/rollup-4.60.4.tgz 0ms (cache hit)
+241 http cache resolve@https://registry.npmjs.org/resolve/-/resolve-1.22.12.tgz 0ms (cache hit)
+242 http cache readdirp@https://registry.npmjs.org/readdirp/-/readdirp-4.1.2.tgz 0ms (cache hit)
+243 http cache printable-characters@https://registry.npmjs.org/printable-characters/-/printable-characters-1.0.42.tgz 0ms (cache hit)
+244 http cache postcss@https://registry.npmjs.org/postcss/-/postcss-8.5.15.tgz 0ms (cache hit)
+245 http cache pkg-types@https://registry.npmjs.org/pkg-types/-/pkg-types-1.3.1.tgz 0ms (cache hit)
+246 http cache picocolors@https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz 0ms (cache hit)
+247 http cache pathval@https://registry.npmjs.org/pathval/-/pathval-2.0.1.tgz 0ms (cache hit)
+248 http cache pathe@https://registry.npmjs.org/pathe/-/pathe-1.1.2.tgz 0ms (cache hit)
+249 http cache path-to-regexp@https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-6.3.0.tgz 0ms (cache hit)
+250 http cache path-parse@https://registry.npmjs.org/path-parse/-/path-parse-1.0.7.tgz 0ms (cache hit)
+251 http cache ohash@https://registry.npmjs.org/ohash/-/ohash-2.0.11.tgz 0ms (cache hit)
+252 http cache node-forge@https://registry.npmjs.org/node-forge/-/node-forge-1.4.0.tgz 0ms (cache hit)
+253 http cache nanoid@https://registry.npmjs.org/nanoid/-/nanoid-3.3.12.tgz 0ms (cache hit)
+254 http cache mustache@https://registry.npmjs.org/mustache/-/mustache-4.2.0.tgz 0ms (cache hit)
+255 http cache ms@https://registry.npmjs.org/ms/-/ms-2.1.3.tgz 0ms (cache hit)
+256 http cache mlly@https://registry.npmjs.org/mlly/-/mlly-1.8.2.tgz 0ms (cache hit)
+257 http cache miniflare@https://registry.npmjs.org/miniflare/-/miniflare-3.20241230.0.tgz 0ms (cache hit)
+258 http cache mime@https://registry.npmjs.org/mime/-/mime-3.0.0.tgz 0ms (cache hit)
+259 http cache magic-string@https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz 0ms (cache hit)
+260 http cache loupe@https://registry.npmjs.org/loupe/-/loupe-3.2.1.tgz 0ms (cache hit)
+261 http cache itty-time@https://registry.npmjs.org/itty-time/-/itty-time-1.0.6.tgz 0ms (cache hit)
+262 http cache is-core-module@https://registry.npmjs.org/is-core-module/-/is-core-module-2.16.2.tgz 0ms (cache hit)
+263 http cache is-arrayish@https://registry.npmjs.org/is-arrayish/-/is-arrayish-0.3.4.tgz 0ms (cache hit)
+264 http cache hono@https://registry.npmjs.org/hono/-/hono-4.12.22.tgz 0ms (cache hit)
+265 http cache hasown@https://registry.npmjs.org/hasown/-/hasown-2.0.3.tgz 0ms (cache hit)
+266 http cache glob-to-regexp@https://registry.npmjs.org/glob-to-regexp/-/glob-to-regexp-0.4.1.tgz 0ms (cache hit)
+267 http cache get-source@https://registry.npmjs.org/get-source/-/get-source-2.0.12.tgz 0ms (cache hit)
+268 http cache function-bind@https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz 0ms (cache hit)
+269 http cache exsolve@https://registry.npmjs.org/exsolve/-/exsolve-1.0.8.tgz 0ms (cache hit)
+270 http cache expect-type@https://registry.npmjs.org/expect-type/-/expect-type-1.3.0.tgz 0ms (cache hit)
+271 http cache estree-walker@https://registry.npmjs.org/estree-walker/-/estree-walker-3.0.3.tgz 0ms (cache hit)
+272 http cache exit-hook@https://registry.npmjs.org/exit-hook/-/exit-hook-2.2.1.tgz 0ms (cache hit)
+273 http cache escape-string-regexp@https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz 0ms (cache hit)
+274 http cache esbuild@https://registry.npmjs.org/esbuild/-/esbuild-0.17.19.tgz 0ms (cache hit)
+275 http cache es-module-lexer@https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-1.7.0.tgz 0ms (cache hit)
+276 http cache es-errors@https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz 0ms (cache hit)
+277 http cache devalue@https://registry.npmjs.org/devalue/-/devalue-4.3.3.tgz 0ms (cache hit)
+278 http cache detect-libc@https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz 0ms (cache hit)
+279 http cache defu@https://registry.npmjs.org/defu/-/defu-6.1.7.tgz 0ms (cache hit)
+280 http cache deep-eql@https://registry.npmjs.org/deep-eql/-/deep-eql-5.0.2.tgz 0ms (cache hit)
+281 http cache debug@https://registry.npmjs.org/debug/-/debug-4.4.3.tgz 0ms (cache hit)
+282 http cache date-fns@https://registry.npmjs.org/date-fns/-/date-fns-4.3.0.tgz 0ms (cache hit)
+283 http cache data-uri-to-buffer@https://registry.npmjs.org/data-uri-to-buffer/-/data-uri-to-buffer-2.0.2.tgz 0ms (cache hit)
+284 http cache cookie@https://registry.npmjs.org/cookie/-/cookie-0.7.2.tgz 0ms (cache hit)
+285 http cache confbox@https://registry.npmjs.org/confbox/-/confbox-0.1.8.tgz 0ms (cache hit)
+286 http cache color-string@https://registry.npmjs.org/color-string/-/color-string-1.9.1.tgz 0ms (cache hit)
+287 http cache color-name@https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz 0ms (cache hit)
+288 http cache color-convert@https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz 0ms (cache hit)
+289 http cache color@https://registry.npmjs.org/color/-/color-4.2.3.tgz 0ms (cache hit)
+290 http cache cjs-module-lexer@https://registry.npmjs.org/cjs-module-lexer/-/cjs-module-lexer-1.4.3.tgz 0ms (cache hit)
+291 http cache chokidar@https://registry.npmjs.org/chokidar/-/chokidar-4.0.3.tgz 0ms (cache hit)
+292 http cache check-error@https://registry.npmjs.org/check-error/-/check-error-2.1.3.tgz 0ms (cache hit)
+293 http cache chai@https://registry.npmjs.org/chai/-/chai-5.3.3.tgz 0ms (cache hit)
+294 http cache capnp-ts@https://registry.npmjs.org/capnp-ts/-/capnp-ts-0.7.0.tgz 0ms (cache hit)
+295 http cache cac@https://registry.npmjs.org/cac/-/cac-6.7.14.tgz 0ms (cache hit)
+296 http cache blake3-wasm@https://registry.npmjs.org/blake3-wasm/-/blake3-wasm-2.1.5.tgz 0ms (cache hit)
+297 http cache birpc@https://registry.npmjs.org/birpc/-/birpc-0.2.14.tgz 0ms (cache hit)
+298 http cache assertion-error@https://registry.npmjs.org/assertion-error/-/assertion-error-2.0.1.tgz 0ms (cache hit)
+299 http cache as-table@https://registry.npmjs.org/as-table/-/as-table-1.0.55.tgz 0ms (cache hit)
+300 http cache acorn-walk@https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.3.5.tgz 0ms (cache hit)
+301 http cache acorn@https://registry.npmjs.org/acorn/-/acorn-8.16.0.tgz 0ms (cache hit)
+302 http cache @vitest/utils@https://registry.npmjs.org/@vitest/utils/-/utils-2.1.9.tgz 0ms (cache hit)
+303 http cache @vitest/spy@https://registry.npmjs.org/@vitest/spy/-/spy-2.1.9.tgz 0ms (cache hit)
+304 http cache @vitest/snapshot@https://registry.npmjs.org/@vitest/snapshot/-/snapshot-2.1.9.tgz 0ms (cache hit)
+305 http cache @vitest/runner@https://registry.npmjs.org/@vitest/runner/-/runner-2.1.9.tgz 0ms (cache hit)
+306 http cache @vitest/pretty-format@https://registry.npmjs.org/@vitest/pretty-format/-/pretty-format-2.1.9.tgz 0ms (cache hit)
+307 http cache @vitest/mocker@https://registry.npmjs.org/@vitest/mocker/-/mocker-2.1.9.tgz 0ms (cache hit)
+308 http cache @vitest/expect@https://registry.npmjs.org/@vitest/expect/-/expect-2.1.9.tgz 0ms (cache hit)
+309 http cache @types/node-forge@https://registry.npmjs.org/@types/node-forge/-/node-forge-1.3.14.tgz 0ms (cache hit)
+310 http cache @types/node@https://registry.npmjs.org/@types/node/-/node-25.9.1.tgz 0ms (cache hit)
+311 http cache @types/estree@https://registry.npmjs.org/@types/estree/-/estree-1.0.9.tgz 0ms (cache hit)
+312 http cache @rollup/rollup-linux-x64-gnu@https://registry.npmjs.org/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.60.4.tgz 0ms (cache hit)
+313 http cache @jridgewell/trace-mapping@https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.9.tgz 0ms (cache hit)
+314 http cache @jridgewell/sourcemap-codec@https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz 0ms (cache hit)
+315 http cache @jridgewell/resolve-uri@https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz 0ms (cache hit)
+316 http cache @img/sharp-linux-x64@https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.33.5.tgz 0ms (cache hit)
+317 http cache @img/sharp-libvips-linux-x64@https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.0.4.tgz 0ms (cache hit)
+318 http cache @fastify/busboy@https://registry.npmjs.org/@fastify/busboy/-/busboy-2.1.1.tgz 0ms (cache hit)
+319 http cache @esbuild/linux-x64@https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.17.19.tgz 0ms (cache hit)
+320 http cache @esbuild-plugins/node-modules-polyfill@https://registry.npmjs.org/@esbuild-plugins/node-modules-polyfill/-/node-modules-polyfill-0.2.2.tgz 0ms (cache hit)
+321 http cache @esbuild-plugins/node-globals-polyfill@https://registry.npmjs.org/@esbuild-plugins/node-globals-polyfill/-/node-globals-polyfill-0.2.3.tgz 0ms (cache hit)
+322 http cache @emnapi/runtime@https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.10.0.tgz 0ms (cache hit)
+323 http cache @cspotcode/source-map-support@https://registry.npmjs.org/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz 0ms (cache hit)
+324 http cache @cloudflare/workers-types@https://registry.npmjs.org/@cloudflare/workers-types/-/workers-types-4.20260524.1.tgz 0ms (cache hit)
+325 http cache @cloudflare/workerd-linux-64@https://registry.npmjs.org/@cloudflare/workerd-linux-64/-/workerd-linux-64-1.20241230.0.tgz 0ms (cache hit)
+326 http cache @cloudflare/vitest-pool-workers@https://registry.npmjs.org/@cloudflare/vitest-pool-workers/-/vitest-pool-workers-0.5.41.tgz 0ms (cache hit)
+327 http cache @cloudflare/kv-asset-handler@https://registry.npmjs.org/@cloudflare/kv-asset-handler/-/kv-asset-handler-0.3.4.tgz 0ms (cache hit)
+328 http cache zod@https://registry.npmjs.org/zod/-/zod-3.22.3.tgz 0ms (cache hit)
+329 http cache ws@https://registry.npmjs.org/ws/-/ws-8.18.0.tgz 0ms (cache hit)
+330 http cache workerd@https://registry.npmjs.org/workerd/-/workerd-1.20250718.0.tgz 0ms (cache hit)
+331 http cache miniflare@https://registry.npmjs.org/miniflare/-/miniflare-3.20250718.3.tgz 0ms (cache hit)
+332 http cache acorn-walk@https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.3.2.tgz 0ms (cache hit)
+333 http cache acorn@https://registry.npmjs.org/acorn/-/acorn-8.14.0.tgz 0ms (cache hit)
+334 http cache @cloudflare/workerd-linux-64@https://registry.npmjs.org/@cloudflare/workerd-linux-64/-/workerd-linux-64-1.20250718.0.tgz 0ms (cache hit)
+335 http cache @cloudflare/unenv-preset@https://registry.npmjs.org/@cloudflare/unenv-preset/-/unenv-preset-2.0.2.tgz 0ms (cache hit)
+336 http cache esbuild@https://registry.npmjs.org/esbuild/-/esbuild-0.21.5.tgz 0ms (cache hit)
+337 http cache @esbuild/linux-x64@https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.21.5.tgz 0ms (cache hit)
+338 http cache pathe@https://registry.npmjs.org/pathe/-/pathe-2.0.3.tgz 0ms (cache hit)
+339 http cache estree-walker@https://registry.npmjs.org/estree-walker/-/estree-walker-0.6.1.tgz 0ms (cache hit)
+340 http cache magic-string@https://registry.npmjs.org/magic-string/-/magic-string-0.25.9.tgz 0ms (cache hit)
+341 http cache estree-walker@https://registry.npmjs.org/estree-walker/-/estree-walker-0.6.1.tgz 0ms (cache hit)
+342 http cache @types/estree@https://registry.npmjs.org/@types/estree/-/estree-1.0.8.tgz 0ms (cache hit)
+343 http cache pathe@https://registry.npmjs.org/pathe/-/pathe-2.0.3.tgz 0ms (cache hit)
+344 http cache pathe@https://registry.npmjs.org/pathe/-/pathe-2.0.3.tgz 0ms (cache hit)
+345 http cache wrangler@https://registry.npmjs.org/wrangler/-/wrangler-3.100.0.tgz 0ms (cache hit)
+346 http cache unenv@https://registry.npmjs.org/unenv-nightly/-/unenv-nightly-2.0.0-20241218-183400-5d6aec3.tgz 0ms (cache hit)
+347 http cache ohash@https://registry.npmjs.org/ohash/-/ohash-1.1.6.tgz 0ms (cache hit)
+348 silly tarball no local data for zod@https://registry.npmjs.org/zod/-/zod-3.25.76.tgz. Extracting by manifest.
+349 silly tarball no local data for youch@https://registry.npmjs.org/youch/-/youch-3.3.4.tgz. Extracting by manifest.
+350 silly tarball no local data for xxhash-wasm@https://registry.npmjs.org/xxhash-wasm/-/xxhash-wasm-1.1.0.tgz. Extracting by manifest.
+351 silly tarball no local data for wrangler@https://registry.npmjs.org/wrangler/-/wrangler-3.114.17.tgz. Extracting by manifest.
+352 silly tarball no local data for workerd@https://registry.npmjs.org/workerd/-/workerd-1.20241230.0.tgz. Extracting by manifest.
+353 silly tarball no local data for ws@https://registry.npmjs.org/ws/-/ws-8.21.0.tgz. Extracting by manifest.
+354 silly tarball no local data for why-is-node-running@https://registry.npmjs.org/why-is-node-running/-/why-is-node-running-2.3.0.tgz. Extracting by manifest.
+355 silly tarball no local data for vitest@https://registry.npmjs.org/vitest/-/vitest-2.1.9.tgz. Extracting by manifest.
+356 silly tarball no local data for vite-node@https://registry.npmjs.org/vite-node/-/vite-node-2.1.9.tgz. Extracting by manifest.
+357 silly tarball no local data for vite@https://registry.npmjs.org/vite/-/vite-5.4.21.tgz. Extracting by manifest.
+358 silly tarball no local data for unenv@https://registry.npmjs.org/unenv/-/unenv-2.0.0-rc.14.tgz. Extracting by manifest.
+359 silly tarball no local data for undici@https://registry.npmjs.org/undici/-/undici-5.29.0.tgz. Extracting by manifest.
+360 silly tarball no local data for undici-types@https://registry.npmjs.org/undici-types/-/undici-types-7.24.6.tgz. Extracting by manifest.
+361 silly tarball no local data for ufo@https://registry.npmjs.org/ufo/-/ufo-1.6.4.tgz. Extracting by manifest.
+362 silly tarball no local data for typescript@https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz. Extracting by manifest.
+363 silly tarball no local data for tslib@https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz. Extracting by manifest.
+364 silly tarball no local data for tinyspy@https://registry.npmjs.org/tinyspy/-/tinyspy-3.0.2.tgz. Extracting by manifest.
+365 silly tarball no local data for tinyrainbow@https://registry.npmjs.org/tinyrainbow/-/tinyrainbow-1.2.0.tgz. Extracting by manifest.
+366 silly tarball no local data for tinypool@https://registry.npmjs.org/tinypool/-/tinypool-1.1.1.tgz. Extracting by manifest.
+367 silly tarball no local data for tinyexec@https://registry.npmjs.org/tinyexec/-/tinyexec-0.3.2.tgz. Extracting by manifest.
+368 silly tarball no local data for tinybench@https://registry.npmjs.org/tinybench/-/tinybench-2.9.0.tgz. Extracting by manifest.
+369 silly tarball no local data for supports-preserve-symlinks-flag@https://registry.npmjs.org/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz. Extracting by manifest.
+370 silly tarball no local data for stoppable@https://registry.npmjs.org/stoppable/-/stoppable-1.1.0.tgz. Extracting by manifest.
+371 silly tarball no local data for std-env@https://registry.npmjs.org/std-env/-/std-env-3.10.0.tgz. Extracting by manifest.
+372 silly tarball no local data for stacktracey@https://registry.npmjs.org/stacktracey/-/stacktracey-2.2.0.tgz. Extracting by manifest.
+373 silly tarball no local data for stackback@https://registry.npmjs.org/stackback/-/stackback-0.0.2.tgz. Extracting by manifest.
+374 silly tarball no local data for sourcemap-codec@https://registry.npmjs.org/sourcemap-codec/-/sourcemap-codec-1.4.8.tgz. Extracting by manifest.
+375 silly tarball no local data for source-map-js@https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz. Extracting by manifest.
+376 silly tarball no local data for source-map@https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz. Extracting by manifest.
+377 silly tarball no local data for simple-swizzle@https://registry.npmjs.org/simple-swizzle/-/simple-swizzle-0.2.4.tgz. Extracting by manifest.
+378 silly tarball no local data for siginfo@https://registry.npmjs.org/siginfo/-/siginfo-2.0.0.tgz. Extracting by manifest.
+379 silly tarball no local data for sharp@https://registry.npmjs.org/sharp/-/sharp-0.33.5.tgz. Extracting by manifest.
+380 silly tarball no local data for semver@https://registry.npmjs.org/semver/-/semver-7.8.1.tgz. Extracting by manifest.
+381 silly tarball no local data for selfsigned@https://registry.npmjs.org/selfsigned/-/selfsigned-2.4.1.tgz. Extracting by manifest.
+382 silly tarball no local data for rollup-pluginutils@https://registry.npmjs.org/rollup-pluginutils/-/rollup-pluginutils-2.8.2.tgz. Extracting by manifest.
+383 silly tarball no local data for rollup-plugin-node-polyfills@https://registry.npmjs.org/rollup-plugin-node-polyfills/-/rollup-plugin-node-polyfills-0.2.1.tgz. Extracting by manifest.
+384 silly tarball no local data for rollup-plugin-inject@https://registry.npmjs.org/rollup-plugin-inject/-/rollup-plugin-inject-3.0.2.tgz. Extracting by manifest.
+385 silly tarball no local data for rollup@https://registry.npmjs.org/rollup/-/rollup-4.60.4.tgz. Extracting by manifest.
+386 silly tarball no local data for resolve@https://registry.npmjs.org/resolve/-/resolve-1.22.12.tgz. Extracting by manifest.
+387 silly tarball no local data for readdirp@https://registry.npmjs.org/readdirp/-/readdirp-4.1.2.tgz. Extracting by manifest.
+388 silly tarball no local data for printable-characters@https://registry.npmjs.org/printable-characters/-/printable-characters-1.0.42.tgz. Extracting by manifest.
+389 silly tarball no local data for postcss@https://registry.npmjs.org/postcss/-/postcss-8.5.15.tgz. Extracting by manifest.
+390 silly tarball no local data for pkg-types@https://registry.npmjs.org/pkg-types/-/pkg-types-1.3.1.tgz. Extracting by manifest.
+391 silly tarball no local data for picocolors@https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz. Extracting by manifest.
+392 silly tarball no local data for pathval@https://registry.npmjs.org/pathval/-/pathval-2.0.1.tgz. Extracting by manifest.
+393 silly tarball no local data for pathe@https://registry.npmjs.org/pathe/-/pathe-1.1.2.tgz. Extracting by manifest.
+394 silly tarball no local data for path-to-regexp@https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-6.3.0.tgz. Extracting by manifest.
+395 silly tarball no local data for path-parse@https://registry.npmjs.org/path-parse/-/path-parse-1.0.7.tgz. Extracting by manifest.
+396 silly tarball no local data for ohash@https://registry.npmjs.org/ohash/-/ohash-2.0.11.tgz. Extracting by manifest.
+397 silly tarball no local data for node-forge@https://registry.npmjs.org/node-forge/-/node-forge-1.4.0.tgz. Extracting by manifest.
+398 silly tarball no local data for nanoid@https://registry.npmjs.org/nanoid/-/nanoid-3.3.12.tgz. Extracting by manifest.
+399 silly tarball no local data for mustache@https://registry.npmjs.org/mustache/-/mustache-4.2.0.tgz. Extracting by manifest.
+400 silly tarball no local data for ms@https://registry.npmjs.org/ms/-/ms-2.1.3.tgz. Extracting by manifest.
+401 silly tarball no local data for mlly@https://registry.npmjs.org/mlly/-/mlly-1.8.2.tgz. Extracting by manifest.
+402 silly tarball no local data for miniflare@https://registry.npmjs.org/miniflare/-/miniflare-3.20241230.0.tgz. Extracting by manifest.
+403 silly tarball no local data for mime@https://registry.npmjs.org/mime/-/mime-3.0.0.tgz. Extracting by manifest.
+404 silly tarball no local data for magic-string@https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz. Extracting by manifest.
+405 silly tarball no local data for loupe@https://registry.npmjs.org/loupe/-/loupe-3.2.1.tgz. Extracting by manifest.
+406 silly tarball no local data for itty-time@https://registry.npmjs.org/itty-time/-/itty-time-1.0.6.tgz. Extracting by manifest.
+407 silly tarball no local data for is-core-module@https://registry.npmjs.org/is-core-module/-/is-core-module-2.16.2.tgz. Extracting by manifest.
+408 silly tarball no local data for is-arrayish@https://registry.npmjs.org/is-arrayish/-/is-arrayish-0.3.4.tgz. Extracting by manifest.
+409 silly tarball no local data for hono@https://registry.npmjs.org/hono/-/hono-4.12.22.tgz. Extracting by manifest.
+410 silly tarball no local data for hasown@https://registry.npmjs.org/hasown/-/hasown-2.0.3.tgz. Extracting by manifest.
+411 silly tarball no local data for glob-to-regexp@https://registry.npmjs.org/glob-to-regexp/-/glob-to-regexp-0.4.1.tgz. Extracting by manifest.
+412 silly tarball no local data for get-source@https://registry.npmjs.org/get-source/-/get-source-2.0.12.tgz. Extracting by manifest.
+413 silly tarball no local data for function-bind@https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz. Extracting by manifest.
+414 silly tarball no local data for exsolve@https://registry.npmjs.org/exsolve/-/exsolve-1.0.8.tgz. Extracting by manifest.
+415 silly tarball no local data for expect-type@https://registry.npmjs.org/expect-type/-/expect-type-1.3.0.tgz. Extracting by manifest.
+416 silly tarball no local data for estree-walker@https://registry.npmjs.org/estree-walker/-/estree-walker-3.0.3.tgz. Extracting by manifest.
+417 silly tarball no local data for exit-hook@https://registry.npmjs.org/exit-hook/-/exit-hook-2.2.1.tgz. Extracting by manifest.
+418 silly tarball no local data for escape-string-regexp@https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz. Extracting by manifest.
+419 silly tarball no local data for esbuild@https://registry.npmjs.org/esbuild/-/esbuild-0.17.19.tgz. Extracting by manifest.
+420 silly tarball no local data for es-module-lexer@https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-1.7.0.tgz. Extracting by manifest.
+421 silly tarball no local data for es-errors@https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz. Extracting by manifest.
+422 silly tarball no local data for devalue@https://registry.npmjs.org/devalue/-/devalue-4.3.3.tgz. Extracting by manifest.
+423 silly tarball no local data for detect-libc@https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz. Extracting by manifest.
+424 silly tarball no local data for defu@https://registry.npmjs.org/defu/-/defu-6.1.7.tgz. Extracting by manifest.
+425 silly tarball no local data for deep-eql@https://registry.npmjs.org/deep-eql/-/deep-eql-5.0.2.tgz. Extracting by manifest.
+426 silly tarball no local data for debug@https://registry.npmjs.org/debug/-/debug-4.4.3.tgz. Extracting by manifest.
+427 silly tarball no local data for date-fns@https://registry.npmjs.org/date-fns/-/date-fns-4.3.0.tgz. Extracting by manifest.
+428 silly tarball no local data for data-uri-to-buffer@https://registry.npmjs.org/data-uri-to-buffer/-/data-uri-to-buffer-2.0.2.tgz. Extracting by manifest.
+429 silly tarball no local data for cookie@https://registry.npmjs.org/cookie/-/cookie-0.7.2.tgz. Extracting by manifest.
+430 silly tarball no local data for confbox@https://registry.npmjs.org/confbox/-/confbox-0.1.8.tgz. Extracting by manifest.
+431 silly tarball no local data for color-string@https://registry.npmjs.org/color-string/-/color-string-1.9.1.tgz. Extracting by manifest.
+432 silly tarball no local data for color-name@https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz. Extracting by manifest.
+433 silly tarball no local data for color-convert@https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz. Extracting by manifest.
+434 silly tarball no local data for color@https://registry.npmjs.org/color/-/color-4.2.3.tgz. Extracting by manifest.
+435 silly tarball no local data for cjs-module-lexer@https://registry.npmjs.org/cjs-module-lexer/-/cjs-module-lexer-1.4.3.tgz. Extracting by manifest.
+436 silly tarball no local data for chokidar@https://registry.npmjs.org/chokidar/-/chokidar-4.0.3.tgz. Extracting by manifest.
+437 silly tarball no local data for check-error@https://registry.npmjs.org/check-error/-/check-error-2.1.3.tgz. Extracting by manifest.
+438 silly tarball no local data for chai@https://registry.npmjs.org/chai/-/chai-5.3.3.tgz. Extracting by manifest.
+439 silly tarball no local data for capnp-ts@https://registry.npmjs.org/capnp-ts/-/capnp-ts-0.7.0.tgz. Extracting by manifest.
+440 silly tarball no local data for cac@https://registry.npmjs.org/cac/-/cac-6.7.14.tgz. Extracting by manifest.
+441 silly tarball no local data for blake3-wasm@https://registry.npmjs.org/blake3-wasm/-/blake3-wasm-2.1.5.tgz. Extracting by manifest.
+442 silly tarball no local data for birpc@https://registry.npmjs.org/birpc/-/birpc-0.2.14.tgz. Extracting by manifest.
+443 silly tarball no local data for assertion-error@https://registry.npmjs.org/assertion-error/-/assertion-error-2.0.1.tgz. Extracting by manifest.
+444 silly tarball no local data for as-table@https://registry.npmjs.org/as-table/-/as-table-1.0.55.tgz. Extracting by manifest.
+445 silly tarball no local data for acorn-walk@https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.3.5.tgz. Extracting by manifest.
+446 silly tarball no local data for acorn@https://registry.npmjs.org/acorn/-/acorn-8.16.0.tgz. Extracting by manifest.
+447 silly tarball no local data for @vitest/spy@https://registry.npmjs.org/@vitest/spy/-/spy-2.1.9.tgz. Extracting by manifest.
+448 silly tarball no local data for @vitest/utils@https://registry.npmjs.org/@vitest/utils/-/utils-2.1.9.tgz. Extracting by manifest.
+449 silly tarball no local data for @vitest/snapshot@https://registry.npmjs.org/@vitest/snapshot/-/snapshot-2.1.9.tgz. Extracting by manifest.
+450 silly tarball no local data for @vitest/runner@https://registry.npmjs.org/@vitest/runner/-/runner-2.1.9.tgz. Extracting by manifest.
+451 silly tarball no local data for @vitest/pretty-format@https://registry.npmjs.org/@vitest/pretty-format/-/pretty-format-2.1.9.tgz. Extracting by manifest.
+452 silly tarball no local data for @vitest/mocker@https://registry.npmjs.org/@vitest/mocker/-/mocker-2.1.9.tgz. Extracting by manifest.
+453 silly tarball no local data for @vitest/expect@https://registry.npmjs.org/@vitest/expect/-/expect-2.1.9.tgz. Extracting by manifest.
+454 silly tarball no local data for @types/node-forge@https://registry.npmjs.org/@types/node-forge/-/node-forge-1.3.14.tgz. Extracting by manifest.
+455 silly tarball no local data for @types/node@https://registry.npmjs.org/@types/node/-/node-25.9.1.tgz. Extracting by manifest.
+456 silly tarball no local data for @types/estree@https://registry.npmjs.org/@types/estree/-/estree-1.0.9.tgz. Extracting by manifest.
+457 silly tarball no local data for @rollup/rollup-linux-x64-gnu@https://registry.npmjs.org/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.60.4.tgz. Extracting by manifest.
+458 silly tarball no local data for @jridgewell/trace-mapping@https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.9.tgz. Extracting by manifest.
+459 silly tarball no local data for @jridgewell/sourcemap-codec@https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz. Extracting by manifest.
+460 silly tarball no local data for @jridgewell/resolve-uri@https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz. Extracting by manifest.
+461 silly tarball no local data for @img/sharp-linux-x64@https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.33.5.tgz. Extracting by manifest.
+462 silly tarball no local data for @img/sharp-libvips-linux-x64@https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.0.4.tgz. Extracting by manifest.
+463 silly tarball no local data for @fastify/busboy@https://registry.npmjs.org/@fastify/busboy/-/busboy-2.1.1.tgz. Extracting by manifest.
+464 silly tarball no local data for @esbuild/linux-x64@https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.17.19.tgz. Extracting by manifest.
+465 silly tarball no local data for @esbuild-plugins/node-modules-polyfill@https://registry.npmjs.org/@esbuild-plugins/node-modules-polyfill/-/node-modules-polyfill-0.2.2.tgz. Extracting by manifest.
+466 silly tarball no local data for @esbuild-plugins/node-globals-polyfill@https://registry.npmjs.org/@esbuild-plugins/node-globals-polyfill/-/node-globals-polyfill-0.2.3.tgz. Extracting by manifest.
+467 silly tarball no local data for @emnapi/runtime@https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.10.0.tgz. Extracting by manifest.
+468 silly tarball no local data for @cspotcode/source-map-support@https://registry.npmjs.org/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz. Extracting by manifest.
+469 silly tarball no local data for @cloudflare/workers-types@https://registry.npmjs.org/@cloudflare/workers-types/-/workers-types-4.20260524.1.tgz. Extracting by manifest.
+470 silly tarball no local data for @cloudflare/workerd-linux-64@https://registry.npmjs.org/@cloudflare/workerd-linux-64/-/workerd-linux-64-1.20241230.0.tgz. Extracting by manifest.
+471 silly tarball no local data for @cloudflare/vitest-pool-workers@https://registry.npmjs.org/@cloudflare/vitest-pool-workers/-/vitest-pool-workers-0.5.41.tgz. Extracting by manifest.
+472 silly tarball no local data for @cloudflare/kv-asset-handler@https://registry.npmjs.org/@cloudflare/kv-asset-handler/-/kv-asset-handler-0.3.4.tgz. Extracting by manifest.
+473 silly tarball no local data for zod@https://registry.npmjs.org/zod/-/zod-3.22.3.tgz. Extracting by manifest.
+474 silly tarball no local data for ws@https://registry.npmjs.org/ws/-/ws-8.18.0.tgz. Extracting by manifest.
+475 silly tarball no local data for workerd@https://registry.npmjs.org/workerd/-/workerd-1.20250718.0.tgz. Extracting by manifest.
+476 silly tarball no local data for miniflare@https://registry.npmjs.org/miniflare/-/miniflare-3.20250718.3.tgz. Extracting by manifest.
+477 silly tarball no local data for acorn-walk@https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.3.2.tgz. Extracting by manifest.
+478 silly tarball no local data for acorn@https://registry.npmjs.org/acorn/-/acorn-8.14.0.tgz. Extracting by manifest.
+479 silly tarball no local data for @cloudflare/workerd-linux-64@https://registry.npmjs.org/@cloudflare/workerd-linux-64/-/workerd-linux-64-1.20250718.0.tgz. Extracting by manifest.
+480 silly tarball no local data for @cloudflare/unenv-preset@https://registry.npmjs.org/@cloudflare/unenv-preset/-/unenv-preset-2.0.2.tgz. Extracting by manifest.
+481 silly tarball no local data for esbuild@https://registry.npmjs.org/esbuild/-/esbuild-0.21.5.tgz. Extracting by manifest.
+482 silly tarball no local data for @esbuild/linux-x64@https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.21.5.tgz. Extracting by manifest.
+483 silly tarball no local data for pathe@https://registry.npmjs.org/pathe/-/pathe-2.0.3.tgz. Extracting by manifest.
+484 silly tarball no local data for estree-walker@https://registry.npmjs.org/estree-walker/-/estree-walker-0.6.1.tgz. Extracting by manifest.
+485 silly tarball no local data for magic-string@https://registry.npmjs.org/magic-string/-/magic-string-0.25.9.tgz. Extracting by manifest.
+486 silly tarball no local data for estree-walker@https://registry.npmjs.org/estree-walker/-/estree-walker-0.6.1.tgz. Extracting by manifest.
+487 silly tarball no local data for @types/estree@https://registry.npmjs.org/@types/estree/-/estree-1.0.8.tgz. Extracting by manifest.
+488 silly tarball no local data for pathe@https://registry.npmjs.org/pathe/-/pathe-2.0.3.tgz. Extracting by manifest.
+489 silly tarball no local data for pathe@https://registry.npmjs.org/pathe/-/pathe-2.0.3.tgz. Extracting by manifest.
+490 silly tarball no local data for wrangler@https://registry.npmjs.org/wrangler/-/wrangler-3.100.0.tgz. Extracting by manifest.
+491 silly tarball no local data for unenv@https://registry.npmjs.org/unenv-nightly/-/unenv-nightly-2.0.0-20241218-183400-5d6aec3.tgz. Extracting by manifest.
+492 silly tarball no local data for ohash@https://registry.npmjs.org/ohash/-/ohash-1.1.6.tgz. Extracting by manifest.
+493 http fetch GET https://registry.npmjs.org/zod/-/zod-3.25.76.tgz attempt 1 failed with EAI_AGAIN
+494 http fetch GET https://registry.npmjs.org/youch/-/youch-3.3.4.tgz attempt 1 failed with EAI_AGAIN
+495 http fetch GET https://registry.npmjs.org/xxhash-wasm/-/xxhash-wasm-1.1.0.tgz attempt 1 failed with EAI_AGAIN
+496 http fetch GET https://registry.npmjs.org/wrangler/-/wrangler-3.114.17.tgz attempt 1 failed with EAI_AGAIN
+497 http fetch GET https://registry.npmjs.org/workerd/-/workerd-1.20241230.0.tgz attempt 1 failed with EAI_AGAIN
+498 http fetch GET https://registry.npmjs.org/why-is-node-running/-/why-is-node-running-2.3.0.tgz attempt 1 failed with EAI_AGAIN
+499 http fetch GET https://registry.npmjs.org/ws/-/ws-8.21.0.tgz attempt 1 failed with EAI_AGAIN
+500 http fetch GET https://registry.npmjs.org/vitest/-/vitest-2.1.9.tgz attempt 1 failed with EAI_AGAIN
+501 http fetch GET https://registry.npmjs.org/vite-node/-/vite-node-2.1.9.tgz attempt 1 failed with EAI_AGAIN
+502 http fetch GET https://registry.npmjs.org/vite/-/vite-5.4.21.tgz attempt 1 failed with EAI_AGAIN
+503 http fetch GET https://registry.npmjs.org/unenv/-/unenv-2.0.0-rc.14.tgz attempt 1 failed with EAI_AGAIN
+504 http fetch GET https://registry.npmjs.org/undici/-/undici-5.29.0.tgz attempt 1 failed with EAI_AGAIN
+505 http fetch GET https://registry.npmjs.org/undici-types/-/undici-types-7.24.6.tgz attempt 1 failed with EAI_AGAIN
+506 http fetch GET https://registry.npmjs.org/ufo/-/ufo-1.6.4.tgz attempt 1 failed with EAI_AGAIN
+507 http fetch GET https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz attempt 1 failed with EAI_AGAIN
+508 verbose cwd /mnt/data/work_v3333
+509 verbose os Linux 6.18.44
+510 verbose node v22.16.0
+511 verbose npm  v10.9.2
+512 error Exit handler never called!
+513 error This is an error with npm itself. Please report this error at:
+514 error   <https://github.com/npm/cli/issues>
+515 verbose exit 1
+516 verbose code 1
+517 error A complete log of this run can be found in: /home/oai/.npm/_logs/2026-10-09T12_44_02_482Z-debug-0.log

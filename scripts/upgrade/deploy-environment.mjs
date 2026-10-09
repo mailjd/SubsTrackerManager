@@ -23,14 +23,15 @@ export function deploymentRouteHelp(host = detectDeploymentHost()) {
   const where = host === 'cloudflare-workers-builds' ? 'Cloudflare Workers Builds / Git 直连'
     : host === 'cloudflare-pages' ? 'Cloudflare Pages（本项目是 Worker）' : '未受保护的 Wrangler 部署入口';
   return [
-    `当前入口：${where}。禁止直接 wrangler deploy 绕过备份。`,
+    `当前入口：${where}。禁止直接 wrangler deploy 绕过发布核验。`,
     `v${VERSION} 支持保留 Cloudflare Git 直连；不必 Disconnect。`,
     '必须在原 Worker → Settings → Build(s) → Deploy command 设置 npm run deploy:cloudflare；不是 Build command。Build command 可留空或用 npm run build。',
     'STOP：若日志仍显示 Executing user deploy command: npx wrangler deploy，控制台设置尚未生效；不要反复 Retry 同一错误命令。',
     'ZIP/package.json 无法自动覆盖控制台保存的 Deploy command；保存设置后才执行新 Build。',
-    '在 Builds 的变量/机密配置原 CLOUDFLARE_ACCOUNT_ID、CLOUDFLARE_API_TOKEN、SUBSTRACKER_BACKUP_PASSWORD（至少16字符）、SUBSTRACKER_WORKER_NAME。',
-    '已手動解綁 D1/KV：自動發布不存取資料的 /init 等待頁，無綁定階段不要求備份密碼。綁回原資源後由網頁執行受保護 init。',
-    '仍有原綁定時，沿用直接升級：核驗原綁定與相容結構、保存加密備份並發布。KV-only 無需新增 D1。',
+    '在 Builds 的变量/机密配置原 CLOUDFLARE_ACCOUNT_ID、CLOUDFLARE_API_TOKEN、SUBSTRACKER_WORKER_NAME；舊備份／恢復流程另需 SUBSTRACKER_BACKUP_PASSWORD（至少16字符）。',
+    '已手動解綁 D1/KV：發布不存取資料的 /init 等待頁，無綁定階段不要求備份密碼。綁回原資源後由網頁執行受保護 init。',
+    '預設固定 deferred-web-init：若仍有 D1 或 KV，列出目標與殘留綁定後停止，不自動轉 direct/split，也不解除綁定。',
+    'SUBSTRACKER_WORKER_URL 是可選 Build 變數；缺少網址不阻擋無綁定程式發布。網址核驗與資料 init 分開記錄。',
     '无需断开 Git、无需等待16分钟或手动重跑。原两阶段迁移仅由 deploy:split 显式选择，不是默认部署。',
     '無綁定流程的 ST_CODE_DEPLOYED_AWAITING_BINDINGS 代表程式發布完成；資料升級以網頁 ST_WEB_INIT_COMPLETE 為準。其他既有流程以 ST_UPGRADE_COMPLETE / maintenance:false 為準。',
     '已有未完成的旧迁移仍用原恢复流程；直接升级不伪造其完成标记。Cloudflare Pages 仍不支持。',
@@ -62,7 +63,7 @@ export function validateDeploymentSecrets(env = process.env, {requireBackup = tr
   if (missing.length) fail('ST_DEPLOY_CONFIG', '缺少或格式不符：' + missing.join('、') + '。配置位置：Cloudflare 的 Settings → Builds → Build variables and secrets，或 GitHub Actions Secrets；运行时 Secrets 不等于构建 Secrets。值不会写入日志。');
 }
 
-export function readWranglerConfig(root, env = process.env) {
+export function readWranglerConfig(root, env = process.env, {validateURL = true} = {}) {
   const python = env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
   const file = path.join(root, 'wrangler.toml');
   if (!fs.existsSync(file)) fail('ST_DEPLOY_ROOT', '项目根目录缺少 wrangler.toml；应解压项目内容到仓库根目录，而不是只上传 ZIP。');
@@ -87,7 +88,7 @@ export function readWranglerConfig(root, env = process.env) {
   if (env.SUBSTRACKER_WORKER_NAME) config.name = env.SUBSTRACKER_WORKER_NAME;
   if (!/^[a-zA-Z0-9_-]+$/.test(config.name || '')) fail('ST_DEPLOY_WORKER', '缺少有效的原 Worker 名称，请设置 SUBSTRACKER_WORKER_NAME。');
   if (config.account_id && config.account_id !== env.CLOUDFLARE_ACCOUNT_ID) fail('ST_DEPLOY_ACCOUNT', 'wrangler.toml 的 account_id 与 GitHub CLOUDFLARE_ACCOUNT_ID 不一致；停止，不能改绑数据。');
-  if (env.SUBSTRACKER_WORKER_URL) {
+  if (validateURL && env.SUBSTRACKER_WORKER_URL) {
     let url;
     try { url = new URL(env.SUBSTRACKER_WORKER_URL); } catch { fail('ST_DEPLOY_URL', 'SUBSTRACKER_WORKER_URL 必须是原网站的 HTTPS 源地址。'); }
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || url.pathname !== '/') {

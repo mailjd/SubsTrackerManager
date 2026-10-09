@@ -1,0 +1,36 @@
+{
+  "version": "3.3.33",
+  "algorithm": "sha256",
+  "sourceBase": "3.3.32",
+  "unchangedSourceExceptVersion": true,
+  "unchangedMigrationsAndPublic": true,
+  "wranglerTomlExcludedFromPatch": true,
+  "reconstruction": {
+    "3.3.29": {
+      "baseline": "SubsTracker-GitHub-Cloudflare-Ready_v3.3.29_KVOnlySafeDeployFix_20261008.zip",
+      "mergeAddsOrReplacesOnly": true,
+      "deletionsRequired": [],
+      "matchesFullPackage": true
+    },
+    "3.3.30": {
+      "baseline": "SubsTracker-GitHub-Cloudflare-Ready_v3.3.30_DeploymentBindingFix_20261009.zip",
+      "mergeAddsOrReplacesOnly": true,
+      "deletionsRequired": [],
+      "matchesFullPackage": true
+    },
+    "3.3.31": {
+      "baseline": "SubsTracker-GitHub-Cloudflare-Ready_v3.3.31_DirectUpgrade_20261009.zip",
+      "mergeAddsOrReplacesOnly": true,
+      "deletionsRequired": [],
+      "matchesFullPackage": true
+    },
+    "3.3.32": {
+      "baseline": "SubsTracker-GitHub-Cloudflare-Ready_v3.3.32_UnboundWebInit_20261009.zip",
+      "mergeAddsOrReplacesOnly": true,
+      "deletionsRequired": [],
+      "matchesFullPackage": true
+    }
+  },
+  "validation": "Archive integrity and byte-for-byte overlay reconstruction verified by packaging script; no Cloudflare access.",
+  "noNodeModulesOrGeneratedState": true
+}

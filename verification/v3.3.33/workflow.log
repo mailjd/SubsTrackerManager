@@ -1,0 +1,77 @@
+
+> subscription-manager@3.3.33 test:workflow
+> node scripts/run-python-test.mjs tests/regression/workflow3319.py .
+
+[runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+PASS D1+KV: legacy snapshots seeded once; non-memberships excluded from current
+PASS D1+KV: membership creates active row and independent historical receipt
+PASS D1+KV: reset defaults auto-renew off
+PASS D1+KV: four reminder presets retained with 7/3 unchecked
+PASS D1+KV: same name + account updates same ID; prior history immutable
+PASS D1+KV: replaying older operation never reverts newer active row
+PASS D1+KV: changed payload with old operation ID rejected
+PASS D1+KV: one account allows multiple different memberships
+PASS D1+KV: non-membership creates history only, leaves current unchanged
+PASS D1+KV: mixed import routes membership/current and recharge/history
+PASS D1+KV: retrying same imported rows adds no duplicate history
+PASS D1+KV: reminder-generated UUID does not change operation fingerprint
+PASS D1+KV: table save persists without rewriting/adding historical spending
+PASS D1+KV: history endpoint is read-only
+PASS D1+KV: history date filters use configured calendar timezone
+PASS D1+KV: current, cumulative history and all template scopes survive process restart
+PASS D1+KV: foundation rename updates original menu API, does not create a second database
+PASS D1+KV: independent company/personal serial counters
+PASS D1+KV: duplicate account cannot be silently overwritten by Create
+PASS D1+KV: invalid ownership rejected
+PASS D1+KV: account type comes from foundation plus entire account data
+PASS D1+KV: server filters apply before pagination with correct count
+PASS D1+KV: safe options and Admin response do not expose passwords
+PASS D1+KV: account inline-edit fields persisted and returned including ownership
+PASS D1+KV: account import persists new owner column and account type
+PASS D1+KV: account import rejects invalid ownership without creating account
+PASS D1+KV: concurrent account creation reserves distinct server-side serials
+PASS D1+KV: batch deletes all thirteen eligible accounts
+PASS D1+KV: cycle defaults auto-renew on
+PASS D1+KV: auto renewal catches up multiple cycles and appends each cycle
+PASS D1+KV: second cron does not duplicate renewed periods
+PASS D1+KV: explicit auto-renew off advances cycle without inventing paid history
+PASS D1+KV: backup contains separate ledger, ownership and saved templates
+PASS D1+KV: restoring same backup twice does not duplicate history
+PASS D1+KV: conflicting backup rejected before changing any active data
+PASS D1+KV: malformed history backup rejected before writes
+PASS D1+KV: older backup restored after migration still creates its legacy history
+PASS D1+KV: exact subscription history filter excludes other accounts/names
+PASS D1+KV: dashboard groups cumulative recorded spending by subscription name
+PASS D1+KV: deleting current record leaves financial history intact
+PASS KV-only: legacy snapshots seeded once; non-memberships excluded from current
+PASS KV-only: membership creates active row and independent historical receipt
+PASS KV-only: reset defaults auto-renew off
+PASS KV-only: four reminder presets retained with 7/3 unchecked
+PASS KV-only: same name + account updates same ID; prior history immutable
+PASS KV-only: replaying older operation never reverts newer active row
+PASS KV-only: changed payload with old operation ID rejected
+PASS KV-only: one account allows multiple different memberships
+PASS KV-only: non-membership creates history only, leaves current unchanged
+PASS KV-only: mixed import routes membership/current and recharge/history
+PASS KV-only: retrying same imported rows adds no duplicate history
+PASS KV-only: reminder-generated UUID does not change operation fingerprint
+PASS KV-only: table save persists without rewriting/adding historical spending
+PASS KV-only: history endpoint is read-only
+PASS KV-only: history date filters use configured calendar timezone
+PASS KV-only: current, cumulative history and all template scopes survive process restart
+PASS KV-only: foundation rename updates original menu API, does not create a second database
+PASS KV-only: cycle defaults auto-renew on
+PASS KV-only: auto renewal catches up multiple cycles and appends each cycle
+PASS KV-only: second cron does not duplicate renewed periods
+PASS KV-only: explicit auto-renew off advances cycle without inventing paid history
+PASS KV-only: backup contains separate ledger, ownership and saved templates
+PASS KV-only: restoring same backup twice does not duplicate history
+PASS KV-only: conflicting backup rejected before changing any active data
+PASS KV-only: malformed history backup rejected before writes
+PASS KV-only: older backup restored after migration still creates its legacy history
+PASS KV-only: exact subscription history filter excludes other accounts/names
+PASS KV-only: dashboard groups cumulative recorded spending by subscription name
+PASS KV-only: deleting current record leaves financial history intact
+TOTAL 69 PASS 69 FAIL 0
+(node:2144) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

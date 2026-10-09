@@ -1,0 +1,82 @@
+TAP version 13
+# Subtest: policy allows only read-only filtered domain lookup and script listing
+ok 1 - policy allows only read-only filtered domain lookup and script listing
+  ---
+  duration_ms: 2.136685
+  type: 'test'
+  ...
+# Subtest: actual Cloudflare client uses correct filtered GET path and bounded optional discovery
+ok 2 - actual Cloudflare client uses correct filtered GET path and bounded optional discovery
+  ---
+  duration_ms: 23.501735
+  type: 'test'
+  ...
+# Subtest: actual client does not retry optional discovery for a five-hundred response
+ok 3 - actual client does not retry optional discovery for a five-hundred response
+  ---
+  duration_ms: 0.878188
+  type: 'test'
+  ...
+# Subtest: malformed domain API does not create a guessed URL
+ok 4 - malformed domain API does not create a guessed URL
+  ---
+  duration_ms: 0.18167
+  type: 'test'
+  ...
+# Subtest: other service and non-default legacy environment domains are not selected
+ok 5 - other service and non-default legacy environment domains are not selected
+  ---
+  duration_ms: 0.219278
+  type: 'test'
+  ...
+# Subtest: route extraction requires a unique HTTPS-capable root hostname
+ok 6 - route extraction requires a unique HTTPS-capable root hostname
+  ---
+  duration_ms: 0.344105
+  type: 'test'
+  ...
+# Subtest: explicit origin takes precedence without listing other domains
+ok 7 - explicit origin takes precedence without listing other domains
+  ---
+  duration_ms: 0.261448
+  type: 'test'
+  ...
+# Subtest: URL status body is bounded and cannot stand in for deployment evidence
+ok 8 - URL status body is bounded and cannot stand in for deployment evidence
+  ---
+  duration_ms: 3.625785
+  type: 'test'
+  ...
+# Subtest: wrong runtime version, mode, readiness and run ID all fail URL verification
+ok 9 - wrong runtime version, mode, readiness and run ID all fail URL verification
+  ---
+  duration_ms: 3.572232
+  type: 'test'
+  ...
+# Subtest: evidence requires both a changed deployment and version
+ok 10 - evidence requires both a changed deployment and version
+  ---
+  duration_ms: 0.625285
+  type: 'test'
+  ...
+# Subtest: runtime secrets or vars disappearing cannot be waived by a matching marker
+ok 11 - runtime secrets or vars disappearing cannot be waived by a matching marker
+  ---
+  duration_ms: 0.232966
+  type: 'test'
+  ...
+# Subtest: client retry controls cannot accidentally turn a bounded request into an infinite loop
+ok 12 - client retry controls cannot accidentally turn a bounded request into an infinite loop
+  ---
+  duration_ms: 0.36044
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 106.210856

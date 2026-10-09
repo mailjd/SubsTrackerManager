@@ -23,7 +23,8 @@ export function assertD1KVRequest(path, method='GET') {
     /^\/workers\/scripts\/[a-zA-Z0-9_-]+(?:\/(?:settings|schedules|subdomain))?$/.test(path) ||
     /^\/workers\/scripts\/[a-zA-Z0-9_-]+\/deployments$/.test(path) ||
     /^\/workers\/scripts\/[a-zA-Z0-9_-]+\/versions\/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/.test(path) ||
-    path === '/workers/subdomain' ||
+    path === '/workers/subdomain' || path === '/workers/scripts' ||
+    /^\/workers\/domains\?service=[a-zA-Z0-9_-]+$/.test(path) ||
     /^\/storage\/kv\/namespaces\/[a-fA-F0-9]{32}(?:\/keys(?:\?[^#\\\r\n]*)?)?$/.test(path) || kvValue ||
     /^\/d1\/database\/[a-fA-F0-9-]{36}$/.test(path))) ||
     (method === 'PUT' && /^\/storage\/kv\/namespaces\/[a-fA-F0-9]{32}\/bulk$/.test(path)) ||

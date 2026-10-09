@@ -19,8 +19,8 @@ import {VERSION} from '../src/version.js';
 import {DIRECT_MODE,DIRECT_CONFIG,DIRECT_PLAN,directError,inspectDirectBundle,makeDirectConfig,saveDirectBackup,readDirectBackup,writeDirectPlan,assertDirectGuard,privateWrite} from './upgrade/direct-release.mjs';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
-export async function readActiveRelease(cf,worker){
-  const data=(await cf.request('/workers/scripts/'+encodeURIComponent(worker)+'/deployments')).result;
+export async function readActiveRelease(cf,worker,options={}){
+  const data=(await cf.request('/workers/scripts/'+encodeURIComponent(worker)+'/deployments',options)).result;
   const current=data?.deployments?.[0];
   if(!UUID.test(current?.id||'')||current?.versions?.length!==1||current.versions[0].percentage!==100||!UUID.test(current.versions[0].version_id||''))
     throw directError('ST_DIRECT_ACTIVE','无法确认单一现行版本；不会覆盖不明目标或灰度发布。');

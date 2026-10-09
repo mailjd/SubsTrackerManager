@@ -1,0 +1,2751 @@
+TAP version 13
+# (node:8582) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# \# Context regression TypeScript: 5.8.3; declarations below are a minimal diagnostic fixture, not full Workers types
+# Subtest: reproduces missing-props TS2345, patches it, then REAL compiler accepts the fixture
+ok 1 - reproduces missing-props TS2345, patches it, then REAL compiler accepts the fixture
+  ---
+  duration_ms: 1446.000925
+  type: 'test'
+  ...
+# Subtest: preserves every original byte except the property insertion and saves an exact original
+ok 2 - preserves every original byte except the property insertion and saves an exact original
+  ---
+  duration_ms: 107.699645
+  type: 'test'
+  ...
+# Subtest: idempotent on repeat build and restart: no duplicate props, backups or fingerprint drift
+ok 3 - idempotent on repeat build and restart: no duplicate props, backups or fingerprint drift
+  ---
+  duration_ms: 219.147378
+  type: 'test'
+  ...
+# Subtest: forwards original request/env, preserves this-bound methods, and provides empty props
+ok 4 - forwards original request/env, preserves this-bound methods, and provides empty props
+  ---
+  duration_ms: 95.308906
+  type: 'test'
+  ...
+# Subtest: inline third-argument object is repaired
+ok 5 - inline third-argument object is repaired
+  ---
+  duration_ms: 236.997001
+  type: 'test'
+  ...
+# Subtest: bound-method property assignments and CRLF/comments are preserved
+ok 6 - bound-method property assignments and CRLF/comments are preserved
+  ---
+  duration_ms: 91.009086
+  type: 'test'
+  ...
+# Subtest: parenthesized const and quoted property names are handled
+ok 7 - parenthesized const and quoted property names are handled
+  ---
+  duration_ms: 216.097676
+  type: 'test'
+  ...
+# Subtest: same object referenced by two calls is patched just once
+ok 8 - same object referenced by two calls is patched just once
+  ---
+  duration_ms: 357.509167
+  type: 'test'
+  ...
+# Subtest: existing nonempty props are preserved exactly
+ok 9 - existing nonempty props are preserved exactly
+  ---
+  duration_ms: 43.836155
+  type: 'test'
+  ...
+# Subtest: no repair of an unused or unrelated two-method object without compiler error
+ok 10 - no repair of an unused or unrelated two-method object without compiler error
+  ---
+  duration_ms: 38.824217
+  type: 'test'
+  ...
+# Subtest: clean release without the legacy file is a nonmutating no-op
+ok 11 - clean release without the legacy file is a nonmutating no-op
+  ---
+  duration_ms: 1.082457
+  type: 'test'
+  ...
+# Subtest: does not patch a similarly named file outside src/pages-handler.js
+ok 12 - does not patch a similarly named file outside src/pages-handler.js
+  ---
+  duration_ms: 0.965058
+  type: 'test'
+  ...
+# Subtest: refuses mutable declarations instead of guessing assignments
+ok 13 - refuses mutable declarations instead of guessing assignments
+  ---
+  duration_ms: 43.102192
+  type: 'test'
+  ...
+# Subtest: refuses spreads or additional properties instead of rewriting an unknown custom adapter
+ok 14 - refuses spreads or additional properties instead of rewriting an unknown custom adapter
+  ---
+  duration_ms: 43.135481
+  type: 'test'
+  ...
+# Subtest: does not invent required props values: compiler validates candidate before write
+ok 15 - does not invent required props values: compiler validates candidate before write
+  ---
+  duration_ms: 107.329493
+  type: 'test'
+  ...
+# Subtest: syntax failure leaves original file untouched
+ok 16 - syntax failure leaves original file untouched
+  ---
+  duration_ms: 32.893451
+  type: 'test'
+  ...
+# Subtest: unrelated type errors remain errors after the context-only fix
+ok 17 - unrelated type errors remain errors after the context-only fix
+  ---
+  duration_ms: 245.921307
+  type: 'test'
+  ...
+# Subtest: symbolic-link target is refused
+ok 18 - symbolic-link target is refused
+  ---
+  duration_ms: 1.307542
+  type: 'test'
+  ...
+# Subtest: full lint is still exact tsc, prelint and release test are mandatory, jsconfig not weakened
+ok 19 - full lint is still exact tsc, prelint and release test are mandatory, jsconfig not weakened
+  ---
+  duration_ms: 0.436871
+  type: 'test'
+  ...
+# Subtest: real npm prelint repairs a legacy checkout, runs real tsc, and a fresh retry is stable
+ok 20 - real npm prelint repairs a legacy checkout, runs real tsc, and a fresh retry is stable
+  ---
+  duration_ms: 2303.498284
+  type: 'test'
+  ...
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_D1_RECOVERED {"worker":"original","binding":"SUBSCRIPTIONS_DB","source":"active-deployment","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"d1-id-not-visible","probe":"read-only"}
+# [upgrade] ST_BINDING_D1_RECOVERED {"worker":"original","binding":"SUBSCRIPTIONS_DB","source":"active-deployment","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_D1_RECOVERED {"worker":"original","binding":"SUBSCRIPTIONS_DB","source":"active-deployment","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_KV_ONLY_CONFIRMED {"worker":"original","sources":["settings","active-deployment"],"probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"d1-id-not-visible","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# [upgrade] ST_BINDING_FALLBACK {"worker":"original","reason":"no-d1-in-settings","probe":"read-only"}
+# Subtest: complete settings uses the existing fast path and preserves original bindings
+ok 21 - complete settings uses the existing fast path and preserves original bindings
+  ---
+  duration_ms: 25.481066
+  type: 'test'
+  ...
+# Subtest: D1 absent from settings is recovered ONLY from the active 100-percent deployment
+ok 22 - D1 absent from settings is recovered ONLY from the active 100-percent deployment
+  ---
+  duration_ms: 12.235567
+  type: 'test'
+  ...
+# Subtest: D1 row without ID is resolved, not dropped, even for a long-run upgrade
+ok 23 - D1 row without ID is resolved, not dropped, even for a long-run upgrade
+  ---
+  duration_ms: 4.081223
+  type: 'test'
+  ...
+# Subtest: legacy id spelling in the active version remains supported
+ok 24 - legacy id spelling in the active version remains supported
+  ---
+  duration_ms: 2.08048
+  type: 'test'
+  ...
+# Subtest: settings/current version agree on KV-only: preserve null and let the split guard stop
+ok 25 - settings/current version agree on KV-only: preserve null and let the split guard stop
+  ---
+  duration_ms: 1.916421
+  type: 'test'
+  ...
+# Subtest: KV-only long-run path does not acquire a new version-API requirement
+ok 26 - KV-only long-run path does not acquire a new version-API requirement
+  ---
+  duration_ms: 0.601308
+  type: 'test'
+  ...
+# Subtest: missing-ID D1 cannot be silently deployed as KV-only by protectBindings
+ok 27 - missing-ID D1 cannot be silently deployed as KV-only by protectBindings
+  ---
+  duration_ms: 0.775507
+  type: 'test'
+  ...
+# Subtest: unresolved deployed D1 does not become null
+ok 28 - unresolved deployed D1 does not become null
+  ---
+  duration_ms: 4.11945
+  type: 'test'
+  ...
+# Subtest: a D1 row in settings and none in the current version is a conflict
+ok 29 - a D1 row in settings and none in the current version is a conflict
+  ---
+  duration_ms: 2.193848
+  type: 'test'
+  ...
+# Subtest: permission failure is unresolved, not a false KV-only verdict or a write attempt
+ok 30 - permission failure is unresolved, not a false KV-only verdict or a write attempt
+  ---
+  duration_ms: 1.711511
+  type: 'test'
+  ...
+# Subtest: missing binding list stops before any version fallback
+ok 31 - missing binding list stops before any version fallback
+  ---
+  duration_ms: 0.739023
+  type: 'test'
+  ...
+# Subtest: malformed current version response fails closed
+ok 32 - malformed current version response fails closed
+  ---
+  duration_ms: 1.050133
+  type: 'test'
+  ...
+# Subtest: version identity must match the live deployment rather than an arbitrary uploaded version
+ok 33 - version identity must match the live deployment rather than an arbitrary uploaded version
+  ---
+  duration_ms: 0.913785
+  type: 'test'
+  ...
+# Subtest: live deployment changing during the probe stops without writes
+ok 34 - live deployment changing during the probe stops without writes
+  ---
+  duration_ms: 1.129661
+  type: 'test'
+  ...
+# Subtest: settings changing during the probe stops without merging the two results
+ok 35 - settings changing during the probe stops without merging the two results
+  ---
+  duration_ms: 1.41087
+  type: 'test'
+  ...
+# Subtest: gradual deployment is not collapsed into a guessed D1 binding
+ok 36 - gradual deployment is not collapsed into a guessed D1 binding
+  ---
+  duration_ms: 0.735657
+  type: 'test'
+  ...
+# Subtest: cross-source kv mismatch stops instead of merging resources
+ok 37 - cross-source kv mismatch stops instead of merging resources
+  ---
+  duration_ms: 1.384906
+  type: 'test'
+  ...
+# Subtest: cross-source variables mismatch stops instead of merging resources
+ok 38 - cross-source variables mismatch stops instead of merging resources
+  ---
+  duration_ms: 1.146671
+  type: 'test'
+  ...
+# Subtest: cross-source secret-names mismatch stops instead of merging resources
+ok 39 - cross-source secret-names mismatch stops instead of merging resources
+  ---
+  duration_ms: 1.326665
+  type: 'test'
+  ...
+# Subtest: cross-source extra-bindings mismatch stops instead of merging resources
+ok 40 - cross-source extra-bindings mismatch stops instead of merging resources
+  ---
+  duration_ms: 5.775311
+  type: 'test'
+  ...
+# Subtest: duplicate remote names are refused before deciding the storage mode
+ok 41 - duplicate remote names are refused before deciding the storage mode
+  ---
+  duration_ms: 0.509399
+  type: 'test'
+  ...
+# Subtest: UUIDs are validated structurally and case normalized; two inconsistent IDs fail
+ok 42 - UUIDs are validated structurally and case normalized; two inconsistent IDs fail
+  ---
+  duration_ms: 0.300769
+  type: 'test'
+  ...
+# Subtest: identity revalidation catches binding drift after slow release checks
+ok 43 - identity revalidation catches binding drift after slow release checks
+  ---
+  duration_ms: 0.579899
+  type: 'test'
+  ...
+# Subtest: read-only route allowlist admits only scoped deployment and UUID-version GETs
+ok 44 - read-only route allowlist admits only scoped deployment and UUID-version GETs
+  ---
+  duration_ms: 0.735084
+  type: 'test'
+  ...
+# Subtest: named environment without explicit name uses original-env, not the top-level Worker
+ok 45 - named environment without explicit name uses original-env, not the top-level Worker
+  ---
+  duration_ms: 1274.195389
+  type: 'test'
+  ...
+# Subtest: named environment never inherits top-level KV/D1 IDs or variables
+ok 46 - named environment never inherits top-level KV/D1 IDs or variables
+  ---
+  duration_ms: 951.228369
+  type: 'test'
+  ...
+# Subtest: explicit environment name/binding and explicit original Worker override remain intact
+ok 47 - explicit environment name/binding and explicit original Worker override remain intact
+  ---
+  duration_ms: 2667.207781
+  type: 'test'
+  ...
+# Subtest: policy allows only read-only filtered domain lookup and script listing
+ok 48 - policy allows only read-only filtered domain lookup and script listing
+  ---
+  duration_ms: 2.669566
+  type: 'test'
+  ...
+# Subtest: actual Cloudflare client uses correct filtered GET path and bounded optional discovery
+ok 49 - actual Cloudflare client uses correct filtered GET path and bounded optional discovery
+  ---
+  duration_ms: 25.347552
+  type: 'test'
+  ...
+# Subtest: actual client does not retry optional discovery for a five-hundred response
+ok 50 - actual client does not retry optional discovery for a five-hundred response
+  ---
+  duration_ms: 1.188692
+  type: 'test'
+  ...
+# Subtest: malformed domain API does not create a guessed URL
+ok 51 - malformed domain API does not create a guessed URL
+  ---
+  duration_ms: 0.192745
+  type: 'test'
+  ...
+# Subtest: other service and non-default legacy environment domains are not selected
+ok 52 - other service and non-default legacy environment domains are not selected
+  ---
+  duration_ms: 0.529307
+  type: 'test'
+  ...
+# Subtest: route extraction requires a unique HTTPS-capable root hostname
+ok 53 - route extraction requires a unique HTTPS-capable root hostname
+  ---
+  duration_ms: 0.431101
+  type: 'test'
+  ...
+# Subtest: explicit origin takes precedence without listing other domains
+ok 54 - explicit origin takes precedence without listing other domains
+  ---
+  duration_ms: 0.251758
+  type: 'test'
+  ...
+# Subtest: URL status body is bounded and cannot stand in for deployment evidence
+ok 55 - URL status body is bounded and cannot stand in for deployment evidence
+  ---
+  duration_ms: 3.242887
+  type: 'test'
+  ...
+# Subtest: wrong runtime version, mode, readiness and run ID all fail URL verification
+ok 56 - wrong runtime version, mode, readiness and run ID all fail URL verification
+  ---
+  duration_ms: 3.711904
+  type: 'test'
+  ...
+# Subtest: evidence requires both a changed deployment and version
+ok 57 - evidence requires both a changed deployment and version
+  ---
+  duration_ms: 0.539508
+  type: 'test'
+  ...
+# Subtest: runtime secrets or vars disappearing cannot be waived by a matching marker
+ok 58 - runtime secrets or vars disappearing cannot be waived by a matching marker
+  ---
+  duration_ms: 0.219763
+  type: 'test'
+  ...
+# Subtest: client retry controls cannot accidentally turn a bounded request into an infinite loop
+ok 59 - client retry controls cannot accidentally turn a bounded request into an infinite loop
+  ---
+  duration_ms: 0.339658
+  type: 'test'
+  ...
+# (node:8808) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: explicit legacy direct CLI completes KV-only without split wait, lease or business writes
+ok 60 - explicit legacy direct CLI completes KV-only without split wait, lease or business writes
+  ---
+  duration_ms: 2936.751588
+  type: 'test'
+  ...
+# Subtest: explicit legacy direct CLI completes KV+D1 without split wait, lease or business writes
+ok 61 - explicit legacy direct CLI completes KV+D1 without split wait, lease or business writes
+  ---
+  duration_ms: 2595.113987
+  type: 'test'
+  ...
+# Subtest: same commit can be retried as another one-shot release without maintenance checkpoints
+ok 62 - same commit can be retried as another one-shot release without maintenance checkpoints
+  ---
+  duration_ms: 4747.329434
+  type: 'test'
+  ...
+# Subtest: failed required test prevents artifact upload and Worker publication
+ok 63 - failed required test prevents artifact upload and Worker publication
+  ---
+  duration_ms: 1705.368118
+  type: 'test'
+  ...
+# Subtest: wrong local KV binding is rejected before backup or publish
+ok 64 - wrong local KV binding is rejected before backup or publish
+  ---
+  duration_ms: 1719.400963
+  type: 'test'
+  ...
+# Subtest: old schema prevents publishing without modifying original records
+ok 65 - old schema prevents publishing without modifying original records
+  ---
+  duration_ms: 2000.934901
+  type: 'test'
+  ...
+# Subtest: missing credential encryption key never gets silently regenerated
+ok 66 - missing credential encryption key never gets silently regenerated
+  ---
+  duration_ms: 1639.336143
+  type: 'test'
+  ...
+# Subtest: Wrangler failure never logs success and leaves original source/records intact
+ok 67 - Wrangler failure never logs success and leaves original source/records intact
+  ---
+  duration_ms: 2267.810171
+  type: 'test'
+  ...
+# Subtest: read-only direct backup download works for KV-only without any D1 or publish
+ok 68 - read-only direct backup download works for KV-only without any D1 or publish
+  ---
+  duration_ms: 4993.4441
+  type: 'test'
+  ...
+# Subtest: wrong password cannot download existing backup or change original data
+ok 69 - wrong password cannot download existing backup or change original data
+  ---
+  duration_ms: 4175.673001
+  type: 'test'
+  ...
+# Subtest: bare direct environment variable does not bypass real guard
+ok 70 - bare direct environment variable does not bypass real guard
+  ---
+  duration_ms: 97.439144
+  type: 'test'
+  ...
+# Subtest: original binding drift after release checks stops before writes
+ok 71 - original binding drift after release checks stops before writes
+  ---
+  duration_ms: 1802.05562
+  type: 'test'
+  ...
+# Subtest: verified direct plan still refuses config, source, backup and account tampering
+ok 72 - verified direct plan still refuses config, source, backup and account tampering
+  ---
+  duration_ms: 2586.282496
+  type: 'test'
+  ...
+# Subtest: an already-active old maintenance run is not overwritten by a direct release
+ok 73 - an already-active old maintenance run is not overwritten by a direct release
+  ---
+  duration_ms: 2300.561748
+  type: 'test'
+  ...
+# Subtest: corrupted encrypted remote snapshot prevents Worker publication
+ok 74 - corrupted encrypted remote snapshot prevents Worker publication
+  ---
+  duration_ms: 1900.443754
+  type: 'test'
+  ...
+# (node:8843) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: direct runtime opens existing KV-only without completion keys or storage writes
+ok 75 - direct runtime opens existing KV-only without completion keys or storage writes
+  ---
+  duration_ms: 21.160294
+  type: 'test'
+  ...
+# Subtest: direct runtime opens existing KV+D1 without completion keys or storage writes
+ok 76 - direct runtime opens existing KV+D1 without completion keys or storage writes
+  ---
+  duration_ms: 5.488362
+  type: 'test'
+  ...
+# Subtest: direct runtime never treats missing original credentials as a new install
+ok 77 - direct runtime never treats missing original credentials as a new install
+  ---
+  duration_ms: 0.855953
+  type: 'test'
+  ...
+# Subtest: direct readiness is not permanently cached when storage changes
+ok 78 - direct readiness is not permanently cached when storage changes
+  ---
+  duration_ms: 0.555408
+  type: 'test'
+  ...
+# Subtest: missing / malformed / unavailable original KV fails closed with no initialization
+ok 79 - missing / malformed / unavailable original KV fails closed with no initialization
+  ---
+  duration_ms: 0.461715
+  type: 'test'
+  ...
+# Subtest: direct deployment does not expose staged migration or commit endpoints
+ok 80 - direct deployment does not expose staged migration or commit endpoints
+  ---
+  duration_ms: 1.731497
+  type: 'test'
+  ...
+# Subtest: unprepared distributed release still remains closed; direct mode is not the default bundle
+ok 81 - unprepared distributed release still remains closed; direct mode is not the default bundle
+  ---
+  duration_ms: 0.601065
+  type: 'test'
+  ...
+# Subtest: direct preflight accepts existing KV without requiring a legacy-ledger migration marker
+ok 82 - direct preflight accepts existing KV without requiring a legacy-ledger migration marker
+  ---
+  duration_ms: 0.741951
+  type: 'test'
+  ...
+# Subtest: direct preflight accepts existing D1+KV without requiring a legacy-ledger migration marker
+ok 83 - direct preflight accepts existing D1+KV without requiring a legacy-ledger migration marker
+  ---
+  duration_ms: 4.184645
+  type: 'test'
+  ...
+# Subtest: direct preflight rejects old KV schema and missing original encryption keys
+ok 84 - direct preflight rejects old KV schema and missing original encryption keys
+  ---
+  duration_ms: 0.963567
+  type: 'test'
+  ...
+# Subtest: direct preflight rejects destructive legacy D1 primary-key migration
+ok 85 - direct preflight rejects destructive legacy D1 primary-key migration
+  ---
+  duration_ms: 0.854706
+  type: 'test'
+  ...
+# Subtest: empty optional D1 is accepted without creating anything remotely
+ok 86 - empty optional D1 is accepted without creating anything remotely
+  ---
+  duration_ms: 0.638796
+  type: 'test'
+  ...
+# Subtest: generated config retains original IDs, runtime vars, secrets via keep-vars and cron: false
+ok 87 - generated config retains original IDs, runtime vars, secrets via keep-vars and cron: false
+  ---
+  duration_ms: 0.595872
+  type: 'test'
+  ...
+# Subtest: generated config retains original IDs, runtime vars, secrets via keep-vars and cron: true
+ok 88 - generated config retains original IDs, runtime vars, secrets via keep-vars and cron: true
+  ---
+  duration_ms: 0.128677
+  type: 'test'
+  ...
+# (node:8859) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: legacy HTTP 401 is permitted only during preflight, never final success
+ok 89 - legacy HTTP 401 is permitted only during preflight, never final success
+  ---
+  duration_ms: 18.9657
+  type: 'test'
+  ...
+# Subtest: legacy HTTP 403 is permitted only during preflight, never final success
+ok 90 - legacy HTTP 403 is permitted only during preflight, never final success
+  ---
+  duration_ms: 0.63046
+  type: 'test'
+  ...
+# Subtest: legacy HTTP 404 is permitted only during preflight, never final success
+ok 91 - legacy HTTP 404 is permitted only during preflight, never final success
+  ---
+  duration_ms: 0.765283
+  type: 'test'
+  ...
+# Subtest: legacy login HTML is not treated as a successful final deployment
+ok 92 - legacy login HTML is not treated as a successful final deployment
+  ---
+  duration_ms: 0.979227
+  type: 'test'
+  ...
+# Subtest: upstream errors and Access redirects are not interpreted as a usable old site
+ok 93 - upstream errors and Access redirects are not interpreted as a usable old site
+  ---
+  duration_ms: 1.691539
+  type: 'test'
+  ...
+# Subtest: an active maintenance run is reported, not silently declared ready
+ok 94 - an active maintenance run is reported, not silently declared ready
+  ---
+  duration_ms: 0.617203
+  type: 'test'
+  ...
+# Subtest: binding preflight does not select a latest un-deployed or split-traffic version
+ok 95 - binding preflight does not select a latest un-deployed or split-traffic version
+  ---
+  duration_ms: 0.36079
+  type: 'test'
+  ...
+# Subtest: Workers Builds is detected before generic CI or Actions flags
+ok 96 - Workers Builds is detected before generic CI or Actions flags
+  ---
+  duration_ms: 1.006995
+  type: 'test'
+  ...
+# Subtest: Pages is explicitly rejected; local / GitHub Actions remain supported
+ok 97 - Pages is explicitly rejected; local / GitHub Actions remain supported
+  ---
+  duration_ms: 0.801637
+  type: 'test'
+  ...
+# Subtest: unsupported Node stops before any backup or remote API
+ok 98 - unsupported Node stops before any backup or remote API
+  ---
+  duration_ms: 0.390501
+  type: 'test'
+  ...
+# Subtest: preflight aggregates missing secret NAMES without printing configured values
+ok 99 - preflight aggregates missing secret NAMES without printing configured values
+  ---
+  duration_ms: 0.508081
+  type: 'test'
+  ...
+# Subtest: successful preflight reads but never mutates original TOML or creates state
+ok 100 - successful preflight reads but never mutates original TOML or creates state
+  ---
+  duration_ms: 874.451765
+  type: 'test'
+  ...
+# Subtest: Cloudflare preflight rejects even if secrets are configured, before reading any file
+ok 101 - Cloudflare preflight rejects even if secrets are configured, before reading any file
+  ---
+  duration_ms: 0.478184
+  type: 'test'
+  ...
+# Subtest: explicit original Worker name overrides template, environment is preserved
+ok 102 - explicit original Worker name overrides template, environment is preserved
+  ---
+  duration_ms: 2501.509506
+  type: 'test'
+  ...
+# Subtest: wrong account ID rejects rather than rewriting to another account
+ok 103 - wrong account ID rejects rather than rewriting to another account
+  ---
+  duration_ms: 890.7441
+  type: 'test'
+  ...
+# Subtest: Worker URL is an HTTPS origin, not /admin or credentialed URL
+ok 104 - Worker URL is an HTTPS origin, not /admin or credentialed URL
+  ---
+  duration_ms: 4668.579281
+  type: 'test'
+  ...
+# Subtest: missing Python produces actionable failure, not guessed config
+ok 105 - missing Python produces actionable failure, not guessed config
+  ---
+  duration_ms: 3.277936
+  type: 'test'
+  ...
+# Subtest: raw Cloudflare command explains the supported split route, not a mandatory disconnect
+ok 106 - raw Cloudflare command explains the supported split route, not a mandatory disconnect
+  ---
+  duration_ms: 55.642023
+  type: 'test'
+  ...
+# Subtest: ordinary raw Wrangler guard still fails closed without SQLite warning
+ok 107 - ordinary raw Wrangler guard still fails closed without SQLite warning
+  ---
+  duration_ms: 55.711697
+  type: 'test'
+  ...
+# Subtest: setting a fake run ID cannot unlock guard
+ok 108 - setting a fake run ID cannot unlock guard
+  ---
+  duration_ms: 47.931171
+  type: 'test'
+  ...
+# Subtest: preflight CLI succeeds locally with synthetic config and leaks no secrets
+ok 109 - preflight CLI succeeds locally with synthetic config and leaks no secrets
+  ---
+  duration_ms: 858.180736
+  type: 'test'
+  ...
+# Subtest: CLI rejects Workers Builds before prepare and does not create state
+ok 110 - CLI rejects Workers Builds before prepare and does not create state
+  ---
+  duration_ms: 51.894703
+  type: 'test'
+  ...
+# Subtest: safe workflow retains required tests, both uploaded backups, recovery, and long timeout
+ok 111 - safe workflow retains required tests, both uploaded backups, recovery, and long timeout
+  ---
+  duration_ms: 0.34988
+  type: 'test'
+  ...
+# Subtest: Vitest uses isolated local configuration, never real production binding IDs
+ok 112 - Vitest uses isolated local configuration, never real production binding IDs
+  ---
+  duration_ms: 0.274072
+  type: 'test'
+  ...
+# Subtest: build version and upgrade runner stay consistent, and drain is not shortened
+ok 113 - build version and upgrade runner stay consistent, and drain is not shortened
+  ---
+  duration_ms: 0.373943
+  type: 'test'
+  ...
+# (node:9321) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [bundle] ST_BUNDLE_OK {"wrangler":"3.114.17","variant":"bound","storageBindings":2,"uploaded":false,"productionStorageAccess":false}
+# [bundle] ST_BUNDLE_OK {"wrangler":"3.114.17","variant":"unbound","storageBindings":0,"uploaded":false,"productionStorageAccess":false}
+# Subtest: root release Wrangler and deprecated nested TEST Wrangler are correctly distinguished
+ok 114 - root release Wrangler and deprecated nested TEST Wrangler are correctly distinguished
+  ---
+  duration_ms: 10.870384
+  type: 'test'
+  ...
+# Subtest: every direct dependency is an exact version paired with lock metadata
+ok 115 - every direct dependency is an exact version paired with lock metadata
+  ---
+  duration_ms: 4.934596
+  type: 'test'
+  ...
+# Subtest: missing root Wrangler fails rather than looking up npx/global/network fallback
+ok 116 - missing root Wrangler fails rather than looking up npx/global/network fallback
+  ---
+  duration_ms: 5.515955
+  type: 'test'
+  ...
+# Subtest: wrong installed root version is explicitly rejected
+ok 117 - wrong installed root version is explicitly rejected
+  ---
+  duration_ms: 4.172933
+  type: 'test'
+  ...
+# Subtest: partial package update / mismatching lock root version is rejected
+ok 118 - partial package update / mismatching lock root version is rejected
+  ---
+  duration_ms: 5.129322
+  type: 'test'
+  ...
+# Subtest: caret or floating root Wrangler does not silently drift
+ok 119 - caret or floating root Wrangler does not silently drift
+  ---
+  duration_ms: 5.978639
+  type: 'test'
+  ...
+# Subtest: bin traversal outside installed package is rejected
+ok 120 - bin traversal outside installed package is rejected
+  ---
+  duration_ms: 4.698345
+  type: 'test'
+  ...
+# Subtest: invalid package JSON gives a useful safe error
+ok 121 - invalid package JSON gives a useful safe error
+  ---
+  duration_ms: 3.618414
+  type: 'test'
+  ...
+# Subtest: report-only distinguishes no install from successful verification
+ok 122 - report-only distinguishes no install from successful verification
+  ---
+  duration_ms: 4.502008
+  type: 'test'
+  ...
+# Subtest: public deploy:check now accepts Workers Builds and performs no remote writes
+ok 123 - public deploy:check now accepts Workers Builds and performs no remote writes
+  ---
+  duration_ms: 778.260982
+  type: 'test'
+  ...
+# Subtest: public deploy:check still rejects Pages and missing build secrets
+ok 124 - public deploy:check still rejects Pages and missing build secrets
+  ---
+  duration_ms: 82.504053
+  type: 'test'
+  ...
+# Subtest: raw Wrangler remains blocked: no fake-success workaround or clearing of protection
+ok 125 - raw Wrangler remains blocked: no fake-success workaround or clearing of protection
+  ---
+  duration_ms: 46.450471
+  type: 'test'
+  ...
+# Subtest: error help points at Deploy command and current documentation, not obsolete version
+ok 126 - error help points at Deploy command and current documentation, not obsolete version
+  ---
+  duration_ms: 0.26331
+  type: 'test'
+  ...
+# Subtest: build is no longer an echo-only success and no build script calls production deployment
+ok 127 - build is no longer an echo-only success and no build script calls production deployment
+  ---
+  duration_ms: 0.375174
+  type: 'test'
+  ...
+# Subtest: bundle child environment cannot inherit production credentials, preloads or run capability
+ok 128 - bundle child environment cannot inherit production credentials, preloads or run capability
+  ---
+  duration_ms: 0.30497
+  type: 'test'
+  ...
+# Subtest: bundle wrapper forces --dry-run and never hands it live resource IDs (FAKE executable only)
+ok 129 - bundle wrapper forces --dry-run and never hands it live resource IDs (FAKE executable only)
+  ---
+  duration_ms: 64.654522
+  type: 'test'
+  ...
+# Subtest: bundle check rejects a tool that returns zero but produced no bundle (FAKE executable only)
+ok 130 - bundle check rejects a tool that returns zero but produced no bundle (FAKE executable only)
+  ---
+  duration_ms: 26.574459
+  type: 'test'
+  ...
+# Subtest: bundle child failure is propagated, not presented as successful build (FAKE executable only)
+ok 131 - bundle child failure is propagated, not presented as successful build (FAKE executable only)
+  ---
+  duration_ms: 28.98236
+  type: 'test'
+  ...
+# Subtest: release list retains ALL original checks and adds toolchain + actual bundle
+ok 132 - release list retains ALL original checks and adds toolchain + actual bundle
+  ---
+  duration_ms: 0.9474
+  type: 'test'
+  ...
+# Subtest: GitHub publisher retains required bundle/toolchain checks without skipping previous tests
+ok 133 - GitHub publisher retains required bundle/toolchain checks without skipping previous tests
+  ---
+  duration_ms: 0.168686
+  type: 'test'
+  ...
+# Subtest: retry source digest includes test/config changes but excludes generated result files
+ok 134 - retry source digest includes test/config changes but excludes generated result files
+  ---
+  duration_ms: 6.370302
+  type: 'test'
+  ...
+# Subtest: deploy --help never starts a deployment and works from another working directory
+ok 135 - deploy --help never starts a deployment and works from another working directory
+  ---
+  duration_ms: 91.439122
+  type: 'test'
+  ...
+# Subtest: unknown deployment arguments are not silently ignored before deploying
+ok 136 - unknown deployment arguments are not silently ignored before deploying
+  ---
+  duration_ms: 32.977081
+  type: 'test'
+  ...
+# (node:9473) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: append-only split metadata does not invalidate maintenance backup
+ok 137 - append-only split metadata does not invalidate maintenance backup
+  ---
+  duration_ms: 1.642226
+  type: 'test'
+  ...
+# Subtest: changed original metadata cannot hide behind the operational prefix filter
+ok 138 - changed original metadata cannot hide behind the operational prefix filter
+  ---
+  duration_ms: 0.52887
+  type: 'test'
+  ...
+# Subtest: new ordinary metadata must not be silently accepted as checkpoint bookkeeping
+ok 139 - new ordinary metadata must not be silently accepted as checkpoint bookkeeping
+  ---
+  duration_ms: 0.359558
+  type: 'test'
+  ...
+# Subtest: source changes stop, even if summary row counts are identical
+ok 140 - source changes stop, even if summary row counts are identical
+  ---
+  duration_ms: 0.379297
+  type: 'test'
+  ...
+# Subtest: KV-only is not silently given a race-prone deployment lease
+ok 141 - KV-only is not silently given a race-prone deployment lease
+  ---
+  duration_ms: 0.258934
+  type: 'test'
+  ...
+# Subtest: D1 lease insertion atomically excludes a concurrent Build; release is append-only
+ok 142 - D1 lease insertion atomically excludes a concurrent Build; release is append-only
+  ---
+  duration_ms: 3.794642
+  type: 'test'
+  ...
+# Subtest: expired lease can be superseded without deleting the original claim
+ok 143 - expired lease can be superseded without deleting the original claim
+  ---
+  duration_ms: 1.144894
+  type: 'test'
+  ...
+# (node:9488) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [upgrade] ST_SPLIT_BINDING_PROBE {"worker":"existing-worker","kvBindings":["SUBSCRIPTIONS_KV"],"d1Bindings":[{"name":"SUBSCRIPTIONS_DB","idVisible":true}],"atomicLeaseReady":true,"probe":"read-only","storage":"D1_KV_ONLY"}
+# [upgrade] ST_SPLIT_BINDING_PROBE {"worker":"existing","kvBindings":["SUBSCRIPTIONS_KV"],"d1Bindings":[{"name":"SUBSCRIPTIONS_DB","idVisible":false}],"atomicLeaseReady":false,"probe":"read-only","storage":"D1_KV_ONLY"}
+# Subtest: D1 coordination succeeds only with a verified original D1 id
+ok 144 - D1 coordination succeeds only with a verified original D1 id
+  ---
+  duration_ms: 1.588913
+  type: 'test'
+  ...
+# Subtest: KV-only diagnosis gives exact safe alternative, without printing secrets or IDs
+ok 145 - KV-only diagnosis gives exact safe alternative, without printing secrets or IDs
+  ---
+  duration_ms: 0.597322
+  type: 'test'
+  ...
+# Subtest: a malformed existing D1 binding is distinct from no D1 and fails closed
+ok 146 - a malformed existing D1 binding is distinct from no D1 and fails closed
+  ---
+  duration_ms: 0.405768
+  type: 'test'
+  ...
+# Subtest: Cloudflare routing puts read-only real binding inspection BEFORE all expensive release checks
+ok 147 - Cloudflare routing puts read-only real binding inspection BEFORE all expensive release checks
+  ---
+  duration_ms: 0.273027
+  type: 'test'
+  ...
+# Subtest: GitHub safe upgrade push is opt-in and serial; manual workflow remains available
+ok 148 - GitHub safe upgrade push is opt-in and serial; manual workflow remains available
+  ---
+  duration_ms: 0.530149
+  type: 'test'
+  ...
+# (node:9504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Cloudflare first build really passes guard, remains closed, persists encrypted recovery; fresh second build unlocks once
+ok 149 - Cloudflare first build really passes guard, remains closed, persists encrypted recovery; fresh second build unlocks once
+  ---
+  duration_ms: 19350.601521
+  type: 'test'
+  ...
+# Subtest: test failure stops before lease, artifact upload or Worker deployment
+ok 150 - test failure stops before lease, artifact upload or Worker deployment
+  ---
+  duration_ms: 1800.911571
+  type: 'test'
+  ...
+# Subtest: wrong backup password on a fresh Build cannot create a replacement run
+ok 151 - wrong backup password on a fresh Build cannot create a replacement run
+  ---
+  duration_ms: 9711.572095
+  type: 'test'
+  ...
+# Subtest: changed code while maintenance is active is rejected rather than silently starting another run
+ok 152 - changed code while maintenance is active is rejected rather than silently starting another run
+  ---
+  duration_ms: 9540.281026
+  type: 'test'
+  ...
+# Subtest: lost apply acknowledgement resumes from durable checkpoint in a new Build
+ok 153 - lost apply acknowledgement resumes from durable checkpoint in a new Build
+  ---
+  duration_ms: 17200.727312
+  type: 'test'
+  ...
+# Subtest: lost commit acknowledgement recovers without remigrating or reopening a new run
+ok 154 - lost commit acknowledgement recovers without remigrating or reopening a new run
+  ---
+  duration_ms: 15607.829867
+  type: 'test'
+  ...
+# Subtest: lost Wrangler acknowledgement detects actual maintenance version without duplicate upload and restarts conservative drain
+ok 155 - lost Wrangler acknowledgement detects actual maintenance version without duplicate upload and restarts conservative drain
+  ---
+  duration_ms: 17358.016195
+  type: 'test'
+  ...
+# Subtest: corrupted remote ciphertext is detected before any new deployment or migration
+ok 156 - corrupted remote ciphertext is detected before any new deployment or migration
+  ---
+  duration_ms: 9029.587271
+  type: 'test'
+  ...
+# Subtest: original SQL modified between maintenance backup and retry is not accepted as internal bookkeeping
+ok 157 - original SQL modified between maintenance backup and retry is not accepted as internal bookkeeping
+  ---
+  duration_ms: 15313.126593
+  type: 'test'
+  ...
+# Subtest: encrypted backup download works from a new local directory without a deploy or test bypass
+ok 158 - encrypted backup download works from a new local directory without a deploy or test bypass
+  ---
+  duration_ms: 9073.38963
+  type: 'test'
+  ...
+# Subtest: required bundle failure stops before any Cloudflare WRITE or checkpoint; only read-only binding preflight may run
+ok 159 - required bundle failure stops before any Cloudflare WRITE or checkpoint; only read-only binding preflight may run
+  ---
+  duration_ms: 1655.331745
+  type: 'test'
+  ...
+# Subtest: a real KV-only Worker stops BEFORE the expensive release suite and never alters remote state
+ok 160 - a real KV-only Worker stops BEFORE the expensive release suite and never alters remote state
+  ---
+  duration_ms: 1642.633939
+  type: 'test'
+  ...
+# Subtest: binding recovery completes the ORIGINAL split deployment when FAKE_SETTINGS_MISSING_D1
+ok 161 - binding recovery completes the ORIGINAL split deployment when FAKE_SETTINGS_MISSING_D1
+  ---
+  duration_ms: 12967.986086
+  type: 'test'
+  ...
+# Subtest: binding recovery completes the ORIGINAL split deployment when FAKE_SETTINGS_MISSING_ID
+ok 162 - binding recovery completes the ORIGINAL split deployment when FAKE_SETTINGS_MISSING_ID
+  ---
+  duration_ms: 14176.219373
+  type: 'test'
+  ...
+# Subtest: binding drift after release checks fails before acquiring a lease or uploading artifacts
+ok 163 - binding drift after release checks fails before acquiring a lease or uploading artifacts
+  ---
+  duration_ms: 1803.493824
+  type: 'test'
+  ...
+# Subtest: actual default CLI with zero bindings, disabled workers.dev and no URL publishes web-init exactly once
+ok 164 - actual default CLI with zero bindings, disabled workers.dev and no URL publishes web-init exactly once
+  ---
+  duration_ms: 1041.631946
+  type: 'test'
+  ...
+# Subtest: actual default CLI with residual KV diagnoses target and never invokes old direct upgrade
+ok 165 - actual default CLI with residual KV diagnoses target and never invokes old direct upgrade
+  ---
+  duration_ms: 1049.877051
+  type: 'test'
+  ...
+# Subtest: actual CLI uploader failure reports attempted but not confirmed, not a preflight failure
+ok 166 - actual CLI uploader failure reports attempted but not confirmed, not a preflight failure
+  ---
+  duration_ms: 1060.2837
+  type: 'test'
+  ...
+# (node:10574) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-bcdc48ce-f330-4b56-9abf-299a3d6f444f","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_VERIFIED {"status":"verified","verified":true,"url":"https://test.invalid","attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":200,"matched":true}]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-bcdc48ce-f330-4b56-9abf-299a3d6f444f","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"verified","verified":true,"url":"https://test.invalid","attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":200,"matched":true}]},"initURL":"https://test.invalid/init","suggestedInitURLs":["https://test.invalid/init"]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-52805ff7-0a34-49f2-8ef8-cbf809c39f42","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_VERIFIED {"status":"verified","verified":true,"url":"https://test.invalid","attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":200,"matched":true}]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-52805ff7-0a34-49f2-8ef8-cbf809c39f42","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"verified","verified":true,"url":"https://test.invalid","attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":200,"matched":true}]},"initURL":"https://test.invalid/init","suggestedInitURLs":["https://test.invalid/init"]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"release-checks","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"pre-publish","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"pre-publish","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"publishing","publishAttempted":true,"codeDeployed":null,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-229210d5-e50e-49a3-ba97-14ecdaa7dfc4","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_NOT_VERIFIED {"status":"not_verified","verified":false,"url":null,"attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":200,"reason":"not-this-waiting-release"},{"url":"https://test.invalid","source":"explicit","round":2,"httpStatus":200,"reason":"not-this-waiting-release"},{"url":"https://test.invalid","source":"explicit","round":3,"httpStatus":200,"reason":"not-this-waiting-release"}]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-229210d5-e50e-49a3-ba97-14ecdaa7dfc4","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"not_verified","verified":false,"url":null,"attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":200,"reason":"not-this-waiting-release"},{"url":"https://test.invalid","source":"explicit","round":2,"httpStatus":200,"reason":"not-this-waiting-release"},{"url":"https://test.invalid","source":"explicit","round":3,"httpStatus":200,"reason":"not-this-waiting-release"}]},"initURL":null,"suggestedInitURLs":["https://test.invalid/init"]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"publishing","publishAttempted":true,"codeDeployed":null,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":false,"urlRequiredForCodeDeploy":false,"urlCandidates":[],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-74c009e8-d678-4604-82c6-9e759c9f666a","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_NOT_VERIFIED {"status":"not_configured","verified":false,"url":null,"attempts":[]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-74c009e8-d678-4604-82c6-9e759c9f666a","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"not_configured","verified":false,"url":null,"attempts":[]},"initURL":null,"suggestedInitURLs":[]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":false,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://original.invalid","source":"custom-domain"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-1d170167-3eae-4a70-a9c1-aefcc9baa308","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_VERIFIED {"status":"verified","verified":true,"url":"https://original.invalid","attempts":[{"url":"https://original.invalid","source":"custom-domain","round":1,"httpStatus":200,"matched":true}]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-1d170167-3eae-4a70-a9c1-aefcc9baa308","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"verified","verified":true,"url":"https://original.invalid","attempts":[{"url":"https://original.invalid","source":"custom-domain","round":1,"httpStatus":200,"matched":true}]},"initURL":"https://original.invalid/init","suggestedInitURLs":["https://original.invalid/init"]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":false,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://routes.invalid","source":"existing-root-route"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-20840215-f151-43dd-ac71-6bb65fb6755f","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_VERIFIED {"status":"verified","verified":true,"url":"https://routes.invalid","attempts":[{"url":"https://routes.invalid","source":"existing-root-route","round":1,"httpStatus":200,"matched":true}]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-20840215-f151-43dd-ac71-6bb65fb6755f","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"verified","verified":true,"url":"https://routes.invalid","attempts":[{"url":"https://routes.invalid","source":"existing-root-route","round":1,"httpStatus":200,"matched":true}]},"initURL":"https://routes.invalid/init","suggestedInitURLs":["https://routes.invalid/init"]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":false,"urlRequiredForCodeDeploy":false,"urlCandidates":[],"urlWarnings":[{"code":"ST_URL_ROUTE_AMBIGUOUS","message":"原 Route 不是可唯一推導的 HTTPS 根路由；不猜測 /init 網址。"}],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-6f855dfa-4129-4be2-839b-e1656c1a6344","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_NOT_VERIFIED {"status":"not_configured","verified":false,"url":null,"attempts":[]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-6f855dfa-4129-4be2-839b-e1656c1a6344","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"not_configured","verified":false,"url":null,"attempts":[]},"initURL":null,"suggestedInitURLs":[]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":false,"urlRequiredForCodeDeploy":false,"urlCandidates":[],"urlWarnings":[{"code":"ST_URL_DOMAIN_LOOKUP","httpStatus":403,"message":"Custom Domain 未能自動讀取；未建立、修改或刪除網域。"},{"code":"ST_URL_ROUTE_LOOKUP","httpStatus":403,"message":"既有 Route 未能自動讀取；原路由保留。"}],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-25f5c318-b54b-493c-9177-6a31c5053a6d","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_NOT_VERIFIED {"status":"not_configured","verified":false,"url":null,"attempts":[]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-25f5c318-b54b-493c-9177-6a31c5053a6d","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"not_configured","verified":false,"url":null,"attempts":[]},"initURL":null,"suggestedInitURLs":[]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":false,"urlRequiredForCodeDeploy":false,"urlCandidates":[],"urlWarnings":[{"code":"ST_URL_INVALID","message":"SUBSTRACKER_WORKER_URL 不是有效 HTTPS 根網址；已忽略，不影響程式發布。"}],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-62227f55-aa05-4bf1-8262-c56cfe6fb7c2","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_NOT_VERIFIED {"status":"not_configured","verified":false,"url":null,"attempts":[]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-62227f55-aa05-4bf1-8262-c56cfe6fb7c2","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"not_configured","verified":false,"url":null,"attempts":[]},"initURL":null,"suggestedInitURLs":[]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://original-worker.existing-account.workers.dev","source":"existing-workers.dev"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-1173de7c-e41a-435e-b7d5-54015a032527","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_VERIFIED {"status":"verified","verified":true,"url":"https://original-worker.existing-account.workers.dev","attempts":[{"url":"https://original-worker.existing-account.workers.dev","source":"existing-workers.dev","round":1,"httpStatus":200,"matched":true}]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-1173de7c-e41a-435e-b7d5-54015a032527","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"verified","verified":true,"url":"https://original-worker.existing-account.workers.dev","attempts":[{"url":"https://original-worker.existing-account.workers.dev","source":"existing-workers.dev","round":1,"httpStatus":200,"matched":true}]},"initURL":"https://original-worker.existing-account.workers.dev/init","suggestedInitURLs":["https://original-worker.existing-account.workers.dev/init"]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-8cdc2d17-1c3c-4384-9e7b-b4fc03ccda29","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_NOT_VERIFIED {"status":"not_verified","verified":false,"url":null,"attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":403,"reason":"redirect-or-access-protected"},{"url":"https://test.invalid","source":"explicit","round":2,"httpStatus":403,"reason":"redirect-or-access-protected"},{"url":"https://test.invalid","source":"explicit","round":3,"httpStatus":403,"reason":"redirect-or-access-protected"}]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-8cdc2d17-1c3c-4384-9e7b-b4fc03ccda29","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"not_verified","verified":false,"url":null,"attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":403,"reason":"redirect-or-access-protected"},{"url":"https://test.invalid","source":"explicit","round":2,"httpStatus":403,"reason":"redirect-or-access-protected"},{"url":"https://test.invalid","source":"explicit","round":3,"httpStatus":403,"reason":"redirect-or-access-protected"}]},"initURL":null,"suggestedInitURLs":["https://test.invalid/init"]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-6bf83d9d-14f1-4c45-b771-6d80ad0de14f","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_NOT_VERIFIED {"status":"not_verified","verified":false,"url":null,"attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":302,"reason":"redirect-or-access-protected"},{"url":"https://test.invalid","source":"explicit","round":2,"httpStatus":302,"reason":"redirect-or-access-protected"},{"url":"https://test.invalid","source":"explicit","round":3,"httpStatus":302,"reason":"redirect-or-access-protected"}]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-6bf83d9d-14f1-4c45-b771-6d80ad0de14f","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"not_verified","verified":false,"url":null,"attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":302,"reason":"redirect-or-access-protected"},{"url":"https://test.invalid","source":"explicit","round":2,"httpStatus":302,"reason":"redirect-or-access-protected"},{"url":"https://test.invalid","source":"explicit","round":3,"httpStatus":302,"reason":"redirect-or-access-protected"}]},"initURL":null,"suggestedInitURLs":["https://test.invalid/init"]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-479343e3-2282-4a09-afc0-78ee6aaa82cc","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_NOT_VERIFIED {"status":"not_verified","verified":false,"url":null,"attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"reason":"unreachable-or-invalid-response"},{"url":"https://test.invalid","source":"explicit","round":2,"reason":"unreachable-or-invalid-response"},{"url":"https://test.invalid","source":"explicit","round":3,"reason":"unreachable-or-invalid-response"}]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-479343e3-2282-4a09-afc0-78ee6aaa82cc","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"not_verified","verified":false,"url":null,"attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"reason":"unreachable-or-invalid-response"},{"url":"https://test.invalid","source":"explicit","round":2,"reason":"unreachable-or-invalid-response"},{"url":"https://test.invalid","source":"explicit","round":3,"reason":"unreachable-or-invalid-response"}]},"initURL":null,"suggestedInitURLs":["https://test.invalid/init"]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"control-verification","publishAttempted":true,"codeDeployed":null,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"control-verification","publishAttempted":true,"codeDeployed":null,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"control-verification","publishAttempted":true,"codeDeployed":null,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"control-verification","publishAttempted":true,"codeDeployed":null,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-dcdc8204-61dc-47df-8d3c-de28980c5fe5","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_URL_VERIFIED {"status":"verified","verified":true,"url":"https://test.invalid","attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":200,"matched":true}]}
+# [upgrade] ST_CODE_DEPLOYED_AWAITING_BINDINGS {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-dcdc8204-61dc-47df-8d3c-de28980c5fe5","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"verified","verified":true,"url":"https://test.invalid","attempts":[{"url":"https://test.invalid","source":"explicit","round":1,"httpStatus":200,"matched":true}]},"initURL":"https://test.invalid/init","suggestedInitURLs":["https://test.invalid/init"]}
+# [upgrade] 程式發布已由 Cloudflare 現行版本核對。請手動綁回原 SUBSCRIPTIONS_KV / SUBSCRIPTIONS_DB 並部署綁定，然後開啟原站 /init。網址未驗證不代表尚未發布；資料 init 尚未完成，業務仍鎖定。
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"control-verification","publishAttempted":true,"codeDeployed":null,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_CODE_RELEASE_VERIFIED {"version":"3.3.33","mode":"deferred-web-init","worker":"original-worker","runId":"3.3.33-web-init-4e817675-f04c-41f2-84c1-bad8112994d0","codeDeployed":true,"controlPlaneVerified":true,"deploymentId":"00000000-1111-2222-3333-000000000002","versionId":"00000000-1111-2222-3333-000000000002","applicationReady":false,"dataInitComplete":false,"phase":"bindings_required","dataAPICalls":0,"urlVerification":{"status":"pending","verified":false},"initURL":null}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"url-verification","publishAttempted":true,"codeDeployed":null,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_UNBOUND_PREFLIGHT {"worker":"original-worker","storageBindings":0,"workersDev":true,"urlRequiredForCodeDeploy":false,"urlCandidates":[{"url":"https://test.invalid","source":"explicit"}],"urlWarnings":[],"dataAPICalls":0}
+# [upgrade] ST_UNBOUND_CONFIRMED {"version":"3.3.33","worker":"original-worker","storageBindings":0,"dataAPICalls":0,"next":"/init"}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"release-checks","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# Subtest: default auto deployment without KV/D1 or backup password publishes once and awaits web init
+ok 167 - default auto deployment without KV/D1 or backup password publishes once and awaits web init
+  ---
+  duration_ms: 968.471994
+  type: 'test'
+  ...
+# Subtest: stale LOCAL storage IDs are not rebound after explicit remote unbinding
+ok 168 - stale LOCAL storage IDs are not rebound after explicit remote unbinding
+  ---
+  duration_ms: 889.408378
+  type: 'test'
+  ...
+# Subtest: a failed settings request is not inferred as an empty binding list
+ok 169 - a failed settings request is not inferred as an empty binding list
+  ---
+  duration_ms: 855.314251
+  type: 'test'
+  ...
+# Subtest: missing binding array is not inferred as unbound
+ok 170 - missing binding array is not inferred as unbound
+  ---
+  duration_ms: 1160.624881
+  type: 'test'
+  ...
+# Subtest: partial KV removal does not detach the remaining D1 automatically
+ok 171 - partial KV removal does not detach the remaining D1 automatically
+  ---
+  duration_ms: 753.706475
+  type: 'test'
+  ...
+# Subtest: unbound route refuses a still-bound KV instead of clearing it
+ok 172 - unbound route refuses a still-bound KV instead of clearing it
+  ---
+  duration_ms: 782.029642
+  type: 'test'
+  ...
+# Subtest: Dashboard-only unbinding not yet active cannot clear the active version
+ok 173 - Dashboard-only unbinding not yet active cannot clear the active version
+  ---
+  duration_ms: 818.408966
+  type: 'test'
+  ...
+# Subtest: unsupported live bindings are preserved by refusing publication
+ok 174 - unsupported live bindings are preserved by refusing publication
+  ---
+  duration_ms: 729.841136
+  type: 'test'
+  ...
+# Subtest: release-test failure prevents code publication without requiring storage access
+ok 175 - release-test failure prevents code publication without requiring storage access
+  ---
+  duration_ms: 756.014606
+  type: 'test'
+  ...
+# Subtest: binding drift during release checks stops before publication
+ok 176 - binding drift during release checks stops before publication
+  ---
+  duration_ms: 743.917017
+  type: 'test'
+  ...
+# Subtest: concurrent code deployment is detected before publication
+ok 177 - concurrent code deployment is detected before publication
+  ---
+  duration_ms: 791.945168
+  type: 'test'
+  ...
+# Subtest: publisher failure restores source and original wrangler config; no false completion
+ok 178 - publisher failure restores source and original wrangler config; no false completion
+  ---
+  duration_ms: 742.907016
+  type: 'test'
+  ...
+# Subtest: wrong run ID at URL stays unverified but does not erase control-plane code evidence
+ok 179 - wrong run ID at URL stays unverified but does not erase control-plane code evidence
+  ---
+  duration_ms: 1046.730569
+  type: 'test'
+  ...
+# Subtest: unbound guard rejects a bare environment flag
+ok 180 - unbound guard rejects a bare environment flag
+  ---
+  duration_ms: 88.519397
+  type: 'test'
+  ...
+# Subtest: unbound guard verifies exact config, source fingerprint, account and release descriptor
+ok 181 - unbound guard verifies exact config, source fingerprint, account and release descriptor
+  ---
+  duration_ms: 1046.977241
+  type: 'test'
+  ...
+# Subtest: static assets route migration and local default variables cannot accidentally change original runtime config
+ok 182 - static assets route migration and local default variables cannot accidentally change original runtime config
+  ---
+  duration_ms: 0.411738
+  type: 'test'
+  ...
+# Subtest: fully unbound + workers.dev DISABLED + no Build URL publishes and verifies via control plane
+ok 183 - fully unbound + workers.dev DISABLED + no Build URL publishes and verifies via control plane
+  ---
+  duration_ms: 959.888552
+  type: 'test'
+  ...
+# Subtest: same failing Build with residual KV never falls back to direct-compatible
+ok 184 - same failing Build with residual KV never falls back to direct-compatible
+  ---
+  duration_ms: 866.516159
+  type: 'test'
+  ...
+# Subtest: residual D1 and KV are listed together and neither is detached
+ok 185 - residual D1 and KV are listed together and neither is detached
+  ---
+  duration_ms: 1136.498554
+  type: 'test'
+  ...
+# Subtest: live custom domain is discovered when workers.dev is disabled
+ok 186 - live custom domain is discovered when workers.dev is disabled
+  ---
+  duration_ms: 1104.345357
+  type: 'test'
+  ...
+# Subtest: matching live root Route is discovered without reconfiguring routes
+ok 187 - matching live root Route is discovered without reconfiguring routes
+  ---
+  duration_ms: 816.112329
+  type: 'test'
+  ...
+# Subtest: wildcard hostname and path-only routes are not guessed
+ok 188 - wildcard hostname and path-only routes are not guessed
+  ---
+  duration_ms: 836.820508
+  type: 'test'
+  ...
+# Subtest: domain discovery 403 is optional, but original workers.dev false is preserved
+ok 189 - domain discovery 403 is optional, but original workers.dev false is preserved
+  ---
+  duration_ms: 1047.074361
+  type: 'test'
+  ...
+# Subtest: an invalid optional Build URL does not block an otherwise valid no-storage release
+ok 190 - an invalid optional Build URL does not block an otherwise valid no-storage release
+  ---
+  duration_ms: 1052.360829
+  type: 'test'
+  ...
+# Subtest: existing enabled workers.dev is resolved; it is never enabled as fallback
+ok 191 - existing enabled workers.dev is resolved; it is never enabled as fallback
+  ---
+  duration_ms: 1118.82687
+  type: 'test'
+  ...
+# Subtest: unknown workers.dev state is not guessed as false and stops before release tests
+ok 192 - unknown workers.dev state is not guessed as false and stops before release tests
+  ---
+  duration_ms: 813.709442
+  type: 'test'
+  ...
+# Subtest: HTTP 403 Access protection is not a code deployment failure
+ok 193 - HTTP 403 Access protection is not a code deployment failure
+  ---
+  duration_ms: 840.821001
+  type: 'test'
+  ...
+# Subtest: redirect is never followed and never treated as URL verification
+ok 194 - redirect is never followed and never treated as URL verification
+  ---
+  duration_ms: 854.48287
+  type: 'test'
+  ...
+# Subtest: DNS failure is reported separately after code publication
+ok 195 - DNS failure is reported separately after code publication
+  ---
+  duration_ms: 1026.712293
+  type: 'test'
+  ...
+# Subtest: Wrangler success with no new active deployment never counts as published
+ok 196 - Wrangler success with no new active deployment never counts as published
+  ---
+  duration_ms: 787.33514
+  type: 'test'
+  ...
+# Subtest: new active version without this nonce/source marker cannot claim success even if URL would pass
+ok 197 - new active version without this nonce/source marker cannot claim success even if URL would pass
+  ---
+  duration_ms: 945.993618
+  type: 'test'
+  ...
+# Subtest: new active version with no marker cannot claim success
+ok 198 - new active version with no marker cannot claim success
+  ---
+  duration_ms: 823.388606
+  type: 'test'
+  ...
+# Subtest: marker only in settings but not active version is insufficient
+ok 199 - marker only in settings but not active version is insufficient
+  ---
+  duration_ms: 1043.218634
+  type: 'test'
+  ...
+# Subtest: reserved marker colliding with existing business variable is not overwritten
+ok 200 - reserved marker colliding with existing business variable is not overwritten
+  ---
+  duration_ms: 960.200424
+  type: 'test'
+  ...
+# Subtest: prior legitimate release marker is safely replaced only by the new code marker
+ok 201 - prior legitimate release marker is safely replaced only by the new code marker
+  ---
+  duration_ms: 925.25676
+  type: 'test'
+  ...
+# Subtest: binding change after publisher is detected without issuing data API calls
+ok 202 - binding change after publisher is detected without issuing data API calls
+  ---
+  duration_ms: 973.920556
+  type: 'test'
+  ...
+# Subtest: published version changes while URL is checked: no final success for stale version
+ok 203 - published version changes while URL is checked: no final success for stale version
+  ---
+  duration_ms: 937.056106
+  type: 'test'
+  ...
+# Subtest: a split-traffic deployment is not overwritten
+ok 204 - a split-traffic deployment is not overwritten
+  ---
+  duration_ms: 797.776037
+  type: 'test'
+  ...
+# Subtest: release checks failing report not attempted, unlike uploader failure
+ok 205 - release checks failing report not attempted, unlike uploader failure
+  ---
+  duration_ms: 794.258894
+  type: 'test'
+  ...
+# Subtest: a fresh failed attempt cannot leave a prior success report
+ok 206 - a fresh failed attempt cannot leave a prior success report
+  ---
+  duration_ms: 757.983588
+  type: 'test'
+  ...
+# Subtest: mixed account injection is rejected before control-plane reads
+ok 207 - mixed account injection is rejected before control-plane reads
+  ---
+  duration_ms: 761.292915
+  type: 'test'
+  ...
+# (node:11612) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: unbound GET renders a self-contained init page and reports CODE deployed, not application ready
+ok 208 - unbound GET renders a self-contained init page and reports CODE deployed, not application ready
+  ---
+  duration_ms: 24.216105
+  type: 'test'
+  ...
+# Subtest: missing KV or missing D1 is not treated as a new install
+ok 209 - missing KV or missing D1 is not treated as a new install
+  ---
+  duration_ms: 7.614287
+  type: 'test'
+  ...
+# Subtest: GETs and page refreshes with both resources bound do not run migration or initialize config
+ok 210 - GETs and page refreshes with both resources bound do not run migration or initialize config
+  ---
+  duration_ms: 4.3956
+  type: 'test'
+  ...
+# Subtest: init auth is runtime SuperAdmin, not normal admin or any hard-coded password
+ok 211 - init auth is runtime SuperAdmin, not normal admin or any hard-coded password
+  ---
+  duration_ms: 15.382513
+  type: 'test'
+  ...
+# Subtest: runtime SuperAdmin username is required only when already configured
+ok 212 - runtime SuperAdmin username is required only when already configured
+  ---
+  duration_ms: 17.308442
+  type: 'test'
+  ...
+# Subtest: missing runtime secret still permits code/page deployment but refuses all initialization writes
+ok 213 - missing runtime secret still permits code/page deployment but refuses all initialization writes
+  ---
+  duration_ms: 2.878238
+  type: 'test'
+  ...
+# Subtest: cross-site/simple-form request rejected {"Origin":"https://evil.invalid"}
+ok 214 - cross-site/simple-form request rejected {"Origin":"https://evil.invalid"}
+  ---
+  duration_ms: 2.889172
+  type: 'test'
+  ...
+# Subtest: cross-site/simple-form request rejected {"Origin":""}
+ok 215 - cross-site/simple-form request rejected {"Origin":""}
+  ---
+  duration_ms: 3.295219
+  type: 'test'
+  ...
+# Subtest: cross-site/simple-form request rejected {"X-SubsTracker-Init":""}
+ok 216 - cross-site/simple-form request rejected {"X-SubsTracker-Init":""}
+  ---
+  duration_ms: 3.339399
+  type: 'test'
+  ...
+# Subtest: cross-site/simple-form request rejected {"Content-Type":"text/plain"}
+ok 217 - cross-site/simple-form request rejected {"Content-Type":"text/plain"}
+  ---
+  duration_ms: 2.456308
+  type: 'test'
+  ...
+# Subtest: oversized chunked request rejected before any data read/write
+ok 218 - oversized chunked request rejected before any data read/write
+  ---
+  duration_ms: 3.27079
+  type: 'test'
+  ...
+# Subtest: unconfirmed start does not even CREATE the control table
+ok 219 - unconfirmed start does not even CREATE the control table
+  ---
+  duration_ms: 6.311474
+  type: 'test'
+  ...
+# Subtest: old KV schema, empty original config, missing encryption key and malformed data are not reset
+ok 220 - old KV schema, empty original config, missing encryption key and malformed data are not reset
+  ---
+  duration_ms: 12.380534
+  type: 'test'
+  ...
+# Subtest: source changes between preview and start prevent all writes
+ok 221 - source changes between preview and start prevent all writes
+  ---
+  duration_ms: 7.648574
+  type: 'test'
+  ...
+# Subtest: complete web init preserves every original KV value and all business SQL rows
+ok 222 - complete web init preserves every original KV value and all business SQL rows
+  ---
+  duration_ms: 29.592
+  type: 'test'
+  ...
+# Subtest: repeat init after completion is read-only and never duplicates history
+ok 223 - repeat init after completion is read-only and never duplicates history
+  ---
+  duration_ms: 21.597862
+  type: 'test'
+  ...
+# Subtest: legacy account primary key is rejected before any write (no DROP, replacement or reset)
+ok 224 - legacy account primary key is rejected before any write (no DROP, replacement or reset)
+  ---
+  duration_ms: 3.235478
+  type: 'test'
+  ...
+# Subtest: missing modern optional account column is added without changing original rows
+ok 225 - missing modern optional account column is added without changing original rows
+  ---
+  duration_ms: 15.620793
+  type: 'test'
+  ...
+# Subtest: empty original D1 can gain missing modern tables; no database resource is created
+ok 226 - empty original D1 can gain missing modern tables; no database resource is created
+  ---
+  duration_ms: 17.037013
+  type: 'test'
+  ...
+# Subtest: schema preflight is entirely read-only and identifies modern schema gaps
+ok 227 - schema preflight is entirely read-only and identifies modern schema gaps
+  ---
+  duration_ms: 2.230388
+  type: 'test'
+  ...
+# Subtest: step is resumable after a rejected insert batch; no completion marker is fabricated
+ok 228 - step is resumable after a rejected insert batch; no completion marker is fabricated
+  ---
+  duration_ms: 15.194057
+  type: 'test'
+  ...
+# Subtest: multiple small ledger batches retain progress across browser sessions
+ok 229 - multiple small ledger batches retain progress across browser sessions
+  ---
+  duration_ms: 59.99388
+  type: 'test'
+  ...
+# Subtest: KV eventual-consistency read miss waits, does not repeat marker writes or unlock early
+ok 230 - KV eventual-consistency read miss waits, does not repeat marker writes or unlock early
+  ---
+  duration_ms: 17.943624
+  type: 'test'
+  ...
+# Subtest: substituting KV after completion never reuses cached D1 approval
+ok 231 - substituting KV after completion never reuses cached D1 approval
+  ---
+  duration_ms: 14.902631
+  type: 'test'
+  ...
+# Subtest: changing original source during a paused init stops before the next write
+ok 232 - changing original source during a paused init stops before the next write
+  ---
+  duration_ms: 6.357937
+  type: 'test'
+  ...
+# Subtest: public status and HTML do not disclose stored config, source records, secrets or hashes
+ok 233 - public status and HTML do not disclose stored config, source records, secrets or hashes
+  ---
+  duration_ms: 15.544591
+  type: 'test'
+  ...
+# Subtest: ordinary direct and legacy upgrade endpoints are not exposed by deferred init mode
+ok 234 - ordinary direct and legacy upgrade endpoints are not exposed by deferred init mode
+  ---
+  duration_ms: 2.168386
+  type: 'test'
+  ...
+# Subtest: two concurrent ledger retries never duplicate or overwrite originals
+ok 235 - two concurrent ledger retries never duplicate or overwrite originals
+  ---
+  duration_ms: 31.120958
+  type: 'test'
+  ...
+# Subtest: each small init step stays within 50 D1 statements on a representative modern fixture
+ok 236 - each small init step stays within 50 D1 statements on a representative modern fixture
+  ---
+  duration_ms: 34.157688
+  type: 'test'
+  ...
+# Subtest: ordinary config changes after completion do not invalidate init; original key replacement does
+ok 237 - ordinary config changes after completion do not invalidate init; original key replacement does
+  ---
+  duration_ms: 12.138718
+  type: 'test'
+  ...
+# Subtest: conflicting KV receipt never gets overwritten or treated as complete
+ok 238 - conflicting KV receipt never gets overwritten or treated as complete
+  ---
+  duration_ms: 11.549697
+  type: 'test'
+  ...
+# Subtest: existing malformed historical completion flag fails in preview, before all writes
+ok 239 - existing malformed historical completion flag fails in preview, before all writes
+  ---
+  duration_ms: 3.911999
+  type: 'test'
+  ...
+# Subtest: custom same-name wrong index is detected instead of silently accepted or rebuilt
+ok 240 - custom same-name wrong index is detected instead of silently accepted or rebuilt
+  ---
+  duration_ms: 3.135341
+  type: 'test'
+  ...
+# Subtest: an interrupted response after ledger commit resumes without replaying an immutable receipt
+ok 241 - an interrupted response after ledger commit resumes without replaying an immutable receipt
+  ---
+  duration_ms: 16.189716
+  type: 'test'
+  ...
+# Subtest: concurrent start creates a single stable checkpoint without overwriting its nonce
+ok 242 - concurrent start creates a single stable checkpoint without overwriting its nonce
+  ---
+  duration_ms: 12.439263
+  type: 'test'
+  ...
+# Subtest: init HTML has a nonce CSP, no external script, and never uses persistent browser credential storage
+ok 243 - init HTML has a nonce CSP, no external script, and never uses persistent browser credential storage
+  ---
+  duration_ms: 0.729914
+  type: 'test'
+  ...
+# Subtest: input intent: empty string must not match old nonempty value
+ok 244 - input intent: empty string must not match old nonempty value
+  ---
+  duration_ms: 1.877378
+  type: 'test'
+  ...
+# Subtest: date equivalence uses configured date semantics, not string representation
+ok 245 - date equivalence uses configured date semantics, not string representation
+  ---
+  duration_ms: 16.858987
+  type: 'test'
+  ...
+# Subtest: empty optional values remain valid
+ok 246 - empty optional values remain valid
+  ---
+  duration_ms: 0.284777
+  type: 'test'
+  ...
+# Subtest: normalization never silently accepts invalid dates or periods
+ok 247 - normalization never silently accepts invalid dates or periods
+  ---
+  duration_ms: 0.558067
+  type: 'test'
+  ...
+# Subtest: disabled reminder rules are different; IDs and creation timestamps are not business values
+ok 248 - disabled reminder rules are different; IDs and creation timestamps are not business values
+  ---
+  duration_ms: 0.461867
+  type: 'test'
+  ...
+# Subtest: D1 safe snapshot retains reminder content but no password data
+ok 249 - D1 safe snapshot retains reminder content but no password data
+  ---
+  duration_ms: 0.157512
+  type: 'test'
+  ...
+# Subtest: preset still builds 7/3 disabled and 1/day-of enabled
+ok 250 - preset still builds 7/3 disabled and 1/day-of enabled
+  ---
+  duration_ms: 8.069913
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 生成新的订阅凭据加密密钥
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: empty rules stay disabled and legacy rule keeps stable dedupe id
+ok 251 - scheduler: empty rules stay disabled and legacy rule keeps stable dedupe id
+  ---
+  duration_ms: 68.21786
+  type: 'test'
+  ...
+# Subtest: checkout diagnostic exposes added source/tests, modified and missing files without deleting them
+ok 252 - checkout diagnostic exposes added source/tests, modified and missing files without deleting them
+  ---
+  duration_ms: 4.30637
+  type: 'test'
+  ...
+# Subtest: real Workers test runs after lint and before expensive simulated deployment, never dropped
+ok 253 - real Workers test runs after lint and before expensive simulated deployment, never dropped
+  ---
+  duration_ms: 0.179976
+  type: 'test'
+  ...
+# (node:11667) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+# [runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+# Subtest: failure injection really reproduces a missing Python _sqlite3 extension
+ok 254 - failure injection really reproduces a missing Python _sqlite3 extension
+  ---
+  duration_ms: 754.817773
+  type: 'test'
+  ...
+# Subtest: disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+ok 255 - disk reads work with sqlite3 and _sqlite3 unavailable; preserve Unicode/NUL/int64/blob/NULL
+  ---
+  duration_ms: 813.492855
+  type: 'test'
+  ...
+# Subtest: bound parameters preserve quotes and prevent query text injection
+ok 256 - bound parameters preserve quotes and prevent query text injection
+  ---
+  duration_ms: 850.994367
+  type: 'test'
+  ...
+# Subtest: missing fixture is rejected and is not silently created
+ok 257 - missing fixture is rejected and is not silently created
+  ---
+  duration_ms: 768.606823
+  type: 'test'
+  ...
+# Subtest: corrupt fixture and invalid SQL fail, not empty successful test results
+ok 258 - corrupt fixture and invalid SQL fail, not empty successful test results
+  ---
+  duration_ms: 1585.426558
+  type: 'test'
+  ...
+# Subtest: the read-only path rejects mutations and leaves original bytes untouched
+ok 259 - the read-only path rejects mutations and leaves original bytes untouched
+  ---
+  duration_ms: 815.612389
+  type: 'test'
+  ...
+# Subtest: explicit fixture transaction persists on independent process reopen
+ok 260 - explicit fixture transaction persists on independent process reopen
+  ---
+  duration_ms: 1735.806705
+  type: 'test'
+  ...
+# Subtest: a failed batch rolls back its preceding statement
+ok 261 - a failed batch rolls back its preceding statement
+  ---
+  duration_ms: 935.651858
+  type: 'test'
+  ...
+# Subtest: multiple SQL statements cannot silently execute only the first one
+ok 262 - multiple SQL statements cannot silently execute only the first one
+  ---
+  duration_ms: 807.454995
+  type: 'test'
+  ...
+# Subtest: fixture DDL and ATTACH are not accepted by the write helper
+ok 263 - fixture DDL and ATTACH are not accepted by the write helper
+  ---
+  duration_ms: 1948.133451
+  type: 'test'
+  ...
+# Subtest: blob/empty string/NULL and minimum int64 values round trip through fixture writes
+ok 264 - blob/empty string/NULL and minimum int64 values round trip through fixture writes
+  ---
+  duration_ms: 1156.97585
+  type: 'test'
+  ...
+# Subtest: out-of-range integer and non-finite real parameters fail without modifying fixture
+ok 265 - out-of-range integer and non-finite real parameters fail without modifying fixture
+  ---
+  duration_ms: 1849.856045
+  type: 'test'
+  ...
+# Subtest: missing Node executable is an actual failure, not a Python/sqlite fallback
+ok 266 - missing Node executable is an actual failure, not a Python/sqlite fallback
+  ---
+  duration_ms: 750.35369
+  type: 'test'
+  ...
+# Subtest: runtime preflight tests a real disk file and a Python-to-Node round trip
+ok 267 - runtime preflight tests a real disk file and a Python-to-Node round trip
+  ---
+  duration_ms: 797.84837
+  type: 'test'
+  ...
+# Subtest: runtime preflight rejects a missing Python executable before release checks
+ok 268 - runtime preflight rejects a missing Python executable before release checks
+  ---
+  duration_ms: 3.669923
+  type: 'test'
+  ...
+# Subtest: workflow launcher uses PYTHON rather than silently invoking another interpreter
+ok 269 - workflow launcher uses PYTHON rather than silently invoking another interpreter
+  ---
+  duration_ms: 40.361112
+  type: 'test'
+  ...
+# Subtest: mandatory release workflow and original checks are retained; runtime probe is first
+ok 270 - mandatory release workflow and original checks are retained; runtime probe is first
+  ---
+  duration_ms: 0.44816
+  type: 'test'
+  ...
+# Subtest: all shipped Python disk assertions use the portable helper, not sqlite3 imports
+ok 271 - all shipped Python disk assertions use the portable helper, not sqlite3 imports
+  ---
+  duration_ms: 1.021191
+  type: 'test'
+  ...
+# Subtest: runtime preflight succeeds when the selected Python explicitly blocks SQLite imports
+ok 272 - runtime preflight succeeds when the selected Python explicitly blocks SQLite imports
+  ---
+  duration_ms: 960.843251
+  type: 'test'
+  ...
+# Subtest: disabled Node SQLite is rejected explicitly instead of silently skipping local SQL checks
+ok 273 - disabled Node SQLite is rejected explicitly instead of silently skipping local SQL checks
+  ---
+  duration_ms: 34.528331
+  type: 'test'
+  ...
+# Subtest: Python test failures propagate their exit status through the launcher
+ok 274 - Python test failures propagate their exit status through the launcher
+  ---
+  duration_ms: 1589.840415
+  type: 'test'
+  ...
+# Subtest: regression: extra repository test can read runtime.configured=true
+ok 275 - regression: extra repository test can read runtime.configured=true
+  ---
+  duration_ms: 0.970991
+  type: 'test'
+  ...
+# Subtest: backwards-compatible object shape for existing Workers suite
+ok 276 - backwards-compatible object shape for existing Workers suite
+  ---
+  duration_ms: 1.101614
+  type: 'test'
+  ...
+# Subtest: partial, absent or blank runtime variables still deny elevated identity
+ok 277 - partial, absent or blank runtime variables still deny elevated identity
+  ---
+  duration_ms: 1.253599
+  type: 'test'
+  ...
+# Subtest: credential verification remains strict; no username or password fallback
+ok 278 - credential verification remains strict; no username or password fallback
+  ---
+  duration_ms: 11.649487
+  type: 'test'
+  ...
+# Subtest: password whitespace remains significant
+ok 279 - password whitespace remains significant
+  ---
+  duration_ms: 1.091964
+  type: 'test'
+  ...
+# (node:12352) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: strict adapter reproduces rejected cacheTtl=30, rather than silently accepting it
+ok 280 - strict adapter reproduces rejected cacheTtl=30, rather than silently accepting it
+  ---
+  duration_ms: 2.084586
+  type: 'test'
+  ...
+# Subtest: production bulk read uses a compatible TTL and preserves all values
+ok 281 - production bulk read uses a compatible TTL and preserves all values
+  ---
+  duration_ms: 1.013129
+  type: 'test'
+  ...
+# Subtest: more than 100 keys are split without omission
+ok 282 - more than 100 keys are split without omission
+  ---
+  duration_ms: 0.796691
+  type: 'test'
+  ...
+# Subtest: old runtime rejecting array overload falls back to string reads only
+ok 283 - old runtime rejecting array overload falls back to string reads only
+  ---
+  duration_ms: 0.45128
+  type: 'test'
+  ...
+# Subtest: permission failures propagate without a misleading single-key fallback
+ok 284 - permission failures propagate without a misleading single-key fallback
+  ---
+  duration_ms: 0.284262
+  type: 'test'
+  ...
+# Subtest: partial bulk response is an error, never an empty successful inventory
+ok 285 - partial bulk response is an error, never an empty successful inventory
+  ---
+  duration_ms: 0.327431
+  type: 'test'
+  ...
+# Subtest: repository list works under strict KV contract and retains the record
+ok 286 - repository list works under strict KV contract and retains the record
+  ---
+  duration_ms: 11.809439
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [JWT] 验证成功，用户: admin
+# [配置] 从KV读取配置: 成功
+# Subtest: backup API works under strict KV and does not leak configured passwords
+ok 287 - backup API works under strict KV and does not leak configured passwords
+  ---
+  duration_ms: 29.285305
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# Subtest: create syncs legacy category and Database menu, with no dropped subscription
+ok 288 - create syncs legacy category and Database menu, with no dropped subscription
+  ---
+  duration_ms: 25.448994
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# Subtest: non-membership also records category without creating a current membership
+ok 289 - non-membership also records category without creating a current membership
+  ---
+  duration_ms: 6.546357
+  type: 'test'
+  ...
+# Subtest: invalid input does not create category entries before validation
+ok 290 - invalid input does not create category entries before validation
+  ---
+  duration_ms: 4.686451
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [workflow] legacy category sync delayed: injected category failure
+# Subtest: category mirror failure reports warning while preserving successful committed operation
+ok 291 - category mirror failure reports warning while preserving successful committed operation
+  ---
+  duration_ms: 11.727592
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# Subtest: replay cannot add another receipt or reset current subscription dates
+ok 292 - replay cannot add another receipt or reset current subscription dates
+  ---
+  duration_ms: 4.752567
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [JWT] 验证成功，用户: admin
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [JWT] 验证成功，用户: admin
+# Subtest: D1-backed category/menu sync survives independent API calls
+ok 293 - D1-backed category/menu sync survives independent API calls
+  ---
+  duration_ms: 15.834722
+  type: 'test'
+  ...
+# Subtest: runtime SuperAdmin compatibility functions are exported
+ok 294 - runtime SuperAdmin compatibility functions are exported
+  ---
+  duration_ms: 0.191548
+  type: 'test'
+  ...
+# Subtest: runtime credentials require both fields; no hardcoded/config fallback
+ok 295 - runtime credentials require both fields; no hardcoded/config fallback
+  ---
+  duration_ms: 0.162366
+  type: 'test'
+  ...
+# Subtest: runtime verifier checks both username and password, including empty/nonstring inputs
+ok 296 - runtime verifier checks both username and password, including empty/nonstring inputs
+  ---
+  duration_ms: 1.974974
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: password whitespace is preserved, not silently trimmed
+ok 297 - password whitespace is preserved, not silently trimmed
+  ---
+  duration_ms: 3.010285
+  type: 'test'
+  ...
+# [JWT] 验证成功，用户: root-admin
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: independent runtime SuperAdmin login gets proper role and HttpOnly cookies
+ok 298 - independent runtime SuperAdmin login gets proper role and HttpOnly cookies
+  ---
+  duration_ms: 9.159554
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: explicit runtime username does not accept admin-name plus elevated password
+ok 299 - explicit runtime username does not accept admin-name plus elevated password
+  ---
+  duration_ms: 1.717851
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: ordinary admin login remains valid and clears elevated cookie
+ok 300 - ordinary admin login remains valid and clears elevated cookie
+  ---
+  duration_ms: 2.165631
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: password-only legacy SuperAdmin flow is preserved when username is not configured
+ok 301 - password-only legacy SuperAdmin flow is preserved when username is not configured
+  ---
+  duration_ms: 2.529382
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# Subtest: explicit empty independent username fails closed without breaking ordinary admin
+ok 302 - explicit empty independent username fails closed without breaking ordinary admin
+  ---
+  duration_ms: 2.772407
+  type: 'test'
+  ...
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: correct timezone sends a day-rule notification with strict KV reads
+ok 303 - scheduler: correct timezone sends a day-rule notification with strict KV reads
+  ---
+  duration_ms: 6.960436
+  type: 'test'
+  ...
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: outside the window skips without a KV exception
+ok 304 - scheduler: outside the window skips without a KV exception
+  ---
+  duration_ms: 3.632449
+  type: 'test'
+  ...
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: daily dedupe works across two hours on the same date
+ok 305 - scheduler: daily dedupe works across two hours on the same date
+  ---
+  duration_ms: 5.829271
+  type: 'test'
+  ...
+# [定时任务] telegram 发送失败: Telegram 拒绝: 未知
+# [配置] 从KV读取配置: 成功
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: failed delivery does not reserve dedupe; retry can send
+ok 306 - scheduler: failed delivery does not reserve dedupe; retry can send
+  ---
+  duration_ms: 7.073464
+  type: 'test'
+  ...
+# [定时任务] 已自动处理 1 个订阅生命周期更新
+# [定时任务] telegram 发送成功
+# [配置] 从KV读取配置: 成功
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: reset + renewal off stays expired and observes after-expiry interval
+ok 307 - scheduler: reset + renewal off stays expired and observes after-expiry interval
+  ---
+  duration_ms: 7.092801
+  type: 'test'
+  ...
+# [定时任务] 已自动处理 1 个订阅生命周期更新
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: cycle + renewal off still advances dates but invents no payment
+ok 308 - scheduler: cycle + renewal off still advances dates but invents no payment
+  ---
+  duration_ms: 6.071786
+  type: 'test'
+  ...
+# [定时任务] 已自动处理 1 个订阅生命周期更新
+# [配置] 从KV读取配置: 成功
+# Subtest: scheduler: cycle renewal appends history once, not on every tick
+ok 309 - scheduler: cycle renewal appends history once, not on every tick
+  ---
+  duration_ms: 9.058305
+  type: 'test'
+  ...
+# (node:12363) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: empty D1 returns valid logical SQL (application schema gate remains separate)
+ok 310 - empty D1 returns valid logical SQL (application schema gate remains separate)
+  ---
+  duration_ms: 35.474614
+  type: 'test'
+  ...
+# Subtest: data pages never call export API or any object URL and round-trip every row
+ok 311 - data pages never call export API or any object URL and round-trip every row
+  ---
+  duration_ms: 22.003384
+  type: 'test'
+  ...
+# Subtest: Unicode / apostrophe / newlines / NUL TEXT bytes preserved
+ok 312 - Unicode / apostrophe / newlines / NUL TEXT bytes preserved
+  ---
+  duration_ms: 3.985877
+  type: 'test'
+  ...
+# Subtest: NULL, empty text, empty BLOB and binary are distinct after restore
+ok 313 - NULL, empty text, empty BLOB and binary are distinct after restore
+  ---
+  duration_ms: 2.647221
+  type: 'test'
+  ...
+# Subtest: int64 extremes pass as SQL text without JSON number rounding
+ok 314 - int64 extremes pass as SQL text without JSON number rounding
+  ---
+  duration_ms: 2.952331
+  type: 'test'
+  ...
+# Subtest: finite and infinite REAL values preserve numeric values
+ok 315 - finite and infinite REAL values preserve numeric values
+  ---
+  duration_ms: 2.991252
+  type: 'test'
+  ...
+# Subtest: implicit rowid gaps and duplicate business rows preserved
+ok 316 - implicit rowid gaps and duplicate business rows preserved
+  ---
+  duration_ms: 3.184028
+  type: 'test'
+  ...
+# Subtest: AUTOINCREMENT high-water value survives deleted highest row
+ok 317 - AUTOINCREMENT high-water value survives deleted highest row
+  ---
+  duration_ms: 4.784823
+  type: 'test'
+  ...
+# Subtest: WITHOUT ROWID composite/collated primary key is ordered and preserved
+ok 318 - WITHOUT ROWID composite/collated primary key is ordered and preserved
+  ---
+  duration_ms: 3.718871
+  type: 'test'
+  ...
+# Subtest: STORED and VIRTUAL generated columns restored from table definition
+ok 319 - STORED and VIRTUAL generated columns restored from table definition
+  ---
+  duration_ms: 2.924856
+  type: 'test'
+  ...
+# Subtest: trigger creation after inserts does not duplicate audit rows; trigger still works
+ok 320 - trigger creation after inserts does not duplicate audit rows; trigger still works
+  ---
+  duration_ms: 4.275341
+  type: 'test'
+  ...
+# Subtest: indexes/views/constraints retained and external system table not queried
+ok 321 - indexes/views/constraints retained and external system table not queried
+  ---
+  duration_ms: 2.879193
+  type: 'test'
+  ...
+# Subtest: quoted SQL identifiers do not break schema/row serialization
+ok 322 - quoted SQL identifiers do not break schema/row serialization
+  ---
+  duration_ms: 2.692704
+  type: 'test'
+  ...
+# Subtest: large TEXT uses bounded chunks including NUL and multibyte characters
+ok 323 - large TEXT uses bounded chunks including NUL and multibyte characters
+  ---
+  duration_ms: 18.38924
+  type: 'test'
+  ...
+# Subtest: large binary uses chunks and exact BLOB type, not UTF-8 replacement
+ok 324 - large binary uses chunks and exact BLOB type, not UTF-8 replacement
+  ---
+  duration_ms: 55.008736
+  type: 'test'
+  ...
+# Subtest: large WITHOUT ROWID record retains composite identity
+ok 325 - large WITHOUT ROWID record retains composite identity
+  ---
+  duration_ms: 6.462478
+  type: 'test'
+  ...
+# Subtest: missing page entries fail instead of being accepted as complete
+ok 326 - missing page entries fail instead of being accepted as complete
+  ---
+  duration_ms: 2.332662
+  type: 'test'
+  ...
+# Subtest: repeating pages fail monotonic rowid verification
+ok 327 - repeating pages fail monotonic rowid verification
+  ---
+  duration_ms: 1.869607
+  type: 'test'
+  ...
+# Subtest: schema change during scan fails and returns no archive
+ok 328 - schema change during scan fails and returns no archive
+  ---
+  duration_ms: 1.51369
+  type: 'test'
+  ...
+# Subtest: row count changes during scan fail
+ok 329 - row count changes during scan fail
+  ---
+  duration_ms: 1.789473
+  type: 'test'
+  ...
+# Subtest: unsupported virtual/shadow tables rejected before returning partial backup
+ok 330 - unsupported virtual/shadow tables rejected before returning partial backup
+  ---
+  duration_ms: 0.866291
+  type: 'test'
+  ...
+# Subtest: incomplete xinfo refused, generated/hidden columns never silently omitted
+ok 331 - incomplete xinfo refused, generated/hidden columns never silently omitted
+  ---
+  duration_ms: 0.883019
+  type: 'test'
+  ...
+# Subtest: damaged large cell chunk fails before it can reach encryption
+ok 332 - damaged large cell chunk fails before it can reach encryption
+  ---
+  duration_ms: 2.582078
+  type: 'test'
+  ...
+# Subtest: backup size budget fails closed without changing storage backend
+ok 333 - backup size budget fails closed without changing storage backend
+  ---
+  duration_ms: 1.084709
+  type: 'test'
+  ...
+# Subtest: integer bounds and snapshot options checked before querying
+ok 334 - integer bounds and snapshot options checked before querying
+  ---
+  duration_ms: 0.453588
+  type: 'test'
+  ...
+# (node:12374) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: R2 local/inactive environment bindings rejected; never silently stripped
+ok 335 - R2 local/inactive environment bindings rejected; never silently stripped
+  ---
+  duration_ms: 1.225539
+  type: 'test'
+  ...
+# Subtest: online R2 binding rejected without delete/create/migrate side effects
+ok 336 - online R2 binding rejected without delete/create/migrate side effects
+  ---
+  duration_ms: 0.29616
+  type: 'test'
+  ...
+# Subtest: D1/KV/static assets/variables/secrets accepted without object storage
+ok 337 - D1/KV/static assets/variables/secrets accepted without object storage
+  ---
+  duration_ms: 0.443399
+  type: 'test'
+  ...
+# Subtest: additional storage/services rejected locally to avoid implicit additions
+ok 338 - additional storage/services rejected locally to avoid implicit additions
+  ---
+  duration_ms: 0.346239
+  type: 'test'
+  ...
+# Subtest: R2 and D1 import/export jobs rejected before transport
+ok 339 - R2 and D1 import/export jobs rejected before transport
+  ---
+  duration_ms: 1.085091
+  type: 'test'
+  ...
+# Subtest: redirect-style/absolute paths cannot send token to another storage host
+ok 340 - redirect-style/absolute paths cannot send token to another storage host
+  ---
+  duration_ms: 0.719621
+  type: 'test'
+  ...
+# Subtest: schema response with wrong shape or success false is rejected
+ok 341 - schema response with wrong shape or success false is rejected
+  ---
+  duration_ms: 20.624396
+  type: 'test'
+  ...
+# Subtest: D1 permission error stops backup, no silent fallback to bucket
+ok 342 - D1 permission error stops backup, no silent fallback to bucket
+  ---
+  duration_ms: 0.727895
+  type: 'test'
+  ...
+# Subtest: all shipped Wrangler configs parse and only declare KV/D1 for data storage
+ok 343 - all shipped Wrangler configs parse and only declare KV/D1 for data storage
+  ---
+  duration_ms: 3086.411559
+  type: 'test'
+  ...
+# Subtest: no direct S3/R2 SDK dependency is introduced
+ok 344 - no direct S3/R2 SDK dependency is introduced
+  ---
+  duration_ms: 1.055049
+  type: 'test'
+  ...
+# Subtest: split and GitHub release require storage regression, not a bypass
+ok 345 - split and GitHub release require storage regression, not a bypass
+  ---
+  duration_ms: 0.461763
+  type: 'test'
+  ...
+# Subtest: custom storage IDs retained without any name-based discovery
+ok 346 - custom storage IDs retained without any name-based discovery
+  ---
+  duration_ms: 2.032757
+  type: 'test'
+  ...
+# Subtest: matching explicit local binding retained
+ok 347 - matching explicit local binding retained
+  ---
+  duration_ms: 0.291258
+  type: 'test'
+  ...
+# Subtest: local KV different from actual binding rejected
+ok 348 - local KV different from actual binding rejected
+  ---
+  duration_ms: 0.52728
+  type: 'test'
+  ...
+# Subtest: local D1 different from actual binding rejected
+ok 349 - local D1 different from actual binding rejected
+  ---
+  duration_ms: 0.174776
+  type: 'test'
+  ...
+# Subtest: unknown binding rejected rather than removed at deploy
+ok 350 - unknown binding rejected rather than removed at deploy
+  ---
+  duration_ms: 0.154202
+  type: 'test'
+  ...
+# Subtest: second KV rejected rather than silently dropped
+ok 351 - second KV rejected rather than silently dropped
+  ---
+  duration_ms: 0.132988
+  type: 'test'
+  ...
+# Subtest: legacy D1 id and modern database_id formats supported and conflicts refused
+ok 352 - legacy D1 id and modern database_id formats supported and conflicts refused
+  ---
+  duration_ms: 0.248405
+  type: 'test'
+  ...
+# Subtest: KV-only deployment does not create D1
+ok 353 - KV-only deployment does not create D1
+  ---
+  duration_ms: 0.22583
+  type: 'test'
+  ...
+# Subtest: missing bindings or missing token/account rejected
+ok 354 - missing bindings or missing token/account rejected
+  ---
+  duration_ms: 0.47486
+  type: 'test'
+  ...
+# Subtest: full KV pagination preserves binary, expiration, metadata and encodes keys
+ok 355 - full KV pagination preserves binary, expiration, metadata and encodes keys
+  ---
+  duration_ms: 28.962554
+  type: 'test'
+  ...
+# Subtest: missing KV cursor metadata rejects partial backup
+ok 356 - missing KV cursor metadata rejects partial backup
+  ---
+  duration_ms: 0.727989
+  type: 'test'
+  ...
+# Subtest: KV pagination duplicate keys stop backup
+ok 357 - KV pagination duplicate keys stop backup
+  ---
+  duration_ms: 1.60254
+  type: 'test'
+  ...
+# Subtest: KV key vanishing on read does not produce incomplete success
+ok 358 - KV key vanishing on read does not produce incomplete success
+  ---
+  duration_ms: 1.436756
+  type: 'test'
+  ...
+# Subtest: Cloudflare API permission failure stops without create/delete calls
+ok 359 - Cloudflare API permission failure stops without create/delete calls
+  ---
+  duration_ms: 0.573865
+  type: 'test'
+  ...
+# (node:12460) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D1 backup only uses query API, never an export/download job
+ok 360 - D1 backup only uses query API, never an export/download job
+  ---
+  duration_ms: 14.624154
+  type: 'test'
+  ...
+# Subtest: malformed D1 query backup response fails closed
+ok 361 - malformed D1 query backup response fails closed
+  ---
+  duration_ms: 0.48227
+  type: 'test'
+  ...
+# Subtest: schedules and settings use correct endpoint and response structure
+ok 362 - schedules and settings use correct endpoint and response structure
+  ---
+  duration_ms: 0.855764
+  type: 'test'
+  ...
+# (node:12471) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: repair partial 3319 migration, preserve raw data, retry idempotent (KV)
+ok 363 - repair partial 3319 migration, preserve raw data, retry idempotent (KV)
+  ---
+  duration_ms: 28.534831
+  type: 'test'
+  ...
+# Subtest: repair partial 3319 migration, preserve raw data, retry idempotent (D1)
+ok 364 - repair partial 3319 migration, preserve raw data, retry idempotent (D1)
+  ---
+  duration_ms: 32.115944
+  type: 'test'
+  ...
+# Subtest: full KV scan finds records omitted by index; D1-only record retained
+ok 365 - full KV scan finds records omitted by index; D1-only record retained
+  ---
+  duration_ms: 5.992408
+  type: 'test'
+  ...
+# Subtest: latest D1 changes used without modifying original KV or losing encrypted field
+ok 366 - latest D1 changes used without modifying original KV or losing encrypted field
+  ---
+  duration_ms: 14.409534
+  type: 'test'
+  ...
+# Subtest: equal timestamp business conflict fails before writes
+ok 367 - equal timestamp business conflict fails before writes
+  ---
+  duration_ms: 3.360774
+  type: 'test'
+  ...
+# Subtest: same payment ID with conflicting amount fails before writes
+ok 368 - same payment ID with conflicting amount fails before writes
+  ---
+  duration_ms: 2.264614
+  type: 'test'
+  ...
+# Subtest: newer snapshot missing an older payment is not silently resurrected
+ok 369 - newer snapshot missing an older payment is not silently resurrected
+  ---
+  duration_ms: 3.101149
+  type: 'test'
+  ...
+# Subtest: equal timestamp additive payments repair stale mirror
+ok 370 - equal timestamp additive payments repair stale mirror
+  ---
+  duration_ms: 4.638973
+  type: 'test'
+  ...
+# Subtest: corrupt JSON never becomes an empty record list
+ok 371 - corrupt JSON never becomes an empty record list
+  ---
+  duration_ms: 2.057527
+  type: 'test'
+  ...
+# Subtest: enumeration error fails without writes or done marker
+ok 372 - enumeration error fails without writes or done marker
+  ---
+  duration_ms: 2.375926
+  type: 'test'
+  ...
+# Subtest: index-only missing entry fails instead of claiming complete
+ok 373 - index-only missing entry fails instead of claiming complete
+  ---
+  duration_ms: 2.040772
+  type: 'test'
+  ...
+# Subtest: duplicate payment IDs rejected without writes
+ok 374 - duplicate payment IDs rejected without writes
+  ---
+  duration_ms: 4.440319
+  type: 'test'
+  ...
+# Subtest: old placeholder retained but excluded from spend after actual payments recovered
+ok 375 - old placeholder retained but excluded from spend after actual payments recovered
+  ---
+  duration_ms: 11.375046
+  type: 'test'
+  ...
+# Subtest: dropped ledger writes never report verified (KV)
+ok 376 - dropped ledger writes never report verified (KV)
+  ---
+  duration_ms: 3.383336
+  type: 'test'
+  ...
+# Subtest: dropped ledger writes never report verified (D1)
+ok 377 - dropped ledger writes never report verified (D1)
+  ---
+  duration_ms: 5.164003
+  type: 'test'
+  ...
+# Subtest: failed marker write leaves retryable additive rows
+ok 378 - failed marker write leaves retryable additive rows
+  ---
+  duration_ms: 4.683855
+  type: 'test'
+  ...
+# Subtest: source changes during additive migration prevents complete marker
+ok 379 - source changes during additive migration prevents complete marker
+  ---
+  duration_ms: 1.306274
+  type: 'test'
+  ...
+# Subtest: wrong expected source digest stops before migration
+ok 380 - wrong expected source digest stops before migration
+  ---
+  duration_ms: 2.619476
+  type: 'test'
+  ...
+# Subtest: existing conflicting ledger row not overwritten
+ok 381 - existing conflicting ledger row not overwritten
+  ---
+  duration_ms: 2.457195
+  type: 'test'
+  ...
+# Subtest: deleted current not resurrected; original snapshot still protected
+ok 382 - deleted current not resurrected; original snapshot still protected
+  ---
+  duration_ms: 2.245701
+  type: 'test'
+  ...
+# Subtest: encrypted full archive restores every SQL row, ciphertext, key, KV metadata and binary
+ok 383 - encrypted full archive restores every SQL row, ciphertext, key, KV metadata and binary
+  ---
+  duration_ms: 184.512843
+  type: 'test'
+  ...
+# Subtest: wrong backup password and file corruption rejected
+ok 384 - wrong backup password and file corruption rejected
+  ---
+  duration_ms: 250.367968
+  type: 'test'
+  ...
+# Subtest: weak backup password refused
+ok 385 - weak backup password refused
+  ---
+  duration_ms: 0.215971
+  type: 'test'
+  ...
+# Subtest: missing original key refuses upgrade instead of generating a replacement
+ok 386 - missing original key refuses upgrade instead of generating a replacement
+  ---
+  duration_ms: 4.542916
+  type: 'test'
+  ...
+# Subtest: row count equality cannot hide overwritten original values
+ok 387 - row count equality cannot hide overwritten original values
+  ---
+  duration_ms: 8.719181
+  type: 'test'
+  ...
+# Subtest: KV same count with altered template rejected
+ok 388 - KV same count with altered template rejected
+  ---
+  duration_ms: 7.433082
+  type: 'test'
+  ...
+# Subtest: SQL truncated file or foreign-key violation rejected in isolated restore
+ok 389 - SQL truncated file or foreign-key violation rejected in isolated restore
+  ---
+  duration_ms: 2.473776
+  type: 'test'
+  ...
+# Subtest: two-phase gate only unlocks after original/restore proof (KV)
+ok 390 - two-phase gate only unlocks after original/restore proof (KV)
+  ---
+  duration_ms: 38.067567
+  type: 'test'
+  ...
+# Subtest: two-phase gate only unlocks after original/restore proof (D1)
+ok 391 - two-phase gate only unlocks after original/restore proof (D1)
+  ---
+  duration_ms: 27.642239
+  type: 'test'
+  ...
+# Subtest: commit rejects data changed since applied report
+ok 392 - commit rejects data changed since applied report
+  ---
+  duration_ms: 5.502922
+  type: 'test'
+  ...
+# Subtest: manual raw deployment cannot silently migrate or expose application
+ok 393 - manual raw deployment cannot silently migrate or expose application
+  ---
+  duration_ms: 2.2587
+  type: 'test'
+  ...
+# Subtest: 180 receipts migrate in bounded requests under strict 50-query cold-isolate budget
+ok 394 - 180 receipts migrate in bounded requests under strict 50-query cold-isolate budget
+  ---
+  duration_ms: 530.237422
+  type: 'test'
+  ...
+# Subtest: bulk KV inventory reads >1000 subscriptions without >1000 storage operations
+ok 395 - bulk KV inventory reads >1000 subscriptions without >1000 storage operations
+  ---
+  duration_ms: 16.159965
+  type: 'test'
+  ...
+# Subtest: missing key in a bulk Map is an error, never a skipped row
+ok 396 - missing key in a bulk Map is an error, never a skipped row
+  ---
+  duration_ms: 2.090816
+  type: 'test'
+  ...
+# (node:12482) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: complete prepare→build guard→stage→backup→apply→restore→commit transport integration
+ok 397 - complete prepare→build guard→stage→backup→apply→restore→commit transport integration
+  ---
+  duration_ms: 6511.064525
+  type: 'test'
+  ...
+# Subtest: lost apply response resumes from server report without rerunning or overwriting originals
+ok 398 - lost apply response resumes from server report without rerunning or overwriting originals
+  ---
+  duration_ms: 6259.565754
+  type: 'test'
+  ...
+# Subtest: raw build without safe-run capability is blocked before deploy
+ok 399 - raw build without safe-run capability is blocked before deploy
+  ---
+  duration_ms: 47.610228
+  type: 'test'
+  ...
+# Subtest: lost commit acknowledgement recovers completed receipt without repeating migration
+ok 400 - lost commit acknowledgement recovers completed receipt without repeating migration
+  ---
+  duration_ms: 6541.100996
+  type: 'test'
+  ...
+# Subtest: runner iterates bounded migration batches and reports total additions
+ok 401 - runner iterates bounded migration batches and reports total additions
+  ---
+  duration_ms: 6268.541935
+  type: 'test'
+  ...
+# Subtest: generated configuration cannot add R2 even after an authentic verified backup
+ok 402 - generated configuration cannot add R2 even after an authentic verified backup
+  ---
+  duration_ms: 3431.368885
+  type: 'test'
+  ...
+# Subtest: tampering generated config other than first storage IDs is rejected after authentic prepare
+ok 403 - tampering generated config other than first storage IDs is rejected after authentic prepare
+  ---
+  duration_ms: 3520.006194
+  type: 'test'
+  ...
+1..403
+# tests 403
+# suites 0
+# pass 403
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 174160.091207

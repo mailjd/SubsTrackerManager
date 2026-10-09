@@ -1,8 +1,8 @@
-# v3.3.32｜保留原 Cloudflare Git 連接
+# v3.3.33｜保留原 Cloudflare Git 連接
 
 本次「先解綁 → 程式部署 → 綁回原資源 → /init」**不需要改 GitHub Actions**。繼續使用原 Cloudflare Git 整合，以及 Build `npm run build` / Deploy `npm run deploy:cloudflare`。
 
-請按 `UNBOUND_WEB_INIT_3.3.32.md` 操作。不要同時執行另一個 Safe upgrade 工作流。
+請按 `DEPLOY_REPAIR_3.3.33.md` 操作。不要同時執行另一個 Safe upgrade 工作流。
 
 ## 下方僅為歷史可選長流程，不是這次操作步驟
 

@@ -9,13 +9,14 @@ export class Cloudflare {
     if(!/^[a-fA-F0-9]{32}$/.test(accountId||'')||!token)throw new Error('缺少有效 CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN');
     this.accountId=accountId;this.token=token;this.fetchImpl=fetchImpl;
   }
-  async request(path,{method='GET',body,raw=false,allowNotFound=false}={}){
+  async request(path,{method='GET',body,raw=false,allowNotFound=false,timeoutMs=120000,maxAttempts=5}={}){
+    if(!Number.isInteger(timeoutMs)||timeoutMs<1||timeoutMs>120000||!Number.isInteger(maxAttempts)||maxAttempts<1||maxAttempts>5)throw new Error('無效的 Cloudflare 請求重試預算');
     assertD1KVRequest(path,method);
     const url='https://api.cloudflare.com/client/v4/accounts/'+this.accountId+path;
-    for(let n=0;n<5;n++){
-      const r=await this.fetchImpl(url,{method,redirect:'error',headers:{Authorization:'Bearer '+this.token,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(120000)});
+    for(let n=0;n<maxAttempts;n++){
+      const r=await this.fetchImpl(url,{method,redirect:'error',headers:{Authorization:'Bearer '+this.token,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(timeoutMs)});
       if(r.status===404 && allowNotFound)return null;
-      if((r.status===429||r.status>=500)&&n<4){await sleep(Math.min(30000,1000*2**n));continue;}
+      if((r.status===429||r.status>=500)&&n<maxAttempts-1){await sleep(Math.min(30000,1000*2**n));continue;}
       if(raw){if(!r.ok)throw new Error(`Cloudflare 读取失败 HTTP ${r.status} (${path.split('?')[0]})`);return Buffer.from(await r.arrayBuffer());}
       let data;try{data=await r.json();}catch{throw new Error('Cloudflare 返回非 JSON，已停止');}
       if(!r.ok||data?.success!==true){

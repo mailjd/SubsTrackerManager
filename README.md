@@ -1,3 +1,18 @@
+# SubsTracker v3.3.33｜固定網頁 init 部署流程
+
+**先解綁原 D1/KV → 發布程式 → 綁回同一原 ID → 網頁 `/init` → 資料核驗完成後開站。**
+
+完整操作：**[DEPLOY_REPAIR_3.3.33.md](DEPLOY_REPAIR_3.3.33.md)**。驗證界線：**[VERIFICATION_3.3.33.md](VERIFICATION_3.3.33.md)**。
+
+預設 `npm run deploy:cloudflare` 不再因殘留 KV 切回直接升級。網址／workers.dev 不再是無綁定程式發布的必要条件：改以現行版本＋本次非機密發布識別核對程式發布，網址與資料 init 分開記錄。
+
+保持 Build `npm run build` / Deploy `npm run deploy:cloudflare`。不需要改 Git 連接、不需要啟用 workers.dev、不使用跳過檢查旗標。修補包不包含 `wrangler.toml`；套用至原 repository 根目錄，保留原設定。仍有資料綁定會明確停止，不代為解綁或刪除資料。
+
+`codeDeployed:true` 不等於 `applicationReady:true`。網址未核對時亦不代表程式未發布。資料更新仍須綁回原庫後，由 `/init` 驗證、預覽、確認及回讀。
+
+---
+## 歷史版本記錄（不作為 v3.3.33 預設部署指引）
+
 # SubsTracker v3.3.32｜無綁定先部署，綁回原資源後網頁 init
 
 沿用原 repository、Cloudflare Git、Worker 與原網域。完整操作見 **[UNBOUND_WEB_INIT_3.3.32.md](UNBOUND_WEB_INIT_3.3.32.md)**。
@@ -12,7 +27,7 @@
 
 ## 歷史說明
 
-下方是原 v3.3.31 說明；其中「保持資料綁定並在部署時备份」不是本版的無綁定／網頁 init 路徑。仍保持 KV 綁定的現有環境會沿用該舊直接相容流程。
+下方是原 v3.3.31 說明；其中「保持資料綁定並在部署時备份」不是本版的無綁定／網頁 init 路徑。此句是 v3.3.32 的歷史設計；v3.3.33 已取消自動回退，勿按此舊規則操作。
 
 ---
 

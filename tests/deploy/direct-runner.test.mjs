@@ -25,13 +25,13 @@ async function setup(t,{kvOnly=true}={}){
   const env={...process.env,WORKERS_CI:'1',WORKERS_CI_BUILD_UUID:'direct-test',CF_PAGES:'',GITHUB_ACTIONS:'',SUBSTRACKER_WORKER_NAME:'',SUBSTRACKER_ENVIRONMENT:'',SUBSTRACKER_SAFE_DEPLOY_RUN:'',SUBSTRACKER_DIRECT_DEPLOY_RUN:'',
     PATH:bin+path.delimiter+process.env.PATH,FAKE_UPGRADE_ROOT:root,FAKE_UPGRADE_STATE:state,FAKE_SPLIT_CLOCK:'1',FAKE_ONLINE_KV_ONLY:kvOnly?'1':'',
     NODE_OPTIONS:'--import='+path.join(root,'tests/upgrade/fake-cloudflare-preload.mjs'),CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_TOKEN:'synthetic-only-no-network',SUBSTRACKER_BACKUP_PASSWORD:PASSWORD,SUBSTRACKER_WORKER_URL:'https://upgrade.example.invalid'};
-  const run=(extra={},args=[])=>spawnSync(process.execPath,['scripts/deploy-cloudflare.mjs',...args],{cwd:root,env:{...env,...extra},encoding:'utf8',timeout:60000});
+  const run=(extra={},args=[])=>spawnSync(process.execPath,['scripts/deploy-cloudflare.mjs',...(args.length?args:['direct'])],{cwd:root,env:{...env,...extra},encoding:'utf8',timeout:60000});
   const trace=()=>fs.existsSync(path.join(state,'transport.jsonl'))?fs.readFileSync(path.join(state,'transport.jsonl'),'utf8').trim().split('\n').map(JSON.parse):[];
   const plan=()=>JSON.parse(fs.readFileSync(path.join(root,'.upgrade/direct-plan.json'),'utf8'));
   return {root,state,env,run,trace,plan};
 }
 function pass(result){assert.equal(result.status,0,result.stdout+'\n'+result.stderr);}
-for(const kvOnly of [true,false])test('one default CLI build completes '+(kvOnly?'KV-only':'KV+D1')+' without split wait, lease or business writes',async t=>{
+for(const kvOnly of [true,false])test('explicit legacy direct CLI completes '+(kvOnly?'KV-only':'KV+D1')+' without split wait, lease or business writes',async t=>{
   const f=await setup(t,{kvOnly}),before=fs.readFileSync(path.join(f.state,'kv.json')),toml=fs.readFileSync(path.join(f.root,'wrangler.toml')),release=fs.readFileSync(path.join(f.root,'src/upgrade-release.js'));
   const r=f.run();pass(r);assert.match(r.stdout,/ST_DIRECT_GUARD_OK/);assert.match(r.stdout,/ST_UPGRADE_COMPLETE/);assert.doesNotMatch(r.stdout,/ST_UPGRADE_WAIT|ST_SPLIT_D1_REQUIRED/);
   assert.equal(f.plan().phase,'complete');assert.equal(f.plan().bindings.dbId===null,kvOnly);

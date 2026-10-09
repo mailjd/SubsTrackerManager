@@ -39,7 +39,7 @@ test('Cloudflare first build really passes guard, remains closed, persists encry
  const f=await setup(t),before=fs.readFileSync(path.join(f.state,'kv.json'),'utf8');
  const first=f.run();pass(first);assert.match(first.stdout,/ST_UPGRADE_WAIT/);assert.doesNotMatch(first.stdout,/ST_UPGRADE_COMPLETE/);
  const staged=f.decoded();assert.equal(staged.phase,'staged');assert.ok(staged.readyAfter-staged.stagedAt===16*60*1000);
- const testCalls=fs.readFileSync(path.join(f.state,'required-tests.log'),'utf8').trim().split('\n');assert.deepEqual(testCalls,['test:runtime','test:toolchain','lint','test','test:context','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:table-contract','test:workflow']);
+ const testCalls=fs.readFileSync(path.join(f.state,'required-tests.log'),'utf8').trim().split('\n');assert.deepEqual(testCalls,['test:runtime','test:toolchain','lint','test','test:context','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:web-init','test:table-contract','test:workflow']);
  const db1=new DatabaseSync(path.join(f.state,'d1.sqlite'));assert.equal(db1.prepare("SELECT count(*) AS n FROM schema_meta WHERE key LIKE '%:complete'").get().n,0);db1.close();sameOriginalKV(f,before);
  // A too-early new container must not redeploy or reset the waiting clock.
  f.fresh(2*60*1000);const early=f.run();pass(early);assert.match(early.stdout,/ST_UPGRADE_WAIT/);assert.equal(f.decoded().stagedAt,staged.stagedAt);assert.equal(f.decoded().runId,staged.runId);

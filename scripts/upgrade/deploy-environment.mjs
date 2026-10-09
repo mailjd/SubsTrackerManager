@@ -29,9 +29,10 @@ export function deploymentRouteHelp(host = detectDeploymentHost()) {
     'STOP：若日志仍显示 Executing user deploy command: npx wrangler deploy，控制台设置尚未生效；不要反复 Retry 同一错误命令。',
     'ZIP/package.json 无法自动覆盖控制台保存的 Deploy command；保存设置后才执行新 Build。',
     '在 Builds 的变量/机密配置原 CLOUDFLARE_ACCOUNT_ID、CLOUDFLARE_API_TOKEN、SUBSTRACKER_BACKUP_PASSWORD（至少16字符）、SUBSTRACKER_WORKER_NAME。',
-    '默认直接升级：核验原绑定与兼容结构、保存加密备份、同一次发布新版并核对启站。KV-only 无需新增 D1。',
+    '已手動解綁 D1/KV：自動發布不存取資料的 /init 等待頁，無綁定階段不要求備份密碼。綁回原資源後由網頁執行受保護 init。',
+    '仍有原綁定時，沿用直接升級：核驗原綁定與相容結構、保存加密備份並發布。KV-only 無需新增 D1。',
     '无需断开 Git、无需等待16分钟或手动重跑。原两阶段迁移仅由 deploy:split 显式选择，不是默认部署。',
-    '构建成功不等于升级完成；只有 ST_UPGRADE_COMPLETE 且 maintenance:false 才完成。',
+    '無綁定流程的 ST_CODE_DEPLOYED_AWAITING_BINDINGS 代表程式發布完成；資料升級以網頁 ST_WEB_INIT_COMPLETE 為準。其他既有流程以 ST_UPGRADE_COMPLETE / maintenance:false 為準。',
     '已有未完成的旧迁移仍用原恢复流程；直接升级不伪造其完成标记。Cloudflare Pages 仍不支持。',
     '不要删除 build guard、不要伪造 runId、不要重建 Worker / KV / D1。',
     `详细操作：DEPLOY_REPAIR_${VERSION}.md。`,
@@ -53,11 +54,11 @@ export function assertNodeRuntime(version = process.versions.node) {
   }
 }
 
-export function validateDeploymentSecrets(env = process.env) {
+export function validateDeploymentSecrets(env = process.env, {requireBackup = true} = {}) {
   const missing = [];
   if (!/^[a-fA-F0-9]{32}$/.test(env.CLOUDFLARE_ACCOUNT_ID || '')) missing.push('CLOUDFLARE_ACCOUNT_ID（32位 Account ID，不是 Zone ID）');
   if (!String(env.CLOUDFLARE_API_TOKEN || '').trim()) missing.push('CLOUDFLARE_API_TOKEN');
-  if (String(env.SUBSTRACKER_BACKUP_PASSWORD || '').length < 16) missing.push('SUBSTRACKER_BACKUP_PASSWORD（至少16字符）');
+  if (requireBackup && String(env.SUBSTRACKER_BACKUP_PASSWORD || '').length < 16) missing.push('SUBSTRACKER_BACKUP_PASSWORD（至少16字符）');
   if (missing.length) fail('ST_DEPLOY_CONFIG', '缺少或格式不符：' + missing.join('、') + '。配置位置：Cloudflare 的 Settings → Builds → Build variables and secrets，或 GitHub Actions Secrets；运行时 Secrets 不等于构建 Secrets。值不会写入日志。');
 }
 

@@ -51,3 +51,6 @@ regression-output/
 
 # Local-only direct-release configuration (never commit runtime values)
 wrangler.direct.json
+
+# Local-only no-storage deployment configuration
+wrangler.unbound.json

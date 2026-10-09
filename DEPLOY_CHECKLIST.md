@@ -1,11 +1,16 @@
-# v3.3.31 直接升級檢查
+# v3.3.32 部署與 init 核對
 
-1. 更新原 repository 的程式，保留原 wrangler.toml、Worker 名稱與 Git 連接。不要套回舊 CodeOnlySafetyGate 或獨立升級輔助工具。
-2. 原 Build command 為 `npm run build`，原 Deploy command 為 `npm run deploy:cloudflare`，不需要修改為其他服務或工作流。
-3. 原 Cloudflare Account ID、API Token、SUBSTRACKER_BACKUP_PASSWORD（至少16字元）、可選的 Worker 名稱/環境/網址沿用。
-4. 提交後觸發同一次建置及部署。日誌應有 `ST_DIRECT_BINDINGS_OK`，KV-only 是可接受結果，不會再要求 D1 發布鎖。
-5. `ST_DIRECT_BACKUP_OK` 後單次發布；只有核對同一 runId、新版及原綁定後才顯示 `ST_UPGRADE_COMPLETE`、`mode:direct-compatible`、`maintenance:false`。
-6. 不需要等待16分鐘或 Retry 第二階段。原站真的已有未完成的資料遷移、綁定衝突、密鑰缺失或不兼容舊結構時仍停止，不偽造成功。
-7. 直接升級備份的下載指令由日誌提供：`npm run upgrade:download -- <backup UUID>`。原密碼需另行妥善保存。
+詳細指南：`UNBOUND_WEB_INIT_3.3.32.md`。本文件取代上一版頂層部署清單；舊清單在 release-notes。
 
-完整說明見 DEPLOY_REPAIR_3.3.31.md。本地測試不等於使用者 Cloudflare 的線上驗證。
+1. 先獨立備份原 D1/KV，記錄原 Database ID、Namespace ID、Worker／帳戶／原 Secrets；停止其他寫入者。
+2. 合併本版程式至原 repository 根目錄。package.json 與 package-lock.json 同時更新，保留自訂 wrangler.toml。
+3. 只移除原 Worker 的 D1/KV Bindings，儲存／部署設定。不要刪除資源、原 Worker、密鑰或備份。
+4. 推送本版，保持 Build `npm run build`；Deploy `npm run deploy:cloudflare`。不要串接舊 code-only check 或手動 wrangler deploy。
+5. 確认本次 `ST_CODE_DEPLOYED_AWAITING_BINDINGS`，version 3.3.32，codeDeployed true，applicationReady false。
+6. 同一 Worker 綁回原 ID：KV → SUBSCRIPTIONS_KV；D1 → SUBSCRIPTIONS_DB。儲存並部署 Binding 變更，保留剛發布的程式。
+7. 確認執行時 Secret SUBSTRACKER_SUPERADMIN_PASSWORD（不是 Builds Secret）；已有 SuperAdmin username 時沿用。
+8. 開原站 /init；重新檢查綁定 → SuperAdmin 驗證 → 不寫入預覽 → 核對原資料、原 ID 與備份 → 執行／繼續 init。
+9. 等待 ST_WEB_INIT_COMPLETE、applicationReady true、maintenance false；確認原登入、訂閱／帳號／歷史／範本正常，再恢復其他寫入者。
+10. 中斷從同版 /init 重新驗證續跑；KV 收據等待不等於失敗。遇到資料衝突停止，不刪庫、不重設 config、不偽造完成狀態。
+
+程式發布成功和資料升級成功是兩個階段。執行 init 前可停留等待頁，不需要先發布舊維護版本或等待16分鐘。

@@ -82,7 +82,7 @@ test('bundle child failure is propagated, not presented as successful build (FAK
  const root=fixture(t);fs.writeFileSync(localWrangler(root).entry,'process.exit(9);');assert.throws(()=>checkBundle(root),/exit 9/);
 });
 test('release list retains ALL original checks and adds toolchain + actual bundle',()=>{
- assert.deepEqual(RELEASE_CHECKS,['test:runtime','test:toolchain','lint','test','test:context','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:table-contract','test:workflow']);
+ assert.deepEqual(RELEASE_CHECKS,['test:runtime','test:toolchain','lint','test','test:context','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:web-init','test:table-contract','test:workflow']);
  assert.throws(()=>verifyReleaseChecks(source,Date.now()-1),/ST_SPLIT_BUDGET/);
  const safe=fs.readFileSync(path.join(source,'scripts/safe-upgrade.mjs'),'utf8');assert.match(safe,/cmd==='all'\).*verifyReleaseChecks\(ROOT/);assert.doesNotMatch(safe,/spawnSync\(npx/);
 });
@@ -97,7 +97,7 @@ test('retry source digest includes test/config changes but excludes generated re
 });
 
 test('deploy --help never starts a deployment and works from another working directory',()=>{
- const r=spawnSync(process.execPath,[path.join(source,'scripts/deploy.mjs'),'--help'],{cwd:os.tmpdir(),env:{...process.env,...validEnv},encoding:'utf8',timeout:10000});assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/单次发布完成/);assert.doesNotMatch(r.stdout,/ST_DEPLOY_ENTRY|release:check/);
+ const r=spawnSync(process.execPath,[path.join(source,'scripts/deploy.mjs'),'--help'],{cwd:os.tmpdir(),env:{...process.env,...validEnv},encoding:'utf8',timeout:10000});assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/無 D1\/KV 綁定時先部署 \/init/);assert.doesNotMatch(r.stdout,/ST_DEPLOY_ENTRY|release:check/);
 });
 test('unknown deployment arguments are not silently ignored before deploying',()=>{
  const bad=spawnSync(process.execPath,['scripts/deploy.mjs','--env','wrong-target'],{cwd:source,env:{...process.env,...validEnv},encoding:'utf8',timeout:10000});assert.equal(bad.status,2);assert.match(bad.stderr,/ST_DEPLOY_ARGS/);assert.doesNotMatch(bad.stdout,/ST_DEPLOY_ENTRY/);

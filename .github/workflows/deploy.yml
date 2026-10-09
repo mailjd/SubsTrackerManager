@@ -51,6 +51,7 @@ jobs:
           npm run test:storage
           npm run test:deploy
           npm run test:upgrade
+          npm run test:web-init
           npm run test:table-contract
           npm run test:workflow
       - name: Read original bindings and verify full encrypted pre-upgrade backup

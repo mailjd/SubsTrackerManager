@@ -9,7 +9,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 try {
   assertSupportedDeploymentHost(process.env,{allowWorkersBuilds:true});
   const host=detectDeploymentHost();
-  if(process.env.SUBSTRACKER_DIRECT_DEPLOY_RUN){
+  if(process.env.SUBSTRACKER_UNBOUND_DEPLOY_RUN){
+    assertNodeRuntime();
+    const {assertUnboundGuard}=await import('./deploy-unbound.mjs');
+    assertUnboundGuard(root);
+    console.log('[upgrade] ST_UNBOUND_GUARD_OK：只發布等待綁定與 init 程式，不存取 D1/KV。');
+  }else if(process.env.SUBSTRACKER_DIRECT_DEPLOY_RUN){
     assertNodeRuntime();
     const {assertDirectGuard}=await import('./upgrade/direct-release.mjs');
     assertDirectGuard(root);

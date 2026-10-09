@@ -2,7 +2,7 @@
  * Run actual Workers tests immediately after lint, before slower adapter-based
  * upgrade regressions. Native failures must not be hidden behind mock pass counts. */
 import {spawnSync} from 'node:child_process';
-export const RELEASE_CHECKS=Object.freeze(['test:runtime','test:toolchain','lint','test','test:context','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:table-contract','test:workflow']);
+export const RELEASE_CHECKS=Object.freeze(['test:runtime','test:toolchain','lint','test','test:context','test:syntax','test:bundle','test:storage','test:deploy','test:upgrade','test:web-init','test:table-contract','test:workflow']);
 export function verifyReleaseChecks(root,deadline=Date.now()+15*60*1000){
  const npm=process.platform==='win32'?'npm.cmd':'npm';
  for(const script of RELEASE_CHECKS){

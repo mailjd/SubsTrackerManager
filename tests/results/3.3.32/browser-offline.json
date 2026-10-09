@@ -1,0 +1,21 @@
+{
+  "result": "PASS",
+  "browser": "system Chromium via Playwright",
+  "method": "offline set_content with explicit mock fetch",
+  "liveCloudflare": false,
+  "networkNavigation": "not tested: ERR_BLOCKED_BY_ADMINISTRATOR",
+  "CSPEnforcement": "not tested in browser; Node response-header/nonce checks passed separately",
+  "checks": [
+    "unbound buttons disabled",
+    "GET render sends no POST",
+    "preview enables init",
+    "resource and backup confirmations required",
+    "start/step completion loop",
+    "password cleared at success",
+    "admin link exposed only when ready",
+    "390px mobile has no horizontal overflow",
+    "no page JavaScript exceptions"
+  ],
+  "posts": 6,
+  "pageErrors": []
+}

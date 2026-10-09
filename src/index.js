@@ -1,3 +1,5 @@
+import {UPGRADE_RUN} from './upgrade-release.js';
+import {usesWebInit} from './data/web-init-protocol.js';
 import {upgradeReady} from './data/upgrade-gate.js';
 // @ts-check
 /**
@@ -26,7 +28,7 @@ export default {
     void ctx;
     if(!await upgradeReady(env)){console.log("[upgrade] 验收前暂停定时任务");return;}
     try {
-      await ensureMigrations(env);
+      if(!usesWebInit(UPGRADE_RUN))await ensureMigrations(env);
     } catch (err) {
       console.error('[index] scheduled 迁移失败:', err);
       return;

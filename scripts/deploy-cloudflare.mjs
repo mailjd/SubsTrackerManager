@@ -22,7 +22,11 @@ export async function runSplitDeployment({downloadOnly=false}={}) {
   const config=readConfig(),cf=new Cloudflare({accountId:process.env.CLOUDFLARE_ACCOUNT_ID,token:process.env.CLOUDFLARE_API_TOKEN});
   const remoteSettings=await cf.settings(config.name);
   const bindings=protectBindings(config,remoteSettings);
-  assertSplitBindingsReady({worker:config.name,settings:remoteSettings,bindings});
+  assertSplitBindingsReady({worker:config.name,settings:remoteSettings,bindings,source:{
+    environment:process.env.SUBSTRACKER_ENVIRONMENT||'default',
+    localD1Declared:Array.isArray(config.d1_databases)&&config.d1_databases.length>0,
+    localKVDeclared:Array.isArray(config.kv_namespaces)&&config.kv_namespaces.length>0
+  }});
   if(!downloadOnly)verifyReleaseChecks(ROOT,deadline);
   const store=new CloudflareCheckpoints(cf,{worker:config.name,bindings,password:process.env.SUBSTRACKER_BACKUP_PASSWORD});
   if(downloadOnly){

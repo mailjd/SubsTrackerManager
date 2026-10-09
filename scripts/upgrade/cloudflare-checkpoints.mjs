@@ -30,11 +30,11 @@ function privateWrite(file,bytes) {
 }
 /** A read-only, non-secret diagnostic for the REAL Worker's D1 binding. Never guess
  * a database from a name or create one: KV has no atomic compare-and-swap lease. */
-export function assertSplitBindingsReady({worker,settings,bindings}) {
+export function assertSplitBindingsReady({worker,settings,bindings,source={}}) {
   const all = Array.isArray(settings?.bindings) ? settings.bindings : [];
   const kv = all.filter(b=>b.type==='kv_namespace').map(b=>b.name);
   const d1 = all.filter(b=>b.type==='d1').map(b=>({name:b.name,idVisible:!!(b.database_id||b.id)}));
-  const inventory={worker,kvBindings:kv,d1Bindings:d1,atomicLeaseReady:!!bindings?.dbId,probe:'read-only',storage:'D1_KV_ONLY'};
+  const inventory={worker,environment:source.environment||'default',localD1Declared:!!source.localD1Declared,localKVDeclared:!!source.localKVDeclared,kvBindings:kv,d1Bindings:d1,atomicLeaseReady:!!bindings?.dbId,probe:'read-only',storage:'D1_KV_ONLY'};
   console.log('[upgrade] ST_SPLIT_BINDING_PROBE '+JSON.stringify(inventory));
   if (!bindings?.dbId) {
     const why=d1.length===0
@@ -44,7 +44,8 @@ export function assertSplitBindingsReady({worker,settings,bindings}) {
       'ST_SPLIT_D1_REQUIRED：'+why+'；目标 Worker='+worker+'。\n'+
       '此状态不能用 Cloudflare Workers Builds 分段续跑：KV 最终一致，无法代替 D1 原子发布锁。\n'+
       '方案 A（不添加数据库）：断开该 Worker 的 Cloudflare Builds Git 直连，改用现有 GitHub Actions「Safe upgrade」长流程；KV-only 可用（可选择推送自动运行），工作流会先备份及校验。\n'+
-      '方案 B（仅原本就有 D1）：核实是否选错 SUBSTRACKER_WORKER_NAME / Cloudflare Account；在正确 Worker 的 Bindings 核对原 D1 的 SUBSCRIPTIONS_DB 绑定。不要新建、猜测或改绑一个空 D1。\n'+
+      '方案 B（仅原本就有 D1）：核实 SUBSTRACKER_WORKER_NAME / Cloudflare Account / 命名环境。只有正式 Worker 版本的 Bindings 显示原 SUBSCRIPTIONS_DB 才能继续；源 wrangler.toml 也需固定原 D1、KV ID。不要新建或改绑空 D1。\n'+
+      '核對指令：npm run binding:doctor；如原 D1 已正確連到在線 Worker，才可核實 ID 後 npm run binding:pin（只改本機 wrangler.toml）。參閱 EXISTING_D1_BINDING_RECOVERY.md。\n'+
       '未启动发布，未创建数据库或写入远端记录。参阅 KV_ONLY_DEPLOY_3.3.29.md。'
     );
   }

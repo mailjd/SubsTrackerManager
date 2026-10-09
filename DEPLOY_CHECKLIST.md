@@ -1,15 +1,11 @@
-# v3.3.26部署檢查
+# v3.3.31 直接升級檢查
 
-1. 已閱讀`DEPLOY_REPAIR_3.3.26.md`；完整解壓更新原專案，package及lock配套，含scripts/tests/.github。
-2. 原Worker的Deploy command已保存為`npm run deploy:cloudflare`；不是改Build或Preview欄。下一次日誌必須顯示該命令。
-3. Build command可保留`npm run build`或留空。npm ci包含devDependencies；Node22.13+/npm10+/Python3.11+。
-4. 原名稱、路由、KV/D1綁定與執行時密鑰均保留；不新增R2、不建立替代儲存。
-5. Builds中的原帳戶Token/Account ID、備份密碼（至少16字元）、Worker名稱等已配置；Token具原D1/KV/Worker必要權限。
-6. 所有必需檢查通過才備份／發布，不能以缺包、型別或bundle失敗為由跳過測試。
-7. 無其他未完成舊批次／並行發布者。舊WAIT批次先用其原提交恢復。
-8. WAIT後依readyAfter手動Retry同一提交；COMPLETE且版本3.3.26/maintenance:false才完成。
-9. 核對原資料／帳號／模板／歷史及保存診斷，另存加密備份與驗收報告，密碼單獨保存。
+1. 更新原 repository 的程式，保留原 wrangler.toml、Worker 名稱與 Git 連接。不要套回舊 CodeOnlySafetyGate 或獨立升級輔助工具。
+2. 原 Build command 為 `npm run build`，原 Deploy command 為 `npm run deploy:cloudflare`，不需要修改為其他服務或工作流。
+3. 原 Cloudflare Account ID、API Token、SUBSTRACKER_BACKUP_PASSWORD（至少16字元）、可選的 Worker 名稱/環境/網址沿用。
+4. 提交後觸發同一次建置及部署。日誌應有 `ST_DIRECT_BINDINGS_OK`，KV-only 是可接受結果，不會再要求 D1 發布鎖。
+5. `ST_DIRECT_BACKUP_OK` 後單次發布；只有核對同一 runId、新版及原綁定後才顯示 `ST_UPGRADE_COMPLETE`、`mode:direct-compatible`、`maintenance:false`。
+6. 不需要等待16分鐘或 Retry 第二階段。原站真的已有未完成的資料遷移、綁定衝突、密鑰缺失或不兼容舊結構時仍停止，不偽造成功。
+7. 直接升級備份的下載指令由日誌提供：`npm run upgrade:download -- <backup UUID>`。原密碼需另行妥善保存。
 
-本包不代表已替你修改控制台或正式發布。詳細證據與限制見`VERIFICATION_3.3.26.md`。
-
-本版新增 test:runtime（Python 標準庫 + Node SQLite 實際能力）；不再要求 Python 的 sqlite3/_sqlite3。相關測試仍完整執行，詳見 DEPLOY_REPAIR_3.3.26.md。
+完整說明見 DEPLOY_REPAIR_3.3.31.md。本地測試不等於使用者 Cloudflare 的線上驗證。

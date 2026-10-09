@@ -3,6 +3,7 @@
  * No online application/admin password or encryption key is changed to perform an upgrade.
  */
 import {UPGRADE_RUN} from '../upgrade-release.js';
+import {DIRECT_MODE,directRuntimeReady,handleDirectGate} from './direct-runtime.js';
 import {hasTable,sha256,collectSubscriptionInventory,stableJSON} from './upgrade-reconcile.js';
 import {runLedgerUpgrade,readRawLedgerEntries} from './subscription-ledger.js';
 const readyBindings=new WeakMap();
@@ -19,6 +20,7 @@ async function putMeta(env,k,value){
   if(stableJSON(await getMeta(env,k))!==stableJSON(value))throw new Error('升级状态未通过回读校验');
 }
 export async function upgradeReady(env,run=UPGRADE_RUN){
+  if(run.mode===DIRECT_MODE)return directRuntimeReady(env);
   const binding=env.SUBSCRIPTIONS_DB||env.SUBSCRIPTIONS_KV;
   if(readyBindings.get(binding)===run.id)return true;
   const complete=await getMeta(env,key(run,'complete'));
@@ -28,6 +30,7 @@ export async function upgradeReady(env,run=UPGRADE_RUN){
 function constantEqual(a,b){if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);return diff===0;}
 /** Only the safe runner can invoke these operations, including after the app unlocks. */
 export async function handleUpgradeGate(request,env,run=UPGRADE_RUN){
+  if(run.mode===DIRECT_MODE)return handleDirectGate(request,env,run);
   const path=new URL(request.url).pathname;
   const isUpgrade=path.startsWith('/api/upgrade/');
   const ready=await upgradeReady(env,run);

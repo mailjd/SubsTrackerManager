@@ -9,6 +9,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 try {
   assertSupportedDeploymentHost(process.env,{allowWorkersBuilds:true});
   const host=detectDeploymentHost();
+  if(process.env.SUBSTRACKER_DIRECT_DEPLOY_RUN){
+    assertNodeRuntime();
+    const {assertDirectGuard}=await import('./upgrade/direct-release.mjs');
+    assertDirectGuard(root);
+    console.log('[upgrade] ST_DIRECT_GUARD_OK：原绑定、兼容结构、加密备份和待发布源码核对通过；发布直接运行版本。');
+  }else{ // Original staged-migration guard remains unchanged for explicit legacy recovery.
+
   const key = process.env.SUBSTRACKER_BACKUP_PASSWORD || '';
   const run = process.env.SUBSTRACKER_SAFE_DEPLOY_RUN || '';
   if (!run || key.length < 16) throw new DeploymentError(host==='cloudflare-workers-builds'?'ST_DEPLOY_COMMAND':'ST_DEPLOY_UNPREPARED', deploymentRouteHelp());
@@ -41,6 +48,7 @@ try {
     throw new DeploymentError('ST_DEPLOY_BACKUP', '升级前备份已变化；不能使用此备份放行。');
   }
   console.log('[upgrade] 构建保护检查通过；将以原存储绑定部署维护版本。');
+  }
 } catch (error) {
   console.error(`[upgrade] ${error.code || 'ST_DEPLOY_GUARD'} 阻止未经保护的部署：\n${error.message}`);
   process.exitCode = 1;

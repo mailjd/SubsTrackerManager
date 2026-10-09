@@ -1,0 +1,232 @@
+TAP version 13
+# (node:12913) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: one default CLI build completes KV-only without split wait, lease or business writes
+ok 1 - one default CLI build completes KV-only without split wait, lease or business writes
+  ---
+  duration_ms: 2181.806277
+  type: 'test'
+  ...
+# Subtest: one default CLI build completes KV+D1 without split wait, lease or business writes
+ok 2 - one default CLI build completes KV+D1 without split wait, lease or business writes
+  ---
+  duration_ms: 2385.321234
+  type: 'test'
+  ...
+# Subtest: same commit can be retried as another one-shot release without maintenance checkpoints
+ok 3 - same commit can be retried as another one-shot release without maintenance checkpoints
+  ---
+  duration_ms: 4806.974232
+  type: 'test'
+  ...
+# Subtest: failed required test prevents artifact upload and Worker publication
+ok 4 - failed required test prevents artifact upload and Worker publication
+  ---
+  duration_ms: 1420.58706
+  type: 'test'
+  ...
+# Subtest: wrong local KV binding is rejected before backup or publish
+ok 5 - wrong local KV binding is rejected before backup or publish
+  ---
+  duration_ms: 1421.751504
+  type: 'test'
+  ...
+# Subtest: old schema prevents publishing without modifying original records
+ok 6 - old schema prevents publishing without modifying original records
+  ---
+  duration_ms: 1684.695092
+  type: 'test'
+  ...
+# Subtest: missing credential encryption key never gets silently regenerated
+ok 7 - missing credential encryption key never gets silently regenerated
+  ---
+  duration_ms: 1623.639615
+  type: 'test'
+  ...
+# Subtest: Wrangler failure never logs success and leaves original source/records intact
+ok 8 - Wrangler failure never logs success and leaves original source/records intact
+  ---
+  duration_ms: 1985.033858
+  type: 'test'
+  ...
+# Subtest: read-only direct backup download works for KV-only without any D1 or publish
+ok 9 - read-only direct backup download works for KV-only without any D1 or publish
+  ---
+  duration_ms: 3383.843105
+  type: 'test'
+  ...
+# Subtest: wrong password cannot download existing backup or change original data
+ok 10 - wrong password cannot download existing backup or change original data
+  ---
+  duration_ms: 3649.516838
+  type: 'test'
+  ...
+# Subtest: bare direct environment variable does not bypass real guard
+ok 11 - bare direct environment variable does not bypass real guard
+  ---
+  duration_ms: 71.045922
+  type: 'test'
+  ...
+# Subtest: original binding drift after release checks stops before writes
+ok 12 - original binding drift after release checks stops before writes
+  ---
+  duration_ms: 1546.65372
+  type: 'test'
+  ...
+# Subtest: verified direct plan still refuses config, source, backup and account tampering
+ok 13 - verified direct plan still refuses config, source, backup and account tampering
+  ---
+  duration_ms: 2348.573732
+  type: 'test'
+  ...
+# Subtest: an already-active old maintenance run is not overwritten by a direct release
+ok 14 - an already-active old maintenance run is not overwritten by a direct release
+  ---
+  duration_ms: 1430.029225
+  type: 'test'
+  ...
+# Subtest: corrupted encrypted remote snapshot prevents Worker publication
+ok 15 - corrupted encrypted remote snapshot prevents Worker publication
+  ---
+  duration_ms: 1660.847538
+  type: 'test'
+  ...
+# (node:12914) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: direct runtime opens existing KV-only without completion keys or storage writes
+ok 16 - direct runtime opens existing KV-only without completion keys or storage writes
+  ---
+  duration_ms: 31.058379
+  type: 'test'
+  ...
+# Subtest: direct runtime opens existing KV+D1 without completion keys or storage writes
+ok 17 - direct runtime opens existing KV+D1 without completion keys or storage writes
+  ---
+  duration_ms: 5.847451
+  type: 'test'
+  ...
+# Subtest: direct runtime never treats missing original credentials as a new install
+ok 18 - direct runtime never treats missing original credentials as a new install
+  ---
+  duration_ms: 0.963081
+  type: 'test'
+  ...
+# Subtest: direct readiness is not permanently cached when storage changes
+ok 19 - direct readiness is not permanently cached when storage changes
+  ---
+  duration_ms: 0.522007
+  type: 'test'
+  ...
+# Subtest: missing / malformed / unavailable original KV fails closed with no initialization
+ok 20 - missing / malformed / unavailable original KV fails closed with no initialization
+  ---
+  duration_ms: 0.620936
+  type: 'test'
+  ...
+# Subtest: direct deployment does not expose staged migration or commit endpoints
+ok 21 - direct deployment does not expose staged migration or commit endpoints
+  ---
+  duration_ms: 2.202189
+  type: 'test'
+  ...
+# Subtest: unprepared distributed release still remains closed; direct mode is not the default bundle
+ok 22 - unprepared distributed release still remains closed; direct mode is not the default bundle
+  ---
+  duration_ms: 0.465001
+  type: 'test'
+  ...
+# Subtest: direct preflight accepts existing KV without requiring a legacy-ledger migration marker
+ok 23 - direct preflight accepts existing KV without requiring a legacy-ledger migration marker
+  ---
+  duration_ms: 0.700565
+  type: 'test'
+  ...
+# Subtest: direct preflight accepts existing D1+KV without requiring a legacy-ledger migration marker
+ok 24 - direct preflight accepts existing D1+KV without requiring a legacy-ledger migration marker
+  ---
+  duration_ms: 4.845331
+  type: 'test'
+  ...
+# Subtest: direct preflight rejects old KV schema and missing original encryption keys
+ok 25 - direct preflight rejects old KV schema and missing original encryption keys
+  ---
+  duration_ms: 1.504487
+  type: 'test'
+  ...
+# Subtest: direct preflight rejects destructive legacy D1 primary-key migration
+ok 26 - direct preflight rejects destructive legacy D1 primary-key migration
+  ---
+  duration_ms: 0.653474
+  type: 'test'
+  ...
+# Subtest: empty optional D1 is accepted without creating anything remotely
+ok 27 - empty optional D1 is accepted without creating anything remotely
+  ---
+  duration_ms: 0.593144
+  type: 'test'
+  ...
+# Subtest: generated config retains original IDs, runtime vars, secrets via keep-vars and cron: false
+ok 28 - generated config retains original IDs, runtime vars, secrets via keep-vars and cron: false
+  ---
+  duration_ms: 0.645843
+  type: 'test'
+  ...
+# Subtest: generated config retains original IDs, runtime vars, secrets via keep-vars and cron: true
+ok 29 - generated config retains original IDs, runtime vars, secrets via keep-vars and cron: true
+  ---
+  duration_ms: 0.120572
+  type: 'test'
+  ...
+# (node:12915) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: legacy HTTP 401 is permitted only during preflight, never final success
+ok 30 - legacy HTTP 401 is permitted only during preflight, never final success
+  ---
+  duration_ms: 24.813579
+  type: 'test'
+  ...
+# Subtest: legacy HTTP 403 is permitted only during preflight, never final success
+ok 31 - legacy HTTP 403 is permitted only during preflight, never final success
+  ---
+  duration_ms: 0.758994
+  type: 'test'
+  ...
+# Subtest: legacy HTTP 404 is permitted only during preflight, never final success
+ok 32 - legacy HTTP 404 is permitted only during preflight, never final success
+  ---
+  duration_ms: 0.764902
+  type: 'test'
+  ...
+# Subtest: legacy login HTML is not treated as a successful final deployment
+ok 33 - legacy login HTML is not treated as a successful final deployment
+  ---
+  duration_ms: 0.984524
+  type: 'test'
+  ...
+# Subtest: upstream errors and Access redirects are not interpreted as a usable old site
+ok 34 - upstream errors and Access redirects are not interpreted as a usable old site
+  ---
+  duration_ms: 1.979863
+  type: 'test'
+  ...
+# Subtest: an active maintenance run is reported, not silently declared ready
+ok 35 - an active maintenance run is reported, not silently declared ready
+  ---
+  duration_ms: 0.644621
+  type: 'test'
+  ...
+# Subtest: binding preflight does not select a latest un-deployed or split-traffic version
+ok 36 - binding preflight does not select a latest un-deployed or split-traffic version
+  ---
+  duration_ms: 0.446153
+  type: 'test'
+  ...
+1..36
+# tests 36
+# suites 0
+# pass 36
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 31685.669021

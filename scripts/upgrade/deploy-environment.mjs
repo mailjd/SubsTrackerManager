@@ -29,10 +29,10 @@ export function deploymentRouteHelp(host = detectDeploymentHost()) {
     'STOP：若日志仍显示 Executing user deploy command: npx wrangler deploy，控制台设置尚未生效；不要反复 Retry 同一错误命令。',
     'ZIP/package.json 无法自动覆盖控制台保存的 Deploy command；保存设置后才执行新 Build。',
     '在 Builds 的变量/机密配置原 CLOUDFLARE_ACCOUNT_ID、CLOUDFLARE_API_TOKEN、SUBSTRACKER_BACKUP_PASSWORD（至少16字符）、SUBSTRACKER_WORKER_NAME。',
-    '第一次运行：加密备份并部署维护版本；日志 ST_UPGRADE_WAIT 会给出再次运行时间。',
-    '等待至少16分钟后，Retry 同一提交：恢复加密检查点、补迁移、逐项验收后才开站。',
+    '默认直接升级：核验原绑定与兼容结构、保存加密备份、同一次发布新版并核对启站。KV-only 无需新增 D1。',
+    '无需断开 Git、无需等待16分钟或手动重跑。原两阶段迁移仅由 deploy:split 显式选择，不是默认部署。',
     '构建成功不等于升级完成；只有 ST_UPGRADE_COMPLETE 且 maintenance:false 才完成。',
-    '本机/GitHub Actions → Safe upgrade 仍可运行完整流程；Cloudflare Pages 仍不支持。',
+    '已有未完成的旧迁移仍用原恢复流程；直接升级不伪造其完成标记。Cloudflare Pages 仍不支持。',
     '不要删除 build guard、不要伪造 runId、不要重建 Worker / KV / D1。',
     `详细操作：DEPLOY_REPAIR_${VERSION}.md。`,
   ].join('\n');

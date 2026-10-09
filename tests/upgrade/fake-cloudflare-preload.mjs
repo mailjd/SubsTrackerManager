@@ -11,6 +11,7 @@ const normalNow=Date.now;let clockOffset=0;Date.now=()=>normalNow()+(process.env
 globalThis.fetch=async(input,opt={})=>{
  const url=new URL(input instanceof Request?input.url:input);fs.appendFileSync(path.join(dir,'transport.jsonl'),JSON.stringify({host:url.host,path:url.pathname,method:opt.method||'GET'})+'\n');
  if(url.host==='upgrade.example.invalid'){
+   if(!fs.existsSync(path.join(dir,'deployed'))&&process.env.FAKE_ORIGINAL_MAINTENANCE==='1')return Response.json({success:true,version:'3.3.30',runId:'original-unfinished-run',maintenance:true});
    if(!fs.existsSync(path.join(dir,'deployed')))return new Response('{}',{status:404});
    const text=fs.readFileSync(process.env.FAKE_SPLIT_CLOCK==='1'?path.join(dir,'deployed-release.js'):path.join(root,'src/upgrade-release.js'),'utf8'),run=JSON.parse(text.match(/Object\.freeze\((\{[^\n]+\})\)/)[1]);
    if(url.pathname.endsWith('/status')&&process.env.FAKE_SPLIT_CLOCK!=='1')clockOffset=17*60*1000; // only test runtime; production retains 16-minute drain.
@@ -42,7 +43,7 @@ globalThis.fetch=async(input,opt={})=>{
   if(p.endsWith('/keys')){const keys=[...Object.keys(kv()),...Object.keys(artifacts())].sort();return ok(keys.map(name=>({name})),{result_info:{cursor:'',count:keys.length}});} 
   if(p.includes('/values/')){
     const key=decodeURIComponent(p.split('/values/')[1]);
-    if(key in artifacts())return new Response(Buffer.from(artifacts()[key],'base64'));
+    if(key in artifacts()){const bytes=Buffer.from(artifacts()[key],'base64');if(process.env.FAKE_CORRUPT_DIRECT_ARTIFACT==='1'&&key.includes(':direct:')&&!key.endsWith(':manifest'))bytes[0]^=1;return new Response(bytes);}
     return key in kv()?new Response(kv()[key]):new Response('missing',{status:404});
   }
   return ok({id:'b'.repeat(32),title:'CUSTOM-KEEP-EXISTING'});

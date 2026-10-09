@@ -48,3 +48,6 @@ __pycache__/
 
 # Local synthetic API regression outputs (never commit fixture databases)
 regression-output/
+
+# Local-only direct-release configuration (never commit runtime values)
+wrangler.direct.json

@@ -27,7 +27,7 @@ async function setup(t){
   const env={...process.env,WORKERS_CI:'1',WORKERS_CI_BUILD_UUID:'test-build',CF_PAGES:'',GITHUB_ACTIONS:'',SUBSTRACKER_WORKER_NAME:'',SUBSTRACKER_ENVIRONMENT:'',SUBSTRACKER_SAFE_DEPLOY_RUN:'',
     PATH:bin+path.delimiter+process.env.PATH,FAKE_UPGRADE_ROOT:root,FAKE_UPGRADE_STATE:state,FAKE_SPLIT_CLOCK:'1',
     NODE_OPTIONS:'--import='+path.join(root,'tests/upgrade/fake-cloudflare-preload.mjs'),CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_TOKEN:'only-synthetic',SUBSTRACKER_BACKUP_PASSWORD:PASSWORD,SUBSTRACKER_WORKER_URL:'https://upgrade.example.invalid'};
-  const run=(extra={})=>spawnSync(process.execPath,['scripts/deploy-cloudflare.mjs'],{cwd:root,env:{...env,...extra},encoding:'utf8',timeout:60000});
+  const run=(extra={})=>spawnSync(process.execPath,['scripts/deploy-cloudflare.mjs','split'],{cwd:root,env:{...env,...extra},encoding:'utf8',timeout:60000});
   const fresh=(ms=0)=>{for(const dir of ['.upgrade','upgrade-backups'])fs.rmSync(path.join(root,dir),{recursive:true,force:true});fs.rmSync(path.join(root,'wrangler.upgrade.json'),{force:true});fs.copyFileSync(path.join(source,'src/upgrade-release.js'),path.join(root,'src/upgrade-release.js'));fs.writeFileSync(path.join(state,'clock-ms'),String(ms));};
   const decoded=()=>decryptArchive(fs.readFileSync(path.join(root,'.upgrade/state.stbackup')),PASSWORD);
   const trace=()=>fs.existsSync(path.join(state,'transport.jsonl'))?fs.readFileSync(path.join(state,'transport.jsonl'),'utf8').trim().split('\n').map(JSON.parse):[];

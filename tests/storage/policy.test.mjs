@@ -30,7 +30,7 @@ test('all shipped Wrangler configs parse and only declare KV/D1 for data storage
 });
 test('no direct S3/R2 SDK dependency is introduced',()=>{const p=JSON.parse(fs.readFileSync(path.join(root,'package.json')));for(const key of Object.keys({...p.dependencies,...p.devDependencies}))assert.ok(!/aws-sdk|client-s3|@aws-sdk|minio|r2-client/i.test(key),key);});
 test('split and GitHub release require storage regression, not a bypass',()=>{
- const runner=fs.readFileSync(path.join(root,'scripts/deploy-cloudflare.mjs'),'utf8');
+ const runner=fs.readFileSync(path.join(root,'scripts/deploy-cloudflare-split.mjs'),'utf8');
  assert.ok(RELEASE_CHECKS.includes('test:storage'));
  assert.match(runner,/import \{verifyReleaseChecks\} from '\.\/upgrade\/release-checks\.mjs'/);
  const call=runner.indexOf('if(!downloadOnly)verifyReleaseChecks(ROOT,deadline)');

@@ -74,7 +74,13 @@ export function readWranglerConfig(root, env = process.env) {
   const selected = env.SUBSTRACKER_ENVIRONMENT;
   if (selected) {
     if (!Object.hasOwn(config.env || {}, selected)) fail('ST_DEPLOY_ENV', '找不到 SUBSTRACKER_ENVIRONMENT 对应的 Wrangler 环境。');
-    config = {...config, ...config.env[selected]};
+    const child=config.env[selected];
+    // Wrangler does not inherit data bindings or vars into a named environment.
+    // Clearing these is LOCAL config resolution, not removal of live bindings:
+    // prepare() discovers and preserves the selected Worker's actual resources.
+    const inherited={...config};
+    for(const key of ['kv_namespaces','d1_databases','vars'])delete inherited[key];
+    config = {...inherited,...child,name:child.name||`${config.name}-${selected}`};
   }
   delete config.env;
   if (env.SUBSTRACKER_WORKER_NAME) config.name = env.SUBSTRACKER_WORKER_NAME;

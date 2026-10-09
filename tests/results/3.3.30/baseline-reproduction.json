@@ -1,0 +1,23 @@
+{
+  "base": "3.3.29",
+  "remoteAccess": false,
+  "reproduced": [
+    {
+      "case": "named_environment_without_name",
+      "actual": "original",
+      "expected": "original-staging",
+      "failed": true
+    },
+    {
+      "case": "non_inheritable_kv_binding",
+      "inherited": true,
+      "failed": true
+    },
+    {
+      "case": "existing_d1_without_id",
+      "silentlyResolvedTo": null,
+      "expected": "explicit unresolved-binding error (not KV-only)",
+      "failed": true
+    }
+  ]
+}

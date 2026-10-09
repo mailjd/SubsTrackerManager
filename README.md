@@ -1,3 +1,19 @@
+# SubsTracker v3.3.30｜原部署流程綁定修正版
+
+基於使用者提供的**完整 v3.3.29**。不是升級輔助工具，不是 code-only 跳過門禁。
+
+操作與限制：[DEPLOY_REPAIR_3.3.30.md](DEPLOY_REPAIR_3.3.30.md)。實測報告：[VERIFICATION_3.3.30.md](VERIFICATION_3.3.30.md)。
+
+修正 settings 缺項時的現行版本 D1 核驗、D1 無 ID 被靜默視為 KV-only、命名環境錯誤繼承，以及測試後綁定重驗。原應用、原 D1/KV、原加密備份與兩階段安全升級保留。
+
+Cloudflare 控制台仍使用 Build command `npm run build`、Deploy command `npm run deploy:cloudflare`。保留原 Worker 名稱、帳戶、網址與備份密碼。出現 `ST_UPGRADE_WAIT` 後依原時間重試同一提交，直到 `ST_UPGRADE_COMPLETE` 且 `maintenance:false`。
+
+未完成的旧版本維護批次不可混用本版；本輪沒有登入使用者 Cloudflare，不能宣稱線上已部署成功。
+
+以下為歷史版本說明；本次以 3.3.30 文件為準。
+
+---
+
 # SubsTracker v3.3.28｜SuperAdmin 舊測試契約相容修復
 
 這個版本修正 v3.3.27 部署時唯一失敗的 Workers 測試：`runtime.configured` 原為 `undefined`，現在正確提供 `true`。原憑證 `{username,password}` 可列舉結構不變；驗證邏輯、D1、KV、密文和模板不變。詳見 `DEPLOY_REPAIR_3.3.28.md` 與 `VERIFICATION_3.3.28.md`。

@@ -21,7 +21,16 @@ globalThis.fetch=async(input,opt={})=>{
  }
  if(url.host!=='api.cloudflare.com')throw new Error('Synthetic transport refuses real network: '+url.host);
  const p=url.pathname;
- if(p.endsWith('/settings'))return ok({bindings:[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)},...(process.env.FAKE_ONLINE_KV_ONLY==='1'?[]:[{name:'SUBSCRIPTIONS_DB',type:'d1',database_id:'12345678-1234-1234-1234-123456789abc'}]),{name:'KEEP_SECRET',type:'secret_text'},{name:'ENVIRONMENT',type:'plain_text',text:'production'}]});
+ const liveBindings=()=>[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)},...(process.env.FAKE_ONLINE_KV_ONLY==='1'?[]:[{name:'SUBSCRIPTIONS_DB',type:'d1',database_id:'12345678-1234-1234-1234-123456789abc'}]),{name:'KEEP_SECRET',type:'secret_text'},{name:'ENVIRONMENT',type:'plain_text',text:'production'}];
+ if(p.endsWith('/settings')){
+   let bindings=liveBindings();
+   if(process.env.FAKE_SETTINGS_MISSING_D1==='1')bindings=bindings.filter(b=>b.type!=='d1');
+   if(process.env.FAKE_SETTINGS_MISSING_ID==='1')bindings=bindings.map(b=>b.type==='d1'?{type:b.type,name:b.name}:b);
+   if(process.env.FAKE_BINDING_DRIFT_AFTER_TESTS==='1'&&fs.existsSync(path.join(dir,'required-tests.log')))bindings=bindings.map(b=>b.type==='d1'?{...b,database_id:'87654321-1234-1234-1234-123456789abc'}:b);
+   return ok({bindings});
+ }
+ if(p.endsWith('/deployments'))return ok({deployments:[{id:'12345678-aaaa-bbbb-cccc-123456789abc',versions:[{version_id:'12345678-1111-2222-3333-123456789abc',percentage:100}]}]});
+ if(p.endsWith('/versions/12345678-1111-2222-3333-123456789abc'))return ok({id:'12345678-1111-2222-3333-123456789abc',resources:{bindings:liveBindings()}});
  if(p.endsWith('/schedules'))return ok({schedules:[{cron:'0 * * * *'}]});
  if(p.endsWith('/subdomain'))return ok({enabled:true,subdomain:'existing'});
  if(p.includes('/storage/kv/namespaces/')){

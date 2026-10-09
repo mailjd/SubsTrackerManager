@@ -48,6 +48,3 @@ __pycache__/
 
 # Local synthetic API regression outputs (never commit fixture databases)
 regression-output/
-
-# Local, verified storage-binding source backup (never publish)
-.binding-backups/

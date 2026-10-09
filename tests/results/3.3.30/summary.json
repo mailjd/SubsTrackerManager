@@ -1,0 +1,104 @@
+{
+  "version": "3.3.30",
+  "tested_at": "2026-10-09",
+  "base": {
+    "name": "SubsTracker-GitHub-Cloudflare-Ready_v3.3.29_KVOnlySafeDeployFix_20261008.zip",
+    "sha256": "bf89d859195b4cf3adebb055f6f73a497d1b60601559530d28222f75b6883f16",
+    "version": "3.3.29"
+  },
+  "environment": {
+    "node": "22.16.0",
+    "npm": "10.9.2",
+    "python": "3.13.5",
+    "sqlite": "node:sqlite 3.49.1"
+  },
+  "overall_status": "local_checks_passed_native_checks_blocked_online_not_run",
+  "checks": [
+    {
+      "name": "node_regression",
+      "status": "passed",
+      "passed": 275,
+      "failed": 0,
+      "exit_code": 0,
+      "command": "node --test tests/deploy/*.test.mjs tests/upgrade/*.test.mjs tests/storage/*.test.mjs tests/compat/*.test.mjs tests/runtime/*.test.mjs tests/regression/contract.node.mjs",
+      "evidence": "node-regression.tap",
+      "notes": "Includes 27 new focused cases and 3 new split-deployment integration cases; not additional to 275."
+    },
+    {
+      "name": "syntax",
+      "status": "passed",
+      "passed": 112,
+      "failed": 0,
+      "unit": "files_or_inline_scripts",
+      "exit_code": 0,
+      "command": "node scripts/check-syntax.mjs",
+      "evidence": "syntax.log"
+    },
+    {
+      "name": "workflow",
+      "status": "passed",
+      "passed": 69,
+      "failed": 0,
+      "exit_code": 0,
+      "command": "node scripts/run-python-test.mjs tests/regression/workflow3319.py . /mnt/data/substracker_workflow_verification",
+      "evidence": "workflow-results.json"
+    },
+    {
+      "name": "table_api",
+      "status": "passed",
+      "passed": 37,
+      "failed": 0,
+      "exit_code": 0,
+      "command": "node scripts/run-python-test.mjs tests/regression/api-regression.py . /mnt/data/substracker_api_verification",
+      "evidence": "api-results.json"
+    },
+    {
+      "name": "npm_ci",
+      "status": "failed_environment",
+      "exit_code": 1,
+      "command": "npm ci --include=dev --no-audit --no-fund --fetch-retries=0 --fetch-timeout=5000",
+      "evidence": "npm-ci-diagnostic.txt",
+      "reason": "Repeated registry.npmjs.org EAI_AGAIN in npm debug log; npm ended with Exit handler never called."
+    },
+    {
+      "name": "locked_native_lint_workers_and_bundle",
+      "status": "blocked",
+      "commands": [
+        "npm run lint",
+        "npm test",
+        "npm run test:bundle",
+        "npm run test:toolchain"
+      ],
+      "reason": "Pinned dev dependencies were not installed successfully. No genuine Wrangler/Vitest/workerd result is claimed."
+    },
+    {
+      "name": "historical_3_3_18_3_3_19_cross_version",
+      "status": "not_run",
+      "reason": "Reference source releases 18/19 not supplied. An initial CLI attempt ended at argparse with missing --baseline-dir/--out, before assertions. Preserved in intermediate/business-regression.log; available current-source checks rerun separately with exit 0."
+    },
+    {
+      "name": "cloudflare_live_deployment",
+      "status": "not_run",
+      "reason": "No customer account credentials or live deployment session used."
+    }
+  ],
+  "mock_boundaries": {
+    "cloudflare_control_plane": "synthetic responses",
+    "wrangler_publish": "fake executable in split-runner tests",
+    "release_check_subprocesses_in_split_runner": "synthetic successful test executable; independent real Node and Python suites were also run",
+    "application_upgrade_modules": "real source",
+    "encryption": "real implementation",
+    "local_sqlite": "real SQLite files through node:sqlite",
+    "local_kv": "file-backed adapter",
+    "production_worker": "not accessed"
+  },
+  "safety": {
+    "business_sources_changed": false,
+    "migration_sql_changed": false,
+    "wrangler_template_changed": false,
+    "dependency_versions_changed": false,
+    "release_gates_bypassed": false,
+    "remote_resources_created_or_deleted": false
+  },
+  "counts_note": "275 + 69 + 37 = 381 behavioral assertions. Syntax checks are separate; the 27 focused cases and 3 new split cases are already included in 275."
+}

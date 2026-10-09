@@ -1,0 +1,20 @@
+npm ci --include=dev --no-audit --no-fund --fetch-retries=0 --fetch-timeout=5000
+Registry DNS failures in npm debug log (selected 12 lines):
+493 http fetch GET https://registry.npmjs.org/zod/-/zod-3.25.76.tgz attempt 1 failed with EAI_AGAIN
+494 http fetch GET https://registry.npmjs.org/youch/-/youch-3.3.4.tgz attempt 1 failed with EAI_AGAIN
+495 http fetch GET https://registry.npmjs.org/xxhash-wasm/-/xxhash-wasm-1.1.0.tgz attempt 1 failed with EAI_AGAIN
+496 http fetch GET https://registry.npmjs.org/wrangler/-/wrangler-3.114.17.tgz attempt 1 failed with EAI_AGAIN
+497 http fetch GET https://registry.npmjs.org/ws/-/ws-8.21.0.tgz attempt 1 failed with EAI_AGAIN
+498 http fetch GET https://registry.npmjs.org/workerd/-/workerd-1.20241230.0.tgz attempt 1 failed with EAI_AGAIN
+499 http fetch GET https://registry.npmjs.org/vitest/-/vitest-2.1.9.tgz attempt 1 failed with EAI_AGAIN
+500 http fetch GET https://registry.npmjs.org/vite-node/-/vite-node-2.1.9.tgz attempt 1 failed with EAI_AGAIN
+501 http fetch GET https://registry.npmjs.org/why-is-node-running/-/why-is-node-running-2.3.0.tgz attempt 1 failed with EAI_AGAIN
+502 http fetch GET https://registry.npmjs.org/vite/-/vite-5.4.21.tgz attempt 1 failed with EAI_AGAIN
+503 http fetch GET https://registry.npmjs.org/unenv/-/unenv-2.0.0-rc.14.tgz attempt 1 failed with EAI_AGAIN
+504 http fetch GET https://registry.npmjs.org/undici-types/-/undici-types-7.24.6.tgz attempt 1 failed with EAI_AGAIN
+
+Final npm output:
+npm error Exit handler never called!
+npm error This is an error with npm itself. Please report this error at:
+npm error   <https://github.com/npm/cli/issues>
+npm error A complete log of this run can be found in: /home/oai/.npm/_logs/2026-10-09T07_25_03_638Z-debug-0.log

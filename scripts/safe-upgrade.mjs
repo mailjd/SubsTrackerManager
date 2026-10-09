@@ -11,6 +11,7 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {setTimeout as sleep} from 'node:timers/promises';
 import {Cloudflare,protectBindings} from './upgrade/cloudflare.mjs';
+import {assertSameBindingIdentity} from './upgrade/worker-bindings.mjs';
 import {encryptArchive,decryptArchive,inspectBundle,assertOriginalsPreserved} from './upgrade/archive.mjs';
 import {sha256,stableJSON} from '../src/data/upgrade-reconcile.js';
 import {localWrangler} from './upgrade/local-toolchain.mjs';
@@ -30,7 +31,7 @@ function cfClient(){return new Cloudflare({accountId:process.env.CLOUDFLARE_ACCO
 export function readConfig(){ return readWranglerConfig(ROOT); }
 async function assertBindingIdentity(cf,state){
   if(cf.accountId!==state.accountId)throw new Error('Cloudflare 帐户与备份不一致，已停止');
-  const settings=await cf.settings(state.worker);
+  const settings=await cf.settings(state.worker,{requireD1:!!state.bindings.dbId});
   const bound=protectBindings(state.config,settings);
   if(bound.kvId!==state.bindings.kvId||bound.dbId!==state.bindings.dbId)throw new Error('线上存储绑定在升级中发生变化，已停止');
   if(stableJSON(bound.secretNames)!==stableJSON(state.bindings.secretNames))throw new Error('Worker Secret 名称发生变化，已停止');
@@ -71,8 +72,9 @@ export function writeGenerated(state){
 export async function prepare(options={}){
   checkDeploymentEnvironment(ROOT,process.env,options);
   password();const cf=cfClient(),config=readConfig();
-  const settings=await cf.settings(config.name); // 404/permission errors STOP. Never create a new worker/store.
+  const settings=await cf.settings(config.name,{requireD1:!!options.allowWorkersBuilds||!!config.d1_databases?.length}); // 404/permission errors STOP. Never create a new worker/store.
   const bindings=protectBindings(config,settings);
+  if(options.expectedBindings)assertSameBindingIdentity(options.expectedBindings,bindings);
   const namespace=await cf.namespace(bindings.kvId);
   const database=bindings.dbId?await cf.database(bindings.dbId):null;
   const schedules=await cf.schedules(config.name);

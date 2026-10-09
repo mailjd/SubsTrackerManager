@@ -1,5 +1,6 @@
 /** All discovery/snapshot APIs are read-only. D1 backup uses read-only SELECT/PRAGMA via POST.
  * No create/namespace replacement/credential reset is present in the upgrade path. */
+import {checkedBindingList,d1BindingId,resolveSettingsBindings} from './worker-bindings.mjs';
 import {setTimeout as sleep} from 'node:timers/promises';
 import {snapshotD1WithQueries} from './d1-query-snapshot.mjs';
 import {assertD1KVConfig,assertD1KVRequest} from './storage-policy.mjs';
@@ -17,11 +18,14 @@ export class Cloudflare {
       if((r.status===429||r.status>=500)&&n<4){await sleep(Math.min(30000,1000*2**n));continue;}
       if(raw){if(!r.ok)throw new Error(`Cloudflare 读取失败 HTTP ${r.status} (${path.split('?')[0]})`);return Buffer.from(await r.arrayBuffer());}
       let data;try{data=await r.json();}catch{throw new Error('Cloudflare 返回非 JSON，已停止');}
-      if(!r.ok||data.success!==true)throw new Error(`Cloudflare 请求失败 HTTP ${r.status} (${path.split('?')[0]})：${(data.errors||[]).map(e=>e.code).join(',')}`);
+      if(!r.ok||data?.success!==true){
+        const error=new Error(`Cloudflare 请求失败 HTTP ${r.status} (${path.split('?')[0]})：${(data?.errors||[]).map(e=>e.code).join(',')}`);
+        error.httpStatus=r.status;error.cloudflareCodes=(data?.errors||[]).map(e=>e.code);throw error;
+      }
       return data;
     }
   }
-  async settings(worker){return (await this.request(`/workers/scripts/${encodeURIComponent(worker)}/settings`)).result;}
+  async settings(worker,options={}){const settings=(await this.request(`/workers/scripts/${encodeURIComponent(worker)}/settings`)).result;return resolveSettingsBindings(this,worker,settings,options);}
   async schedules(worker){const r=(await this.request(`/workers/scripts/${encodeURIComponent(worker)}/schedules`)).result;if(!Array.isArray(r?.schedules))throw new Error('未取得完整 Cron 配置');return r.schedules;}
   async scriptSubdomain(worker){return (await this.request(`/workers/scripts/${encodeURIComponent(worker)}/subdomain`)).result;}
   async accountSubdomain(){return (await this.request('/workers/subdomain')).result;}
@@ -51,17 +55,18 @@ export class Cloudflare {
 }
 export function protectBindings(config,settings){
   assertD1KVConfig(config);
-  if(!Array.isArray(settings?.bindings))throw new Error('无法读取正在运行的 Worker 绑定；不按名称创建替代库');
+  checkedBindingList(settings?.bindings);
   if(settings.bindings.some(b=>b.type==='r2_bucket'))throw new Error('ST_STORAGE_POLICY：原 Worker 含 R2 綁定；本版不使用 R2，不自動刪除或移轉，請先核對原資源。');
   const allowed=new Set(['kv_namespace','d1','plain_text','json','secret_text','assets']);
   const unknown=settings.bindings.filter(b=>!allowed.has(b.type));
   if(unknown.length)throw new Error('存在未纳入升级器的其他绑定，请保留原配置并人工审查：'+unknown.map(b=>b.name).join(','));
   const allKv=settings.bindings.filter(b=>b.type==='kv_namespace'),allDb=settings.bindings.filter(b=>b.type==='d1');
   if(allKv.length!==1||allKv[0].name!=='SUBSCRIPTIONS_KV'||allDb.length>1||(allDb[0]&&allDb[0].name!=='SUBSCRIPTIONS_DB'))throw new Error('存储绑定结构不同于当前应用，拒绝猜测目标');
-  if(allDb[0]?.database_id && allDb[0]?.id && allDb[0].database_id!==allDb[0].id)throw new Error('D1 API 同时返回不一致的 ID，已停止');
-  const kvId=allKv[0].namespace_id,dbId=allDb[0]?.database_id||allDb[0]?.id||null;
-  if(!/^[a-fA-F0-9]{32}$/.test(kvId||'')||(dbId&&!/^[a-fA-F0-9-]{36}$/.test(dbId)))throw new Error('Cloudflare 返回无效存储 ID');
-  for(const row of config.kv_namespaces||[]){if(row.binding!=='SUBSCRIPTIONS_KV'||(row.id&&row.id!==kvId))throw new Error('本地 KV ID 与在线 Worker 不同，已停止防止改绑');}
-  for(const row of config.d1_databases||[]){if(row.binding!=='SUBSCRIPTIONS_DB'||(row.database_id&&row.database_id!==dbId))throw new Error('本地 D1 ID 与在线 Worker 不同，已停止防止改绑');}
+  const kvId=typeof allKv[0].namespace_id==='string'?allKv[0].namespace_id.toLowerCase():null,dbId=d1BindingId(allDb[0]);
+  if(allDb.length&&!dbId)throw new Error('ST_BINDING_D1_UNRESOLVED：原 D1 綁定沒有可核實的 ID；不能當成 KV-only 部署。');
+  if(!/^[a-f0-9]{32}$/.test(kvId||''))throw new Error('Cloudflare 返回无效存储 ID');
+  if((config.kv_namespaces||[]).length>1||(config.d1_databases||[]).length>1)throw new Error('本地存储绑定结构不同，拒绝忽略重复绑定');
+  for(const row of config.kv_namespaces||[]){if(row.binding!=='SUBSCRIPTIONS_KV'||(row.id&&String(row.id).toLowerCase()!==kvId))throw new Error('本地 KV ID 与在线 Worker 不同，已停止防止改绑');}
+  for(const row of config.d1_databases||[]){if(row.binding!=='SUBSCRIPTIONS_DB'||(row.database_id&&String(row.database_id).toLowerCase()!==dbId))throw new Error('本地 D1 ID 与在线 Worker 不同，已停止防止改绑');}
   return {kvId,dbId,secretNames:settings.bindings.filter(b=>b.type==='secret_text').map(b=>b.name).sort(),variables:settings.bindings.filter(b=>b.type==='plain_text'||b.type==='json')};
 }

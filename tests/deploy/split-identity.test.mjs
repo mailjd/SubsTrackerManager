@@ -29,7 +29,7 @@ test('a malformed existing D1 binding is distinct from no D1 and fails closed',(
 });
 test('Cloudflare routing puts read-only real binding inspection BEFORE all expensive release checks',()=>{
   const src=fs.readFileSync(path.join(root,'scripts/deploy-cloudflare.mjs'),'utf8');
-  assert.ok(src.indexOf('await cf.settings(config.name)')<src.indexOf('verifyReleaseChecks(ROOT,deadline)'));
+  assert.ok(src.indexOf('await cf.settings(config.name,')<src.indexOf('verifyReleaseChecks(ROOT,deadline)'));
   assert.ok(src.indexOf('assertSplitBindingsReady(')<src.indexOf('verifyReleaseChecks(ROOT,deadline)'));
   assert.ok(src.indexOf('verifyReleaseChecks(ROOT,deadline)')<src.indexOf('store.acquire()'));
 });

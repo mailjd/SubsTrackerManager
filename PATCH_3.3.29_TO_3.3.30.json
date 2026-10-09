@@ -1,0 +1,230 @@
+{
+  "from_version": "3.3.29",
+  "to_version": "3.3.30",
+  "base_zip": "SubsTracker-GitHub-Cloudflare-Ready_v3.3.29_KVOnlySafeDeployFix_20261008.zip",
+  "base_zip_sha256": "bf89d859195b4cf3adebb055f6f73a497d1b60601559530d28222f75b6883f16",
+  "changes": [
+    {
+      "path": ".github/workflows/deploy.yml",
+      "action": "modified",
+      "before_sha256": "79a9cc4a66c7ab92f001106bbd470edb68b2c97aef7d36c1f8bac7778f64ea9d",
+      "after_sha256": "2b4bc30d7c76fd86935cbbf7e235d5250bbe40f4df2ab6b22973e069bbf6acfd"
+    },
+    {
+      "path": "DEPLOY_REPAIR_3.3.30.md",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "288b30d168bad15c09ff3f29a6568e88e30761751b5c332e142f6c32a4fd3d7b"
+    },
+    {
+      "path": "PATCH_README_3.3.30.md",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "62bf68857094a0dc424c088dd7cd09787c19de25c6d99e4deeb413ced0ddeb1e"
+    },
+    {
+      "path": "README.md",
+      "action": "modified",
+      "before_sha256": "ce59d64d27b1b77e26ec31385360580fbb933334aa6474d667b55d3028f4379a",
+      "after_sha256": "bb64c8e52b7d86e0b7214192c9d08e645cba5516322f1aae42dbbc0f3f52b4a9"
+    },
+    {
+      "path": "VERIFICATION_3.3.30.md",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "fffcb0ccf8f4fe17df1ff18ec2724ad56f496d0578a87c1f19dd3fe8bd960da1"
+    },
+    {
+      "path": "package-lock.json",
+      "action": "modified",
+      "before_sha256": "47fad80e26b509af4e110f86396ee1188113248381d5a504d40c7ef439185bb0",
+      "after_sha256": "0ab2fc211754f07190f701b5fa7f5d2933c80e9b3b013f33a7dd4da680dd3a30"
+    },
+    {
+      "path": "package.json",
+      "action": "modified",
+      "before_sha256": "0ccc962441eb7372e444525ed9edc04e35cd2fc48c8cfc11bb57fc9ca9a1079c",
+      "after_sha256": "9b2b54e0c2a4e45b6409fc83bdafb1c89b5ae04ee152e4e36c6efb14a3aba3b5"
+    },
+    {
+      "path": "scripts/deploy-cloudflare.mjs",
+      "action": "modified",
+      "before_sha256": "9cd9237053ecda5d419e5f279fb10c9666db8b6e27cf5cad4c7663bd151f8322",
+      "after_sha256": "00aaaab9ecc2455a4d8ec11fafb5dabf4e975d9d3282b7ca1c8780791b215d8c"
+    },
+    {
+      "path": "scripts/safe-upgrade.mjs",
+      "action": "modified",
+      "before_sha256": "33a018e20f7b66b8fbbae39b5fbccb63f0fd8065e7a3aedb1adf6cd4660f0702",
+      "after_sha256": "f7dcff00cbfa32c1b06558636b88604e82a865006ff7da458004f5c287e085da"
+    },
+    {
+      "path": "scripts/upgrade/cloudflare.mjs",
+      "action": "modified",
+      "before_sha256": "029b5cc5188f38063a42d7642002787e073d88e88e611e549a44a8773daa0460",
+      "after_sha256": "c85cde0303b32631a1c488b374fa1d826b2e6eb93f02c7070264b784353376d7"
+    },
+    {
+      "path": "scripts/upgrade/deploy-environment.mjs",
+      "action": "modified",
+      "before_sha256": "3d630cd212fde3a5d51035123a785b41576c360928c6280d09afc73156878249",
+      "after_sha256": "1256ca6544594e3f4fd6027c66c45cbb69c37c95ff84d176f7c7cd07a1ef714f"
+    },
+    {
+      "path": "scripts/upgrade/storage-policy.mjs",
+      "action": "modified",
+      "before_sha256": "8dafa4ab19d94cacfabc47364cc37b8cc452e2f1ec8db40cb293f63892820d3c",
+      "after_sha256": "40cb7b6179c080dc49569eaeb393e790d00cd1d5c2f09ef562e648e760b01f31"
+    },
+    {
+      "path": "scripts/upgrade/worker-bindings.mjs",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "863ba224356c258ad2bb3d21892df04eff9cf1cbab136001c5fc49d4936b628e"
+    },
+    {
+      "path": "src/upgrade-release.js",
+      "action": "modified",
+      "before_sha256": "f4731a5ac6d9e7868b4b1e46e0d048760ff86d84b2cbed9a55152a9675ea025d",
+      "after_sha256": "e060d4fb79e1fa62abd5871a23558cb1405eadc80ae4d691b967c6e0993dae09"
+    },
+    {
+      "path": "src/version.js",
+      "action": "modified",
+      "before_sha256": "162c8ae73e9829b715ec0883809fc31e68a5b6efd52ef960a58c5d9c4d39d937",
+      "after_sha256": "5cbac7592ffdac0ad932cdc62849ac7b9f52ff21fd0a0bbcced4fb5d15d52623"
+    },
+    {
+      "path": "tests/deploy/binding-resolution.test.mjs",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "b416fd3595b8c0b81beeba5fc48c17441c70092d20a487356fd5f6bb64d1a46b"
+    },
+    {
+      "path": "tests/deploy/split-identity.test.mjs",
+      "action": "modified",
+      "before_sha256": "ac773c0330e5b8e31c46f7f7a38559f6316b50c5766c1b9c4dc07adf21a88618",
+      "after_sha256": "925f495fce0603be48274339ca609be3e428ec96d76285026c8455dd0811dcf8"
+    },
+    {
+      "path": "tests/deploy/split-runner.test.mjs",
+      "action": "modified",
+      "before_sha256": "6fc63fd4f828426eee35c8bc2021af1eeafacad0fb3e578d4f6b620477120870",
+      "after_sha256": "54ffcccda2d778afb026933c75d0c0a5ebed4226c94d7d6b7caeaa9679799d2b"
+    },
+    {
+      "path": "tests/results/3.3.30/api-results.json",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "513a4688609b4ea5fca41b73c2e6667b1674718e01f6d66a73163a7ae9ff7b3b"
+    },
+    {
+      "path": "tests/results/3.3.30/api.exit",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "tests/results/3.3.30/api.log",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "52d9968dd32761a9df601a97f0ede266cdc6912286be4c1783124429786bf83b"
+    },
+    {
+      "path": "tests/results/3.3.30/baseline-reproduction.json",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "9011b719f6c8284db12bf7c2ca86c1a2868e18330eb993b0e1882a79aaa298ef"
+    },
+    {
+      "path": "tests/results/3.3.30/intermediate/business-regression.exit",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "path": "tests/results/3.3.30/intermediate/business-regression.log",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "bd6d49380e3f883a6f47e2e36571f02babc0603b78118164ccf33a41e09f1c52"
+    },
+    {
+      "path": "tests/results/3.3.30/node-regression.exit",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "tests/results/3.3.30/node-regression.tap",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "38d8e619964a0900fc068818332fada19aa753626dac5777d66b6d2348bfa4eb"
+    },
+    {
+      "path": "tests/results/3.3.30/npm-ci-diagnostic.txt",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "0503525c593a4c0507ffe0e79585b253f9c6eaebf67fd3579d00040ebccff389"
+    },
+    {
+      "path": "tests/results/3.3.30/npm-ci.exit",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "tests/results/3.3.30/npm-ci.log",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "b5ada01836f90bb5b5ad7797af70302c926ed796cf3526cf5fc5c2fc1960c2a1"
+    },
+    {
+      "path": "tests/results/3.3.30/summary.json",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "5415f419b4d5b74d1b7f0879545bd00e2561cb62a53a740d46083d3ac41023ad"
+    },
+    {
+      "path": "tests/results/3.3.30/syntax.exit",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "tests/results/3.3.30/syntax.log",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "82d34311d41190c178daef23da6fac216f9029e3d558b1d4adb0bd9a2606e036"
+    },
+    {
+      "path": "tests/results/3.3.30/workflow-results.json",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "9c7f145f0c95c3cb8945dab6388579528a22d921d238f3aa64ae29cf837b43bf"
+    },
+    {
+      "path": "tests/results/3.3.30/workflow.exit",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "tests/results/3.3.30/workflow.log",
+      "action": "added",
+      "before_sha256": null,
+      "after_sha256": "82a4a35f7c8ffa620e7358067cc312ed6e5050d566886cc23b0ee00b3c67ec22"
+    },
+    {
+      "path": "tests/upgrade/fake-cloudflare-preload.mjs",
+      "action": "modified",
+      "before_sha256": "8b917e68b6410159ed3d6ed7706c294030dcf98558661f2d1f270409760ea79a",
+      "after_sha256": "d383d5bd0a510a85d871e769d60730371c8478cb527c99f8b95345102c936c8d"
+    }
+  ],
+  "deleted": [],
+  "metadata_exclusions": [
+    "FILE_MANIFEST_3.3.30.json",
+    "PATCH_3.3.29_TO_3.3.30.json"
+  ],
+  "note": "Metadata files are included in both packages. FILE_MANIFEST contains PATCH manifest hash; neither hash list hashes itself. wrangler.toml is unchanged and excluded from the differential patch."
+}

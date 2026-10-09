@@ -4,6 +4,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {checkDeploymentEnvironment} from './upgrade/deploy-environment.mjs';
 import {Cloudflare,protectBindings} from './upgrade/cloudflare.mjs';
+import {assertSameBindingIdentity} from './upgrade/worker-bindings.mjs';
 import {CloudflareCheckpoints,sourceFingerprint,assertSplitBindingsReady} from './upgrade/cloudflare-checkpoints.mjs';
 import {prepare,stage,finish,saveState,writeGenerated,readConfig,workerCall} from './safe-upgrade.mjs';
 import {VERSION} from '../src/version.js';
@@ -20,13 +21,10 @@ export async function runSplitDeployment({downloadOnly=false}={}) {
   // It never creates a database or writes to KV/D1; a KV-only Worker cannot
   // acquire the atomic D1 lease required by Cloudflare split deployments.
   const config=readConfig(),cf=new Cloudflare({accountId:process.env.CLOUDFLARE_ACCOUNT_ID,token:process.env.CLOUDFLARE_API_TOKEN});
-  const remoteSettings=await cf.settings(config.name);
+  console.log('[upgrade] ST_DEPLOY_TARGET '+JSON.stringify({worker:config.name,environment:process.env.SUBSTRACKER_ENVIRONMENT||'top-level',nameSource:process.env.SUBSTRACKER_WORKER_NAME?'SUBSTRACKER_WORKER_NAME':'resolved-wrangler-config'}));
+  const remoteSettings=await cf.settings(config.name,{requireD1:true});
   const bindings=protectBindings(config,remoteSettings);
-  assertSplitBindingsReady({worker:config.name,settings:remoteSettings,bindings,source:{
-    environment:process.env.SUBSTRACKER_ENVIRONMENT||'default',
-    localD1Declared:Array.isArray(config.d1_databases)&&config.d1_databases.length>0,
-    localKVDeclared:Array.isArray(config.kv_namespaces)&&config.kv_namespaces.length>0
-  }});
+  assertSplitBindingsReady({worker:config.name,settings:remoteSettings,bindings});
   if(!downloadOnly)verifyReleaseChecks(ROOT,deadline);
   const store=new CloudflareCheckpoints(cf,{worker:config.name,bindings,password:process.env.SUBSTRACKER_BACKUP_PASSWORD});
   if(downloadOnly){
@@ -35,9 +33,11 @@ export async function runSplitDeployment({downloadOnly=false}={}) {
     console.log('[upgrade:download] 已下载并验证加密附件到 upgrade-backups/；没有部署、迁移或解锁。');return {phase:state.phase,downloaded:true};
   }
   const sourceHash=sourceFingerprint(ROOT);
+  const confirmBindings=async()=>assertSameBindingIdentity(bindings,protectBindings(config,await cf.settings(config.name,{requireD1:true})));
+  await confirmBindings(); // Tests can take minutes: do not write through a stale binding probe.
   await store.acquire();
   const checkpoint=async state=>{budget();saveState(state);await store.publish(ROOT,state);};
-  const activeOptions={...options,checkpoint,beforeWrite:()=>{budget();return store.assertLease();},deployTimeoutMs:()=>Math.max(1,Math.min(600000,deadline-Date.now()-30000))};
+  const activeOptions={...options,checkpoint,beforeWrite:async()=>{budget();await confirmBindings();return store.assertLease();},deployTimeoutMs:()=>Math.max(1,Math.min(600000,deadline-Date.now()-30000))};
   try {
     let state=await store.load(ROOT,{write:false});
     if(state && (state.version!==VERSION||state.sourceHash!==sourceHash)){
@@ -49,7 +49,7 @@ export async function runSplitDeployment({downloadOnly=false}={}) {
     if(state)await store.load(ROOT,{version:VERSION,sourceHash});
     if(!state) {
       // Detect an existing maintenance run before creating a new one. prepare itself is read-only.
-      state=await prepare({...options,sourceHash,remoteArtifactsPrefix:store.prefix.artifact,remoteControlPrefix:store.prefix.control});
+      state=await prepare({...options,expectedBindings:bindings,sourceHash,remoteArtifactsPrefix:store.prefix.artifact,remoteControlPrefix:store.prefix.control});
       let prior;
       try {prior=await workerCall(state,'status');}catch(error){if(![401,403,404].includes(error.httpStatus)&&!/非 JSON/.test(error.message))throw error;}
       if(prior?.maintenance)throw new Error('ST_SPLIT_OLD_RUN：线上已有未完成的安全升级；请用该版原恢复附件续跑，不覆盖其维护版本');

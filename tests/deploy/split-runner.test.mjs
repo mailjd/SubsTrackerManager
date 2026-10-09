@@ -115,8 +115,26 @@ test('a real KV-only Worker stops BEFORE the expensive release suite and never a
   assert.match(result.stderr,/ST_SPLIT_D1_REQUIRED/);
   assert.match(result.stderr,/KV-only|没有 D1/);
   assert.equal(fs.existsSync(path.join(f.state,'required-tests.log')),false,'release suite must not run first');
-  assert.deepEqual(f.trace().map(x=>x.method),['GET'],'no remote mutation even attempted');
+  assert.deepEqual(f.trace().map(x=>x.method),['GET','GET','GET','GET','GET'],'settings and current-version verification remain read-only');
   assert.ok(!fs.existsSync(path.join(f.root,'.upgrade/state.stbackup')));
   assert.ok(!fs.existsSync(path.join(f.state,'deployed')));
   assert.equal(fs.readFileSync(path.join(f.state,'kv.json'),'utf8'),original);
+});
+
+for(const flag of ['FAKE_SETTINGS_MISSING_D1','FAKE_SETTINGS_MISSING_ID'])test('binding recovery completes the ORIGINAL split deployment when '+flag,async t=>{
+ const f=await setup(t),before=fs.readFileSync(path.join(f.state,'kv.json'),'utf8');
+ const first=f.run({[flag]:'1'});pass(first);assert.match(first.stdout,/ST_BINDING_D1_RECOVERED/);assert.match(first.stdout,/ST_UPGRADE_WAIT/);
+ assert.equal(f.decoded().bindings.dbId,'12345678-1234-1234-1234-123456789abc');
+ f.fresh(17*60*1000);const second=f.run({[flag]:'1'});pass(second);assert.match(second.stdout,/ST_UPGRADE_COMPLETE/);
+ assert.equal(f.decoded().phase,'complete');sameOriginalKV(f,before);
+ assert.equal(fs.readFileSync(path.join(f.state,'deploy-count'),'utf8').match(/deploy/g).length,1);
+ assert.equal(f.trace().filter(x=>x.path.endsWith('/api/upgrade/commit')).length,1);
+ assert.ok(!f.trace().some(x=>x.method==='DELETE'||/\/d1\/database$/.test(x.path)));
+});
+test('binding drift after release checks fails before acquiring a lease or uploading artifacts',async t=>{
+ const f=await setup(t);const result=f.run({FAKE_BINDING_DRIFT_AFTER_TESTS:'1'});
+ assert.notEqual(result.status,0);assert.match(result.stderr,/ST_BINDING_CHANGED/);
+ assert.ok(f.trace().every(x=>x.method==='GET'));
+ assert.ok(!fs.existsSync(path.join(f.state,'deployed')));
+ assert.ok(!fs.existsSync(path.join(f.root,'.upgrade/state.stbackup')));
 });

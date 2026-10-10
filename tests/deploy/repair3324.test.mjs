@@ -97,7 +97,7 @@ test('retry source digest includes test/config changes but excludes generated re
 });
 
 test('deploy --help never starts a deployment and works from another working directory',()=>{
- const r=spawnSync(process.execPath,[path.join(source,'scripts/deploy.mjs'),'--help'],{cwd:os.tmpdir(),env:{...process.env,...validEnv},encoding:'utf8',timeout:10000});assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/無 D1\/KV 綁定時先部署 \/init/);assert.doesNotMatch(r.stdout,/ST_DEPLOY_ENTRY|release:check/);
+ const r=spawnSync(process.execPath,[path.join(source,'scripts/deploy.mjs'),'--help'],{cwd:os.tmpdir(),env:{...process.env,...validEnv},encoding:'utf8',timeout:10000});assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/保留現行 D1\/KV 綁定先發布程式/);assert.doesNotMatch(r.stdout,/ST_DEPLOY_ENTRY|release:check/);
 });
 test('unknown deployment arguments are not silently ignored before deploying',()=>{
  const bad=spawnSync(process.execPath,['scripts/deploy.mjs','--env','wrong-target'],{cwd:source,env:{...process.env,...validEnv},encoding:'utf8',timeout:10000});assert.equal(bad.status,2);assert.match(bad.stderr,/ST_DEPLOY_ARGS/);assert.doesNotMatch(bad.stdout,/ST_DEPLOY_ENTRY/);

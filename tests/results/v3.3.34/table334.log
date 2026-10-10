@@ -1,0 +1,40 @@
+[runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+PASS KV+SQLite: normal fields persisted
+PASS KV+SQLite: clear subscription type stays empty
+PASS KV+SQLite: explicit past expiry is not renewed
+PASS KV+SQLite: editing history note does not advance dates
+PASS KV+SQLite: clear optional start date
+PASS KV+SQLite: invalid zero period rejected without writes
+PASS KV+SQLite: invalid calendar date rejected
+PASS KV+SQLite: expired paid tier rejected instead of false success
+PASS KV+SQLite: server/client version mismatch rejected
+PASS KV+SQLite: unknown/read-only field rejected
+PASS KV+SQLite: rules and cells share one subscription write
+PASS KV+SQLite: rules-only save is verified
+PASS KV+SQLite: empty reminder rules survive GET
+PASS KV+SQLite: malformed reminder payload rejected
+PASS KV+SQLite: dropped reminder write cannot report success
+PASS KV+SQLite: dropped storage writes cannot report success
+PASS KV+SQLite: new process GET and disk read retain changes
+PASS KV+SQLite: cloud template API/storage keys unchanged
+PASS KV+SQLite: stale KV plus newer D1 returns persisted input
+PASS KV-only: normal fields persisted
+PASS KV-only: clear subscription type stays empty
+PASS KV-only: explicit past expiry is not renewed
+PASS KV-only: editing history note does not advance dates
+PASS KV-only: clear optional start date
+PASS KV-only: invalid zero period rejected without writes
+PASS KV-only: invalid calendar date rejected
+PASS KV-only: expired paid tier rejected instead of false success
+PASS KV-only: server/client version mismatch rejected
+PASS KV-only: unknown/read-only field rejected
+PASS KV-only: rules and cells share one subscription write
+PASS KV-only: rules-only save is verified
+PASS KV-only: empty reminder rules survive GET
+PASS KV-only: malformed reminder payload rejected
+PASS KV-only: dropped reminder write cannot report success
+PASS KV-only: dropped storage writes cannot report success
+PASS KV-only: new process GET and disk read retain changes
+PASS KV-only: cloud template API/storage keys unchanged
+(node:21728) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

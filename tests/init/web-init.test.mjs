@@ -137,3 +137,17 @@ test('concurrent start creates a single stable checkpoint without overwriting it
 test('init HTML has a nonce CSP, no external script, and never uses persistent browser credential storage',async()=>{
   const r=await handleWebInitGate(req('/init'),{},run),html=await r.text();assert.match(r.headers.get('Content-Security-Policy'),/frame-ancestors 'none'/);assert.match(r.headers.get('Content-Security-Policy'),/script-src 'nonce-/);assert.ok(!/localStorage|sessionStorage|<script[^>]+src=/.test(html));
 });
+
+for(const [kv,d1] of [[false,false],[true,false],[false,true],[true,true]])test(`code identity with KV=${kv},D1=${d1} performs zero data/session calls`,async()=>{
+  const explode=()=>assert.fail('code status must not read, write, or open a D1 session');
+  const env={...(kv?{SUBSCRIPTIONS_KV:{get:explode,list:explode,put:explode}}:{}),...(d1?{SUBSCRIPTIONS_DB:{prepare:explode,batch:explode,withSession:explode}}:{})};
+  const response=await handleWebInitGate(req('/api/upgrade/code-status'),env,run);assert.equal(response.status,200);
+  const body=await response.json();assert.deepEqual(body.bindings,{kv,d1});assert.equal(body.scope,'code-only');assert.equal(body.dataAccessed,false);assert.equal(body.readinessChecked,false);assert.equal(body.applicationReady,null);assert.equal(body.dataInitComplete,null);assert.equal(body.runId,run.id);
+});
+test('code identity endpoint does not accept an init write or report initialization complete',async()=>{
+ const response=await handleWebInitGate(req('/api/upgrade/code-status',{method:'POST',body:{ready:true}}),{},run);assert.equal(response.status,405);
+});
+
+test('init instructions do not tell an already-bound operator to detach or rebind again',async()=>{
+ const response=await handleWebInitGate(req('/init'),{},run);const html=await response.text();assert.match(html,/已綁定不用重綁/);assert.match(html,/缺項才補綁原資源/);assert.doesNotMatch(html,/先綁回原 D1 和 KV/);
+});

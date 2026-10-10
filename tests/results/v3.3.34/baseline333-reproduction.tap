@@ -1,0 +1,30 @@
+TAP version 13
+# (node:755) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# [upgrade] ST_DEPLOY_ENTRY {"version":"3.3.33","entry":"deploy:cloudflare","mode":"deferred-web-init","intent":"unbound-then-web-init","automaticFallback":false}
+# [upgrade] ST_DEPLOY_TARGET {"worker":"original-worker","environment":"top-level","accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","expectedStorageBindings":0}
+# [upgrade] ST_DEPLOY_FAILED {"stage":"preflight","publishAttempted":false,"codeDeployed":false,"applicationReady":false,"dataInitComplete":false,"dataAPICalls":0}
+# Subtest: same failing Build with residual KV never falls back to direct-compatible
+ok 1 - same failing Build with residual KV never falls back to direct-compatible
+  ---
+  duration_ms: 653.642977
+  type: 'test'
+  ...
+# Subtest: residual D1 and KV are listed together and neither is detached
+ok 2 - residual D1 and KV are listed together and neither is detached
+  ---
+  duration_ms: 633.002107
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1368.146291

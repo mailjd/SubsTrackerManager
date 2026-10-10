@@ -1,4 +1,4 @@
-/** Authenticated, resumable upgrade for the no-storage deployment path.
+/** Authenticated, resumable upgrade for the binding-preserving code-deployment path.
  * GETs never initialize storage. Existing KV business keys/config/secrets and D1
  * business rows are never replaced. Only missing schema, immutable ledger rows,
  * and release-scoped control/receipt records are added. No cross-store transaction
@@ -192,7 +192,13 @@ async function publicStatus(env,run){
 export async function handleWebInitGate(request,env,run){
   const path=new URL(request.url).pathname;
   try{
-    validRun(run);env=sessionEnv(env);
+    validRun(run);
+    if(path==='/api/upgrade/code-status'){
+      if(request.method!=='GET')return json({success:false,code:'INIT_METHOD'},405);
+      // Code identity is independent of data readiness. Do not even open a D1 session.
+      return json({success:true,scope:'code-only',version:run.version,runId:run.id,mode:WEB_INIT_MODE,codeDeployed:true,bindings:bindingState(env),dataAccessed:false,readinessChecked:false,applicationReady:null,dataInitComplete:null,initURL:'/init'});
+    }
+    env=sessionEnv(env);
     if((path==='/api/init/status'||path==='/api/upgrade/status')&&request.method==='GET')return json(await publicStatus(env,run));
     if(path==='/init'||path==='/init/'){
       if(request.method!=='GET')return json({success:false,code:'INIT_METHOD',message:'請由 /init 頁面的按鈕執行。'},405);

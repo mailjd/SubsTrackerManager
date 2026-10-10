@@ -12,6 +12,7 @@ import {handleWebInitGate} from '../../src/data/web-init.js';
 import {WEB_INIT_MODE} from '../../src/data/web-init-protocol.js';
 import {VERSION} from '../../src/version.js';
 import {RELEASE_MARKER,MARKER_FORMAT,deploymentMarker} from '../../scripts/upgrade/deployment-evidence.mjs';
+import {assertPreservedStorage} from '../../scripts/upgrade/web-init-bindings.mjs';
 import {deploymentFailureMessage} from '../../scripts/deploy-cloudflare.mjs';
 const source=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const A='00000000-1111-2222-3333-000000000001',B='00000000-1111-2222-3333-000000000002';
@@ -40,8 +41,11 @@ function setup(t){
       f.published++;f.run={version:VERSION,id:plan.runId,mode:WEB_INIT_MODE,tokenHash:''};f.plan=plan;
       const check=spawnSync(process.execPath,[path.join(root,'scripts/require-safe-upgrade.mjs')],{cwd:root,env:{...env,SUBSTRACKER_UNBOUND_DEPLOY_RUN:plan.runId},encoding:'utf8'});
       assert.equal(check.status,0,check.stdout+'\n'+check.stderr);assert.match(check.stdout,/ST_UNBOUND_GUARD_OK/);
+      assertPreservedStorage(plan.config,plan.bindingIdentity);
+      // Simulate the actual uploaded config, not the old API rows.
+      f.stores=[...plan.config.kv_namespaces.map(b=>({name:b.binding,type:'kv_namespace',namespace_id:b.id})),...plan.config.d1_databases.map(b=>({name:b.binding,type:'d1',database_id:b.database_id}))];
       f.version=B;f.marker=deploymentMarker(plan);
-    },async fetchImpl(url){f.httpCalls.push(url);assert.ok(f.published>0,'unbound old runtime must NOT be queried before publication');return handleWebInitGate(new Request(url),{},f.run);}
+    },async fetchImpl(url){f.httpCalls.push(url);assert.ok(f.published>0,'old runtime must NOT be queried before publication');assert.ok(url.endsWith('/api/upgrade/code-status'));return handleWebInitGate(new Request(url),{},f.run);}
   };
   return f;
 }
@@ -62,14 +66,14 @@ test('a failed settings request is not inferred as an empty binding list',async 
 test('missing binding array is not inferred as unbound',async t=>{
   const f=setup(t);f.cf.request=async()=>({result:{}});await assert.rejects(()=>runAutoDeployment(f.options),/ST_BINDING_RESPONSE/);assert.equal(f.published,0);
 });
-test('partial KV removal does not detach the remaining D1 automatically',async t=>{
-  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_DB',type:'d1',id:A}];await assert.rejects(()=>runAutoDeployment(f.options),/ST_UNBOUND_STILL_BOUND/);assert.equal(f.published,0);
+test('D1-only code publication retains the exact D1 and waits for missing KV',async t=>{
+  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_DB',type:'d1',id:A}];const result=await runAutoDeployment(f.options);assert.equal(f.published,1);assert.equal(f.plan.config.d1_databases[0].database_id,A);assert.deepEqual(result.missingBindings,['SUBSCRIPTIONS_KV']);assert.deepEqual(f.plan.config.kv_namespaces,[]);
 });
-test('unbound route refuses a still-bound KV instead of clearing it',async t=>{
-  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)}];await assert.rejects(()=>runUnboundDeployment(f.options),/ST_UNBOUND_STILL_BOUND/);assert.equal(f.published,0);
+test('KV-only code publication retains the exact KV instead of clearing it',async t=>{
+  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)}];const result=await runUnboundDeployment(f.options);assert.equal(f.published,1);assert.equal(f.plan.config.kv_namespaces[0].id,'b'.repeat(32));assert.deepEqual(result.missingBindings,['SUBSCRIPTIONS_DB']);
 });
 test('Dashboard-only unbinding not yet active cannot clear the active version',async t=>{
-  const f=setup(t);f.versionOverride=[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)}];await assert.rejects(()=>runUnboundDeployment(f.options),/ST_UNBOUND_STILL_BOUND/);assert.equal(f.published,0);
+  const f=setup(t);f.versionOverride=[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)}];await assert.rejects(()=>runUnboundDeployment(f.options),/ST_UNBOUND_NOT_ACTIVE/);assert.equal(f.published,0);
 });
 test('unsupported live bindings are preserved by refusing publication',async t=>{
   const f=setup(t);f.stores=[{name:'QUEUE',type:'queue'}];await assert.rejects(()=>runUnboundDeployment(f.options),/ST_UNBOUND_OTHER_BINDING/);assert.equal(f.published,0);
@@ -78,7 +82,7 @@ test('release-test failure prevents code publication without requiring storage a
   const f=setup(t);f.options.checkRelease=()=>{throw new Error('native workers test failed');};await assert.rejects(()=>runUnboundDeployment(f.options),/native workers test failed/);assert.equal(f.published,0);assert.ok(f.calls.every(x=>x.method==='GET'));
 });
 test('binding drift during release checks stops before publication',async t=>{
-  const f=setup(t);f.options.checkRelease=()=>{f.stores=[{name:'SUBSCRIPTIONS_DB',type:'d1',id:A}];};await assert.rejects(()=>runUnboundDeployment(f.options),/ST_UNBOUND_STILL_BOUND/);assert.equal(f.published,0);
+  const f=setup(t);f.options.checkRelease=()=>{f.stores=[{name:'SUBSCRIPTIONS_DB',type:'d1',id:A}];};await assert.rejects(()=>runUnboundDeployment(f.options),/ST_UNBOUND_CHANGED/);assert.equal(f.published,0);
 });
 test('concurrent code deployment is detected before publication',async t=>{
   const f=setup(t);f.options.checkRelease=()=>{f.version=B;};await assert.rejects(()=>runUnboundDeployment(f.options),/ST_UNBOUND_CHANGED/);assert.equal(f.published,0);
@@ -113,15 +117,13 @@ test('fully unbound + workers.dev DISABLED + no Build URL publishes and verifies
   const r=await runAutoDeployment(f.options);
   assert.equal(f.published,1);assert.equal(r.codeDeployed,true);assert.equal(r.controlPlaneVerified,true);assert.equal(r.urlVerification.status,'not_configured');assert.equal(r.dataInitComplete,false);assert.equal(r.applicationReady,false);assert.equal(f.httpCalls.length,0);assert.equal(f.plan.config.workers_dev,false);assert.equal(f.plan.config.preview_urls,false);assert.equal(r.phase,'bindings_required');
 });
-test('same failing Build with residual KV never falls back to direct-compatible',async t=>{
-  const f=setup(t);delete f.env.SUBSTRACKER_WORKER_URL;f.domain={enabled:false};f.stores=[{type:'kv_namespace',name:'SUBSCRIPTIONS_KV',namespace_id:'b'.repeat(32)}];
-  await assert.rejects(()=>runAutoDeployment(f.options),e=>{
-    assert.equal(e.code,'ST_UNBOUND_STILL_BOUND');assert.match(e.message,/original-worker/);assert.match(e.message,/SUBSCRIPTIONS_KV/);assert.match(e.message,/activeVersion/);assert.equal(e.deploymentState.publishAttempted,false);assert.equal(e.deploymentState.stage,'preflight');assert.match(deploymentFailureMessage(e),/尚未呼叫發布器/);return true;
-  });assert.equal(f.published,0);assert.equal(f.checks,0);assert.ok(f.calls.every(c=>c.route.startsWith('/workers/')));
+test('exact latest log shape: KV-only, workers.dev disabled, no URL publishes web-init without detaching',async t=>{
+  const f=setup(t);delete f.env.SUBSTRACKER_WORKER_URL;f.domain={enabled:false};f.stores=[{type:'kv_namespace',name:'SUBSCRIPTIONS_KV',namespace_id:'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'}];
+  const result=await runAutoDeployment(f.options);assert.equal(result.codeDeployed,true);assert.equal(result.mode,WEB_INIT_MODE);assert.equal(result.urlVerification.verified,false);assert.equal(f.plan.config.kv_namespaces[0].id,'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');assert.equal(f.published,1);assert.equal(f.checks,1);assert.deepEqual(result.missingBindings,['SUBSCRIPTIONS_DB']);assert.ok(f.calls.every(c=>c.route.startsWith('/workers/')));
 });
-test('residual D1 and KV are listed together and neither is detached',async t=>{
-  const f=setup(t);f.stores=[{type:'d1',name:'SUBSCRIPTIONS_DB',id:A},{type:'kv_namespace',name:'SUBSCRIPTIONS_KV',namespace_id:'b'.repeat(32)}];
-  await assert.rejects(()=>runAutoDeployment(f.options),e=>/SUBSCRIPTIONS_DB/.test(e.message)&&/SUBSCRIPTIONS_KV/.test(e.message));assert.equal(f.published,0);assert.equal(f.stores.length,2);
+test('bound KV + D1, workers.dev disabled, no URL preserves both and awaits init, not rebind',async t=>{
+  const f=setup(t);delete f.env.SUBSTRACKER_WORKER_URL;f.domain={enabled:false};f.stores=[{type:'d1',name:'SUBSCRIPTIONS_DB',id:A},{type:'kv_namespace',name:'SUBSCRIPTIONS_KV',namespace_id:'b'.repeat(32)}];
+  const result=await runAutoDeployment(f.options);assert.equal(f.published,1);assert.equal(f.plan.config.d1_databases[0].database_id,A);assert.equal(f.plan.config.kv_namespaces[0].id,'b'.repeat(32));assert.equal(result.phase,'init_required');assert.deepEqual(result.missingBindings,[]);assert.equal(result.applicationReady,false);assert.equal(result.dataInitComplete,false);assert.equal(result.dataAPICalls,0);
 });
 test('live custom domain is discovered when workers.dev is disabled',async t=>{
   const f=setup(t);delete f.env.SUBSTRACKER_WORKER_URL;f.domain={enabled:false};f.customDomains=[{service:'another-worker',environment:'production',hostname:'wrong.invalid'},{service:'original-worker',environment:'production',hostname:'original.invalid'}];
@@ -182,7 +184,7 @@ test('prior legitimate release marker is safely replaced only by the new code ma
 });
 test('binding change after publisher is detected without issuing data API calls',async t=>{
   const f=setup(t);const publisher=f.options.publisher;f.options.publisher=async(...args)=>{await publisher(...args);f.stores=[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)}];};
-  await assert.rejects(()=>runAutoDeployment(f.options),e=>e.code==='ST_UNBOUND_STILL_BOUND'&&e.deploymentState.publishAttempted===true);assert.ok(f.calls.every(x=>x.method==='GET'&&x.route.startsWith('/workers/')));
+  await assert.rejects(()=>runAutoDeployment(f.options),e=>/ST_UNBOUND_CHANGED/.test(e.message)&&e.deploymentState.publishAttempted===true);assert.ok(f.calls.every(x=>x.method==='GET'&&x.route.startsWith('/workers/')));
 });
 test('published version changes while URL is checked: no final success for stale version',async t=>{
   const f=setup(t);f.options.fetchImpl=async()=>{f.version='00000000-1111-2222-3333-000000000003';return Response.json({});};await assert.rejects(()=>runAutoDeployment(f.options),/ST_UNBOUND_CHANGED/);
@@ -194,8 +196,43 @@ test('release checks failing report not attempted, unlike uploader failure',asyn
   const f=setup(t);f.options.checkRelease=()=>{throw new Error('real-test-failure');};await assert.rejects(()=>runAutoDeployment(f.options),e=>{assert.equal(e.deploymentState.publishAttempted,false);assert.equal(e.deploymentState.codeDeployed,false);assert.equal(e.deploymentState.stage,'release-checks');assert.match(deploymentFailureMessage(e),/尚未呼叫發布器/);return true;});
 });
 test('a fresh failed attempt cannot leave a prior success report',async t=>{
-  const f=setup(t);fs.mkdirSync(path.join(f.root,'.upgrade'),{recursive:true});fs.writeFileSync(path.join(f.root,'.upgrade/unbound-result.json'),'old-success');f.stores=[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)}];await assert.rejects(()=>runAutoDeployment(f.options));assert.ok(!fs.existsSync(path.join(f.root,'.upgrade/unbound-result.json')));
+  const f=setup(t);fs.mkdirSync(path.join(f.root,'.upgrade'),{recursive:true});fs.writeFileSync(path.join(f.root,'.upgrade/unbound-result.json'),'old-success');f.stores=[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'missing-id'}];await assert.rejects(()=>runAutoDeployment(f.options));assert.ok(!fs.existsSync(path.join(f.root,'.upgrade/unbound-result.json')));
 });
 test('mixed account injection is rejected before control-plane reads',async t=>{
   const f=setup(t);f.cf.accountId='c'.repeat(32);await assert.rejects(()=>runAutoDeployment(f.options),/ST_UNBOUND_ACCOUNT/);assert.equal(f.calls.length,0);assert.equal(f.published,0);
+});
+
+// v3.3.34 binding preservation regression (API and uploader are simulated).
+test('settings database_id and active legacy id normalize to the same exact D1',async t=>{
+  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_DB',type:'d1',database_id:A}];const request=f.cf.request;
+  f.cf.request=async(p,o)=>{const data=await request(p,o);if(p.includes('/versions/'))data.result.resources.bindings=data.result.resources.bindings.map(b=>b.type==='d1'?{name:b.name,type:b.type,id:b.database_id}:b);return data;};
+  const result=await runAutoDeployment(f.options);assert.equal(result.codeDeployed,true);assert.equal(f.plan.config.d1_databases[0].database_id,A);
+});
+test('live KV+D1 override stale local IDs without adding a third resource',async t=>{
+  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)},{name:'SUBSCRIPTIONS_DB',type:'d1',id:A}];
+  fs.appendFileSync(path.join(f.root,'wrangler.toml'),'\n[[kv_namespaces]]\nbinding="WRONG"\nid="'+ 'c'.repeat(32)+'"\n[[d1_databases]]\nbinding="WRONG_DB"\ndatabase_id="'+B+'"\n');
+  await runAutoDeployment(f.options);assert.deepEqual(f.plan.config.kv_namespaces,[{binding:'SUBSCRIPTIONS_KV',id:'b'.repeat(32)}]);assert.equal(f.plan.config.d1_databases.length,1);assert.equal(f.plan.config.d1_databases[0].database_id,A);
+});
+test('D1 present with no ID cannot be silently removed or replaced from local config',async t=>{
+  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_DB',type:'d1'}];await assert.rejects(()=>runAutoDeployment(f.options),/ST_WEB_INIT_D1_ID/);assert.equal(f.published,0);assert.equal(f.checks,0);
+});
+test('different D1 IDs between settings and active version cannot be merged',async t=>{
+  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_DB',type:'d1',id:A}];const request=f.cf.request;
+  f.cf.request=async(p,o)=>{const d=await request(p,o);if(p.includes('/versions/'))d.result.resources.bindings=d.result.resources.bindings.map(b=>b.type==='d1'?{...b,id:B}:b);return d;};
+  await assert.rejects(()=>runAutoDeployment(f.options),/ST_UNBOUND_NOT_ACTIVE/);assert.equal(f.published,0);
+});
+test('removing existing D1 during checks is detected before publication',async t=>{
+  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_DB',type:'d1',id:A}];f.options.checkRelease=()=>{f.stores=[];};await assert.rejects(()=>runAutoDeployment(f.options),/ST_UNBOUND_CHANGED/);assert.equal(f.published,0);
+});
+test('publisher dropping a pre-existing D1 does not count as code deployment success',async t=>{
+  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_DB',type:'d1',id:A}];const publish=f.options.publisher;f.options.publisher=async(...args)=>{await publish(...args);f.stores=[];};await assert.rejects(()=>runAutoDeployment(f.options),/ST_UNBOUND_CHANGED/);
+});
+test('guard rejects a plan and config edited together to strip existing D1',async t=>{
+  const f=setup(t);f.stores=[{name:'SUBSCRIPTIONS_DB',type:'d1',id:A}];f.options.publisher=(root,plan,env)=>{
+    plan.config.d1_databases=[];fs.writeFileSync(path.join(root,UNBOUND_PLAN),JSON.stringify(plan));fs.writeFileSync(path.join(root,UNBOUND_CONFIG),JSON.stringify(plan.config));
+    assert.throws(()=>assertUnboundGuard(root,{...env,SUBSTRACKER_UNBOUND_DEPLOY_RUN:plan.runId}),/ST_UNBOUND_GUARD/);throw new Error('guard checked');
+  };await assert.rejects(()=>runAutoDeployment(f.options),/guard checked/);
+});
+test('storage with nonstandard names is preserved but never mistaken for required app bindings',async t=>{
+  const f=setup(t);f.stores=[{name:'OTHER_KV',type:'kv_namespace',namespace_id:'b'.repeat(32)},{name:'OTHER_DB',type:'d1',id:A}];const result=await runAutoDeployment(f.options);assert.equal(result.preservedBindings.length,2);assert.deepEqual(result.missingBindings,['SUBSCRIPTIONS_KV','SUBSCRIPTIONS_DB']);assert.equal(result.phase,'bindings_required');
 });

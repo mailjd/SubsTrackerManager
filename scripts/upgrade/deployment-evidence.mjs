@@ -1,4 +1,4 @@
-/** v3.3.33: separate release identity, public URL reachability and data readiness.
+/** v3.3.34: separate release identity, public URL reachability and data readiness.
  * Control-plane identity is authoritative for CODE publication, never for init.
  * The marker is non-secret Worker metadata, not a KV/D1 key or an auth bypass.
  */
@@ -22,7 +22,7 @@ export function releaseEvidence(plan,snapshot){
   const marker=deploymentMarker(plan);
   const expected=plan.bindingIdentity.filter(b=>b.type!=='assets'&&b.name!==RELEASE_MARKER);
   const current=snapshot.bindings.filter(b=>b.type!=='assets'&&b.name!==RELEASE_MARKER);
-  if(!isDeepStrictEqual(expected,current))throw new Error('ST_UNBOUND_CHANGED：發布後原變數或機密名稱變更；未把此結果當成本次部署成功。');
+  if(!isDeepStrictEqual(expected,current))throw new Error('ST_UNBOUND_CHANGED：發布後原 D1/KV 綁定、變數或機密名稱變更；未把此結果當成本次部署成功。');
   // readUnbound already checks settings == the ACTIVE version's binding list.
   // This unique nonce + source digest must be in BOTH, not only the latest upload.
   const row=snapshot.bindings.find(b=>b.name===RELEASE_MARKER);
@@ -88,17 +88,17 @@ export async function verifyReleaseURL(candidates,plan,{fetchImpl=fetch,pause=as
       if(now()+1000>=deadline)return {status:'not_verified',verified:false,url:null,attempts};
       const outcome={url:item.url,source:item.source,round:round+1};
       try{
-        const r=await fetchImpl(item.url+'/api/upgrade/status',{method:'GET',redirect:'manual',headers:{'Cache-Control':'no-store'},signal:AbortSignal.timeout(Math.max(1,Math.min(8000,deadline-now())))});
+        const r=await fetchImpl(item.url+'/api/upgrade/code-status',{method:'GET',redirect:'manual',headers:{'Cache-Control':'no-store'},signal:AbortSignal.timeout(Math.max(1,Math.min(8000,deadline-now())))});
         outcome.httpStatus=r.status;
         if(r.ok){
           // Avoid unbounded response allocation from a wrong user-supplied origin.
           const reader=r.body?.getReader();let text='',size=0;
           if(reader){try{for(;;){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>32768){await reader.cancel();throw new Error('response-too-large');}text+=new TextDecoder().decode(value);}}finally{reader.releaseLock();}}
           let v;try{v=JSON.parse(text);}catch{/* HTML/login/stale sites are not this release. */}
-          if(v?.version===plan.version&&v.runId===plan.runId&&v.mode==='deferred-web-init'&&v.codeDeployed===true&&v.phase==='bindings_required'&&v.applicationReady===false){
+          if(v?.version===plan.version&&v.runId===plan.runId&&v.mode==='deferred-web-init'&&v.codeDeployed===true&&v.scope==='code-only'&&v.dataAccessed===false&&v.readinessChecked===false&&v.applicationReady===null&&v.dataInitComplete===null){
             attempts.push({...outcome,matched:true});return {status:'verified',verified:true,url:item.url,attempts};
           }
-          outcome.reason='not-this-waiting-release';
+          outcome.reason='not-this-code-release';
         }else outcome.reason=[301,302,303,307,308,401,403].includes(r.status)?'redirect-or-access-protected':'http-status';
       }catch{outcome.reason='unreachable-or-invalid-response';}
       attempts.push(outcome);

@@ -38,8 +38,8 @@ test('URL status body is bounded and cannot stand in for deployment evidence',as
   const r=await verifyReleaseURL([{url:'https://test.invalid'}],plan,{fetchImpl:async()=>new Response('x'.repeat(40000))});assert.equal(r.verified,false);
 });
 test('wrong runtime version, mode, readiness and run ID all fail URL verification',async()=>{
-  const valid={version:plan.version,runId:plan.runId,mode:'deferred-web-init',codeDeployed:true,phase:'bindings_required',applicationReady:false};
-  for(const update of [{version:'old'},{runId:'old'},{mode:'direct-compatible'},{applicationReady:true},{phase:'ready'},{codeDeployed:false}]){
+  const valid={version:plan.version,runId:plan.runId,mode:'deferred-web-init',codeDeployed:true,scope:'code-only',dataAccessed:false,readinessChecked:false,applicationReady:null,dataInitComplete:null};
+  for(const update of [{version:'old'},{runId:'old'},{mode:'direct-compatible'},{applicationReady:true},{readinessChecked:true},{scope:'data'},{dataAccessed:true},{dataInitComplete:true},{codeDeployed:false}]){
     const r=await verifyReleaseURL([{url:'https://test.invalid'}],plan,{fetchImpl:async()=>Response.json({...valid,...update})});assert.equal(r.verified,false);
   }
 });
@@ -52,4 +52,8 @@ test('runtime secrets or vars disappearing cannot be waived by a matching marker
 });
 test('client retry controls cannot accidentally turn a bounded request into an infinite loop',async()=>{
   const cf=new Cloudflare({accountId:'a'.repeat(32),token:'synthetic',fetchImpl:()=>assert.fail()});for(const opts of [{maxAttempts:0},{maxAttempts:6},{timeoutMs:NaN},{timeoutMs:-1}])await assert.rejects(()=>cf.request('/workers/scripts',opts),/請求重試預算/);
+});
+
+test('code identity endpoint verifies without claiming runtime/data readiness',async()=>{
+ const r=await verifyReleaseURL([{url:'https://test.invalid'}],plan,{fetchImpl:async(url,opts)=>{assert.ok(url.endsWith('/api/upgrade/code-status'));assert.equal(opts.method,'GET');return Response.json({version:plan.version,runId:plan.runId,mode:'deferred-web-init',codeDeployed:true,scope:'code-only',dataAccessed:false,readinessChecked:false,applicationReady:null,dataInitComplete:null});}});assert.equal(r.verified,true);
 });

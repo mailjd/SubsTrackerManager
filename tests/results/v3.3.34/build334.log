@@ -1,0 +1,9 @@
+[build] SubsTracker 3.3.34：依赖、完整类型检查（含旧适配兼容）、源码语法、Wrangler dry-run；不会发布。
+[build] Cloudflare Deploy command 保持 npm run deploy:cloudflare。npm run build 不会改写控制台设置。
+[checkout] ST_CHECKOUT_INVENTORY {"version":"3.3.34","status":"manifest-missing","extraFiles":[],"modifiedFiles":[],"missingFiles":[],"remoteAccess":false}
+[checkout] 以上只记录仓库与发布包的差异；未删除、排除或改写额外文件。完整类型检查及 Workers 测试仍会检查它们。
+[runtime] ST_TEST_RUNTIME_OK {"node":"22.16.0","python":"3.13.5","sqliteEngine":"node:sqlite","sqliteVersion":"3.49.1","pythonSQLiteRequired":false,"crossProcessDiskRead":true,"remoteAccess":false}
+(node:7237) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[toolchain] ST_TOOLCHAIN hono：预期 4.12.22，实际 未安装。请用本版 package-lock.json 重新 npm ci --include=dev；不要仅更新全局 Wrangler。
+[build] ST_BUILD_CHECK check-toolchain.mjs 未通过；尚未部署。

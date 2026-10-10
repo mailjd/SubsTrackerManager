@@ -13,7 +13,7 @@ try {
     assertNodeRuntime();
     const {assertUnboundGuard}=await import('./deploy-unbound.mjs');
     assertUnboundGuard(root);
-    console.log('[upgrade] ST_UNBOUND_GUARD_OK：只發布等待綁定與 init 程式，不存取 D1/KV。');
+    console.log('[upgrade] ST_UNBOUND_GUARD_OK：原 D1/KV 綁定與待發布設定一致；只發布程式，不執行資料 init。');
   }else if(process.env.SUBSTRACKER_DIRECT_DEPLOY_RUN){
     assertNodeRuntime();
     const {assertDirectGuard}=await import('./upgrade/direct-release.mjs');

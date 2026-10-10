@@ -26,3 +26,7 @@ it('native Request JSON and crypto authenticate but cannot init a partially boun
   const request=new Request('https://test.invalid/api/init/preview',{method:'POST',headers:{Origin:'https://test.invalid','Content-Type':'application/json','X-SubsTracker-Init':'1'},body:JSON.stringify({password:'synthetic-runtime-secret'})});
   const r=await handleWebInitGate(request,e,run);expect(r.status).toBe(503);expect((await r.json()).code).toBe('INIT_BINDINGS_REQUIRED');
 });
+
+it('native Request code identity is independent of KV data and never claims init complete',async()=>{
+ const before=await env.SUBSCRIPTIONS_KV.get('config');const response=await handleWebInitGate(new Request('https://test.invalid/api/upgrade/code-status'),{SUBSCRIPTIONS_KV:env.SUBSCRIPTIONS_KV},run);const status=await response.json();expect(response.status).toBe(200);expect(status.scope).toBe('code-only');expect(status.applicationReady).toBe(null);expect(status.readinessChecked).toBe(false);expect(await env.SUBSCRIPTIONS_KV.get('config')).toBe(before);
+});

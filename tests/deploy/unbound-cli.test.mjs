@@ -17,7 +17,7 @@ function fixture(t){
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{spawnSync}=require('node:child_process');
 const root=process.env.FAKE_UPGRADE_ROOT,state=process.env.FAKE_UPGRADE_STATE,args=process.argv.slice(2);
 assert.equal(args[0],'deploy');assert.ok(args.includes('--keep-vars'));
-const cfg=JSON.parse(fs.readFileSync(args[args.indexOf('--config')+1]));assert.deepEqual(cfg.kv_namespaces,[]);assert.deepEqual(cfg.d1_databases,[]);assert.equal(cfg.workers_dev,false);assert.equal(cfg.preview_urls,false);assert.equal(cfg.routes,undefined);
+const cfg=JSON.parse(fs.readFileSync(args[args.indexOf('--config')+1]));assert.deepEqual(cfg.kv_namespaces,process.env.FAKE_UNBOUND_KV==='1'?[{binding:'SUBSCRIPTIONS_KV',id:'b'.repeat(32)}]:[]);assert.deepEqual(cfg.d1_databases,process.env.FAKE_WEB_INIT_D1==='1'?[{binding:'SUBSCRIPTIONS_DB',database_id:'00000000-1111-2222-3333-000000000001',database_name:'00000000-1111-2222-3333-000000000001'}]:[]);assert.equal(cfg.workers_dev,false);assert.equal(cfg.preview_urls,false);assert.equal(cfg.routes,undefined);
 const guard=spawnSync(process.execPath,['scripts/require-safe-upgrade.mjs'],{cwd:root,env:process.env,stdio:'inherit'});if(guard.status!==0)process.exit(guard.status||1);
 if(process.env.FAKE_UNBOUND_PUBLISH_FAIL==='1')process.exit(9);
 fs.copyFileSync(args[args.indexOf('--config')+1],path.join(state,'published-config.json'));fs.copyFileSync(path.join(root,'src/upgrade-release.js'),path.join(state,'published-release.js'));
@@ -32,8 +32,14 @@ test('actual default CLI with zero bindings, disabled workers.dev and no URL pub
   assert.match(fs.readFileSync(path.join(f.state,'published-release.js'),'utf8'),/deferred-web-init/);assert.ok(!fs.existsSync(path.join(f.root,'wrangler.unbound.json')));
   const calls=fs.readFileSync(path.join(f.state,'transport.jsonl'),'utf8').trim().split('\n').map(JSON.parse);assert.ok(calls.every(c=>c.method==='GET'&&c.url.includes('/workers/')));
 });
-test('actual default CLI with residual KV diagnoses target and never invokes old direct upgrade',t=>{
-  const f=fixture(t),r=f.run({FAKE_UNBOUND_KV:'1'});assert.equal(r.status,1);assert.match(r.stderr,/ST_UNBOUND_STILL_BOUND/);assert.match(r.stderr,/original-worker/);assert.match(r.stderr,/尚未呼叫發布器/);assert.doesNotMatch(r.stderr,/ST_DIRECT_URL/);assert.ok(!fs.existsSync(path.join(f.state,'published-config.json')));assert.ok(!fs.existsSync(path.join(f.state,'checks.log')));
+test('actual default CLI with KV preserves its ID and still uses web init',t=>{
+  const f=fixture(t),r=f.run({FAKE_UNBOUND_KV:'1'});assert.equal(r.status,0,r.stdout+'\n'+r.stderr);assert.match(r.stdout,/ST_WEB_INIT_BINDINGS_PRESERVED/);assert.match(r.stdout,/ST_CODE_RELEASE_VERIFIED/);assert.doesNotMatch(r.stdout,/ST_DIRECT_PUBLISH/);const config=JSON.parse(fs.readFileSync(path.join(f.state,'published-config.json')));assert.equal(config.kv_namespaces[0].id,'b'.repeat(32));
+});
+test('actual default CLI with KV+D1 publishes both unchanged and awaits init',t=>{
+  const f=fixture(t),r=f.run({FAKE_UNBOUND_KV:'1',FAKE_WEB_INIT_D1:'1'});assert.equal(r.status,0,r.stdout+'\n'+r.stderr);assert.match(r.stdout,/ST_CODE_DEPLOYED_AWAITING_INIT/);assert.doesNotMatch(r.stdout,/ST_DIRECT_PUBLISH|ST_UNBOUND_STILL_BOUND/);const config=JSON.parse(fs.readFileSync(path.join(f.state,'published-config.json')));assert.equal(config.d1_databases[0].database_id,'00000000-1111-2222-3333-000000000001');assert.equal(config.kv_namespaces[0].id,'b'.repeat(32));
+});
+test('actual default CLI with D1-only preserves it and waits for KV',t=>{
+  const f=fixture(t),r=f.run({FAKE_WEB_INIT_D1:'1'});assert.equal(r.status,0,r.stdout+'\n'+r.stderr);const report=JSON.parse(fs.readFileSync(path.join(f.root,'.upgrade/unbound-result.json')));assert.deepEqual(report.missingBindings,['SUBSCRIPTIONS_KV']);
 });
 test('actual CLI uploader failure reports attempted but not confirmed, not a preflight failure',t=>{
   const f=fixture(t),r=f.run({FAKE_UNBOUND_PUBLISH_FAIL:'1'});assert.equal(r.status,1);assert.match(r.stderr,/ST_UNBOUND_PUBLISH_FAILED/);assert.match(r.stderr,/"publishAttempted":true/);assert.match(r.stderr,/"codeDeployed":null/);assert.doesNotMatch(r.stdout,/ST_CODE_RELEASE_VERIFIED|ST_CODE_DEPLOYED_AWAITING_BINDINGS/);
